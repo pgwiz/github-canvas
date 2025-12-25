@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Copy, Check, Image, Code, FileText, Twitter, Linkedin, Download } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface LinkGeneratorProps {
@@ -162,7 +162,7 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
       variant="outline"
       size="sm"
       onClick={() => copyToClipboard(text, tab)}
-      className="shrink-0"
+      className="shrink-0 bg-background/30 backdrop-blur-sm border-border/30"
     >
       {copiedTab === tab ? (
         <Check className="w-4 h-4 text-primary" />
@@ -173,104 +173,110 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Download & Share Buttons */}
-      <div className="flex flex-wrap gap-3">
-        <Button
-          variant="outline"
-          onClick={downloadAsSVG}
-          disabled={isDownloading}
-          className="flex-1 min-w-[120px]"
-        >
-          <Download className="w-4 h-4 mr-2" />
-          SVG
-        </Button>
-        <Button
-          variant="outline"
-          onClick={downloadAsPNG}
-          disabled={isDownloading}
-          className="flex-1 min-w-[120px]"
-        >
-          <Download className="w-4 h-4 mr-2" />
-          PNG
-        </Button>
-        <Button
-          variant="outline"
-          onClick={openTwitterShare}
-          className="flex-1 min-w-[120px]"
-        >
-          <Twitter className="w-4 h-4 mr-2" />
-          Twitter/X
-        </Button>
-        <Button
-          variant="outline"
-          onClick={openLinkedInShare}
-          className="flex-1 min-w-[120px]"
-        >
-          <Linkedin className="w-4 h-4 mr-2" />
-          LinkedIn
-        </Button>
+    <div className="relative rounded-lg overflow-hidden">
+      {/* Inner frosted glass panel */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent backdrop-blur-sm" />
+      <div className="relative p-4 rounded-lg border border-primary/10 bg-background/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]">
+        <div className="space-y-6">
+          {/* Download & Share Buttons */}
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant="outline"
+              onClick={downloadAsSVG}
+              disabled={isDownloading}
+              className="flex-1 min-w-[120px] bg-background/30 backdrop-blur-sm border-border/30 hover:bg-background/50"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              SVG
+            </Button>
+            <Button
+              variant="outline"
+              onClick={downloadAsPNG}
+              disabled={isDownloading}
+              className="flex-1 min-w-[120px] bg-background/30 backdrop-blur-sm border-border/30 hover:bg-background/50"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              PNG
+            </Button>
+            <Button
+              variant="outline"
+              onClick={openTwitterShare}
+              className="flex-1 min-w-[120px] bg-background/30 backdrop-blur-sm border-border/30 hover:bg-background/50"
+            >
+              <Twitter className="w-4 h-4 mr-2" />
+              Twitter/X
+            </Button>
+            <Button
+              variant="outline"
+              onClick={openLinkedInShare}
+              className="flex-1 min-w-[120px] bg-background/30 backdrop-blur-sm border-border/30 hover:bg-background/50"
+            >
+              <Linkedin className="w-4 h-4 mr-2" />
+              LinkedIn
+            </Button>
+          </div>
+
+          {/* Link Tabs */}
+          <Tabs defaultValue="image" className="w-full">
+            <TabsList className="grid grid-cols-3 w-full mb-4 bg-background/30 backdrop-blur-sm">
+              <TabsTrigger value="image" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
+                <Image className="w-4 h-4" />
+                Image URL
+              </TabsTrigger>
+              <TabsTrigger value="markdown" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
+                <FileText className="w-4 h-4" />
+                Markdown
+              </TabsTrigger>
+              <TabsTrigger value="html" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
+                <Code className="w-4 h-4" />
+                HTML
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="image">
+              <div className="flex gap-2">
+                <Input
+                  value={imageUrl}
+                  readOnly
+                  className="font-mono text-xs bg-background/30 backdrop-blur-sm border-border/30"
+                />
+                <CopyButton text={imageUrl} tab="image" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 opacity-70">
+                Direct link to your SVG stats image — works in READMEs!
+              </p>
+            </TabsContent>
+
+            <TabsContent value="markdown">
+              <div className="flex gap-2">
+                <Input
+                  value={markdownCode}
+                  readOnly
+                  className="font-mono text-xs bg-background/30 backdrop-blur-sm border-border/30"
+                />
+                <CopyButton text={markdownCode} tab="markdown" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 opacity-70">
+                Paste this in your README.md file
+              </p>
+            </TabsContent>
+
+            <TabsContent value="html">
+              <div className="flex gap-2">
+                <Input
+                  value={htmlCode}
+                  readOnly
+                  className="font-mono text-xs bg-background/30 backdrop-blur-sm border-border/30"
+                />
+                <CopyButton text={htmlCode} tab="html" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 opacity-70">
+                Use this in your website or blog
+              </p>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
-
-      {/* Link Tabs */}
-      <Tabs defaultValue="image" className="w-full">
-        <TabsList className="grid grid-cols-3 w-full mb-4">
-          <TabsTrigger value="image" className="flex items-center gap-2">
-            <Image className="w-4 h-4" />
-            Image URL
-          </TabsTrigger>
-          <TabsTrigger value="markdown" className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            Markdown
-          </TabsTrigger>
-          <TabsTrigger value="html" className="flex items-center gap-2">
-            <Code className="w-4 h-4" />
-            HTML
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="image">
-          <div className="flex gap-2">
-            <Input
-              value={imageUrl}
-              readOnly
-              className="font-mono text-xs bg-background/50"
-            />
-            <CopyButton text={imageUrl} tab="image" />
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Direct link to your SVG stats image — works in READMEs!
-          </p>
-        </TabsContent>
-
-        <TabsContent value="markdown">
-          <div className="flex gap-2">
-            <Input
-              value={markdownCode}
-              readOnly
-              className="font-mono text-xs bg-background/50"
-            />
-            <CopyButton text={markdownCode} tab="markdown" />
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Paste this in your README.md file
-          </p>
-        </TabsContent>
-
-        <TabsContent value="html">
-          <div className="flex gap-2">
-            <Input
-              value={htmlCode}
-              readOnly
-              className="font-mono text-xs bg-background/50"
-            />
-            <CopyButton text={htmlCode} tab="html" />
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Use this in your website or blog
-          </p>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }

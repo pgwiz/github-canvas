@@ -142,7 +142,7 @@ export default function Generator() {
             {/* Left Panel - Configuration */}
             <div className="space-y-6">
               {/* Username Input */}
-              <GlassPanel>
+              <GlassPanel accent="green">
                 <Label htmlFor="username" className="text-lg font-semibold mb-4 block">
                   GitHub Username
                 </Label>
@@ -155,7 +155,7 @@ export default function Generator() {
                       value={config.username}
                       onChange={(e) => updateConfig({ username: e.target.value })}
                       onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-                      className="pl-10 h-12 bg-background/50"
+                      className="pl-10 h-12 bg-background/30 backdrop-blur-sm border-border/30"
                       disabled={config.type === "quote" || config.type === "custom"}
                     />
                   </div>
@@ -185,7 +185,7 @@ export default function Generator() {
               </GlassPanel>
 
               {/* Card Type Selection */}
-              <GlassPanel>
+              <GlassPanel accent="teal">
                 <Label className="text-lg font-semibold mb-4 block">
                   Card Type
                 </Label>
@@ -193,20 +193,20 @@ export default function Generator() {
                   value={config.type} 
                   onValueChange={(v) => updateConfig({ type: v as CardType })}
                 >
-                  <TabsList className="grid grid-cols-3 lg:grid-cols-6 w-full h-auto">
-                    <TabsTrigger value="stats" className="py-3">📊 Stats</TabsTrigger>
-                    <TabsTrigger value="languages" className="py-3">💻 Languages</TabsTrigger>
-                    <TabsTrigger value="streak" className="py-3">🔥 Streak</TabsTrigger>
-                    <TabsTrigger value="activity" className="py-3">📈 Activity</TabsTrigger>
-                    <TabsTrigger value="quote" className="py-3">💬 Quote</TabsTrigger>
-                    <TabsTrigger value="custom" className="py-3">✨ Custom</TabsTrigger>
+                  <TabsList className="grid grid-cols-3 lg:grid-cols-6 w-full h-auto bg-background/30 backdrop-blur-sm">
+                    <TabsTrigger value="stats" className="py-3 data-[state=active]:bg-secondary/20">📊 Stats</TabsTrigger>
+                    <TabsTrigger value="languages" className="py-3 data-[state=active]:bg-secondary/20">💻 Languages</TabsTrigger>
+                    <TabsTrigger value="streak" className="py-3 data-[state=active]:bg-secondary/20">🔥 Streak</TabsTrigger>
+                    <TabsTrigger value="activity" className="py-3 data-[state=active]:bg-secondary/20">📈 Activity</TabsTrigger>
+                    <TabsTrigger value="quote" className="py-3 data-[state=active]:bg-secondary/20">💬 Quote</TabsTrigger>
+                    <TabsTrigger value="custom" className="py-3 data-[state=active]:bg-secondary/20">✨ Custom</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </GlassPanel>
 
               {/* Quote Refresh Button */}
               {config.type === "quote" && (
-                <GlassPanel>
+                <GlassPanel accent="purple">
                   <div className="flex items-center justify-between">
                     <div>
                       <Label className="text-lg font-semibold block">AI-Powered Quote</Label>
@@ -218,6 +218,7 @@ export default function Generator() {
                       variant="outline"
                       onClick={handleRefreshQuote}
                       disabled={quoteLoading}
+                      className="bg-background/30 backdrop-blur-sm border-border/30"
                     >
                       <RefreshCw className={`w-4 h-4 mr-2 ${quoteLoading ? 'animate-spin' : ''}`} />
                       New Quote
@@ -227,7 +228,7 @@ export default function Generator() {
               )}
 
               {/* Template Gallery */}
-              <GlassPanel>
+              <GlassPanel accent="purple">
                 <Label className="text-lg font-semibold mb-4 block">
                   Choose a Template
                 </Label>
@@ -238,7 +239,7 @@ export default function Generator() {
               </GlassPanel>
 
               {/* Customization Panel */}
-              <GlassPanel>
+              <GlassPanel accent="green">
                 <Label className="text-lg font-semibold mb-4 block">
                   Customize
                 </Label>
@@ -252,15 +253,21 @@ export default function Generator() {
             {/* Right Panel - Preview & Links */}
             <div className="space-y-6">
               {/* Preview */}
-              <GlassPanel glow="primary">
+              <GlassPanel accent="teal" active>
                 <Label className="text-lg font-semibold mb-4 block">
                   Live Preview
                 </Label>
-                <CardPreview 
-                  config={config} 
-                  githubData={githubData}
-                  quote={currentQuote}
-                />
+                {/* Nested frosted glass inner panel */}
+                <div className="relative rounded-lg overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 to-transparent backdrop-blur-md" />
+                  <div className="relative p-4 rounded-lg border border-secondary/10 bg-background/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+                    <CardPreview 
+                      config={config} 
+                      githubData={githubData}
+                      quote={currentQuote}
+                    />
+                  </div>
+                </div>
                 {githubData && config.type !== "quote" && config.type !== "custom" && (
                   <p className="text-xs text-muted-foreground mt-4 text-center">
                     ✓ Showing real data for @{githubData.user.login}
@@ -269,7 +276,7 @@ export default function Generator() {
               </GlassPanel>
 
               {/* Link Generator */}
-              <GlassPanel>
+              <GlassPanel accent="green">
                 <Label className="text-lg font-semibold mb-4 block">
                   Share Your Card
                 </Label>

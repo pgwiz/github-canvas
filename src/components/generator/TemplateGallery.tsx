@@ -187,42 +187,48 @@ const templates = [
 
 export function TemplateGallery({ selectedTheme, onSelectTheme }: TemplateGalleryProps) {
   return (
-    <div className="grid grid-cols-4 gap-3 max-h-64 overflow-y-auto pr-2">
-      {templates.map((template) => (
-        <button
-          key={template.id}
-          onClick={() => onSelectTheme(template.id)}
-          className={cn(
-            "relative p-3 rounded-lg border-2 transition-all hover:scale-105",
-            selectedTheme === template.id
-              ? "border-primary shadow-glow"
-              : "border-border hover:border-primary/50"
-          )}
-          style={{ backgroundColor: template.colors.bg }}
-        >
-          <div className="flex gap-1 mb-2">
-            <div 
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: template.colors.primary }}
-            />
-            <div 
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: template.colors.secondary }}
-            />
-          </div>
-          <span 
-            className="text-xs font-medium"
-            style={{ color: template.colors.text }}
-          >
-            {template.name}
-          </span>
-          {selectedTheme === template.id && (
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-primary-foreground text-xs">✓</span>
-            </div>
-          )}
-        </button>
-      ))}
+    <div className="relative rounded-lg overflow-hidden">
+      {/* Inner frosted glass panel */}
+      <div className="absolute inset-0 bg-gradient-to-br from-chart-3/5 to-transparent backdrop-blur-sm" />
+      <div className="relative p-3 rounded-lg border border-chart-3/10 bg-background/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]">
+        <div className="grid grid-cols-4 gap-3 max-h-64 overflow-y-auto pr-2">
+          {templates.map((template) => (
+            <button
+              key={template.id}
+              onClick={() => onSelectTheme(template.id)}
+              className={cn(
+                "relative p-3 rounded-lg border transition-all hover:scale-105",
+                selectedTheme === template.id
+                  ? "border-primary/60 shadow-[0_0_20px_-4px_hsl(var(--primary)/0.4)]"
+                  : "border-border/20 hover:border-border/40 bg-background/20 backdrop-blur-sm"
+              )}
+              style={{ backgroundColor: `${template.colors.bg}cc` }}
+            >
+              <div className="flex gap-1 mb-2">
+                <div 
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: template.colors.primary }}
+                />
+                <div 
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: template.colors.secondary }}
+                />
+              </div>
+              <span 
+                className="text-xs font-medium"
+                style={{ color: template.colors.text }}
+              >
+                {template.name}
+              </span>
+              {selectedTheme === template.id && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                  <span className="text-primary-foreground text-xs">✓</span>
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
