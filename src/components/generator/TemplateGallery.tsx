@@ -94,11 +94,100 @@ const templates = [
       border: "#ffff66",
     },
   },
+  // New themes
+  {
+    id: "cyberpunk",
+    name: "Cyberpunk",
+    colors: {
+      bg: "#0a0a0f",
+      primary: "#f706cf",
+      secondary: "#00f0ff",
+      text: "#ffffff",
+      border: "#f706cf",
+    },
+  },
+  {
+    id: "nord",
+    name: "Nord",
+    colors: {
+      bg: "#2e3440",
+      primary: "#88c0d0",
+      secondary: "#81a1c1",
+      text: "#eceff4",
+      border: "#4c566a",
+    },
+  },
+  {
+    id: "monokai",
+    name: "Monokai",
+    colors: {
+      bg: "#272822",
+      primary: "#a6e22e",
+      secondary: "#f92672",
+      text: "#f8f8f2",
+      border: "#a6e22e",
+    },
+  },
+  {
+    id: "gruvbox",
+    name: "Gruvbox",
+    colors: {
+      bg: "#282828",
+      primary: "#fabd2f",
+      secondary: "#83a598",
+      text: "#ebdbb2",
+      border: "#fabd2f",
+    },
+  },
+  {
+    id: "solarized",
+    name: "Solarized",
+    colors: {
+      bg: "#002b36",
+      primary: "#b58900",
+      secondary: "#268bd2",
+      text: "#839496",
+      border: "#b58900",
+    },
+  },
+  {
+    id: "catppuccin",
+    name: "Catppuccin",
+    colors: {
+      bg: "#1e1e2e",
+      primary: "#cba6f7",
+      secondary: "#f5c2e7",
+      text: "#cdd6f4",
+      border: "#cba6f7",
+    },
+  },
+  {
+    id: "aurora",
+    name: "Aurora",
+    colors: {
+      bg: "#0b0d17",
+      primary: "#00d9ff",
+      secondary: "#ff6bcb",
+      text: "#e0e0e0",
+      border: "#00d9ff",
+    },
+  },
+  {
+    id: "matrix",
+    name: "Matrix",
+    colors: {
+      bg: "#000000",
+      primary: "#00ff00",
+      secondary: "#00aa00",
+      text: "#00ff00",
+      border: "#00ff00",
+    },
+  },
 ];
 
 export function TemplateGallery({ selectedTheme, onSelectTheme }: TemplateGalleryProps) {
   return (
-    <div className="grid grid-cols-4 gap-3">
+    <div className="grid grid-cols-4 gap-3 max-h-64 overflow-y-auto pr-2">
       {templates.map((template) => (
         <button
           key={template.id}

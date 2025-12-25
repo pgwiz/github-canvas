@@ -24,6 +24,9 @@ export interface GitHubStats {
     current: number;
     longest: number;
     total: number;
+    startDate?: string;
+    longestStreakStart?: string;
+    longestStreakEnd?: string;
   };
   activity: number[];
 }
