@@ -258,11 +258,7 @@ function generateSVG(params: CardParams): string {
 }
 
 function generateStatsSVG(p: any): string {
-  const { stats, animate } = p;
-  const fadeClass = animate ? 'class="animate-fade stagger-1"' : '';
-  const fadeClass2 = animate ? 'class="animate-fade stagger-2"' : '';
-  const fadeClass3 = animate ? 'class="animate-fade stagger-3"' : '';
-  const fadeClass4 = animate ? 'class="animate-fade stagger-4"' : '';
+  const { stats } = p;
   
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
@@ -272,22 +268,22 @@ function generateStatsSVG(p: any): string {
   <g transform="translate(25, 25)">
     <text class="title">${p.username}'s GitHub Stats</text>
     
-    <g transform="translate(0, 45)" ${fadeClass}>
+    <g transform="translate(0, 45)">
       <text class="stat-value" fill="${p.primaryColor}">⭐ ${formatNumber(stats.totalStars)}</text>
       <text class="stat-label" y="22">Total Stars</text>
     </g>
     
-    <g transform="translate(115, 45)" ${fadeClass2}>
+    <g transform="translate(115, 45)">
       <text class="stat-value" fill="${p.secondaryColor}">📦 ${stats.publicRepos}</text>
       <text class="stat-label" y="22">Repositories</text>
     </g>
     
-    <g transform="translate(230, 45)" ${fadeClass3}>
+    <g transform="translate(230, 45)">
       <text class="stat-value" fill="${p.primaryColor}">👥 ${formatNumber(stats.followers)}</text>
       <text class="stat-label" y="22">Followers</text>
     </g>
     
-    <g transform="translate(345, 45)" ${fadeClass4}>
+    <g transform="translate(345, 45)">
       <text class="stat-value" fill="${p.secondaryColor}">🔀 ${formatNumber(stats.totalForks)}</text>
       <text class="stat-label" y="22">Total Forks</text>
     </g>
