@@ -12,7 +12,7 @@ interface CardPreviewProps {
 
 export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [svgUrl, setSvgUrl] = useState<string>("");
+  const [svgContent, setSvgContent] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -47,7 +47,7 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
       // Don't fetch for stats/languages/streak/activity without username
       if (!config.username && config.type !== "quote" && config.type !== "custom") {
         setError("Enter a GitHub username to preview");
-        setSvgUrl("");
+        setSvgContent("");
         return;
       }
 
@@ -68,16 +68,9 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
 
         const svgText = await response.text();
         
-        // Create a blob URL for the SVG
-        const blob = new Blob([svgText], { type: "image/svg+xml" });
-        const blobUrl = URL.createObjectURL(blob);
-        
-        // Clean up previous blob URL
-        if (svgUrl) {
-          URL.revokeObjectURL(svgUrl);
-        }
-        
-        setSvgUrl(blobUrl);
+        // Store SVG content directly for inline rendering
+        // This allows CSS animations to work properly
+        setSvgContent(svgText);
       } catch (err) {
         console.error("Error fetching SVG:", err);
         setError("Failed to generate preview");
@@ -102,14 +95,7 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
           
           if (response.ok) {
             const svgText = await response.text();
-            const blob = new Blob([svgText], { type: "image/svg+xml" });
-            const blobUrl = URL.createObjectURL(blob);
-            
-            if (svgUrl) {
-              URL.revokeObjectURL(svgUrl);
-            }
-            
-            setSvgUrl(blobUrl);
+            setSvgContent(svgText);
           }
         } catch (err) {
           console.error("Error fetching quote SVG:", err);
@@ -121,15 +107,6 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
       fetchQuoteSvg();
     }
   }, [quote]);
-
-  // Cleanup blob URL on unmount
-  useEffect(() => {
-    return () => {
-      if (svgUrl) {
-        URL.revokeObjectURL(svgUrl);
-      }
-    };
-  }, []);
 
   return (
     <div className="flex justify-center items-center min-h-[200px]">
@@ -143,15 +120,13 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
           <span className="text-4xl">📊</span>
           <span className="text-sm text-center">{error}</span>
         </div>
-      ) : svgUrl ? (
-        <img 
-          src={svgUrl} 
-          alt={`${config.type} card preview`}
-          className="max-w-full h-auto rounded-lg"
+      ) : svgContent ? (
+        <div 
+          className="max-w-full h-auto rounded-lg overflow-hidden"
           style={{ 
             maxWidth: `${config.width}px`,
-            maxHeight: `${config.height + 50}px`
           }}
+          dangerouslySetInnerHTML={{ __html: svgContent }}
         />
       ) : (
         <div className="flex flex-col items-center gap-2 text-muted-foreground">
