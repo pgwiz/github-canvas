@@ -161,12 +161,8 @@ function generateSVG(params: CardParams): string {
 
   const animations = animate ? `
     @keyframes svgFadeIn {
-      from { opacity: 0.2; transform: translateY(5px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes svgScaleIn {
-      from { transform: scale(0.9); opacity: 0.5; }
-      to { transform: scale(1); opacity: 1; }
+      from { opacity: 0.3; }
+      to { opacity: 1; }
     }
     @keyframes svgPulse {
       0%, 100% { opacity: 1; }
@@ -179,7 +175,7 @@ function generateSVG(params: CardParams): string {
       to { stroke-dashoffset: 0; }
     }
     .animate-fade { animation: svgFadeIn 0.6s ease-out forwards; }
-    .animate-scale { animation: svgScaleIn 0.5s ease-out forwards; }
+    .animate-scale { animation: svgFadeIn 0.5s ease-out forwards; }
     .animate-pulse { animation: svgPulse 2s ease-in-out infinite; }
     .animate-grow { animation: svgGrow 1s ease-out forwards; }
     .stagger-1 { animation-delay: 0.1s; }
