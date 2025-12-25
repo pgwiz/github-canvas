@@ -13,6 +13,11 @@ const animations = [
   { value: "wave", label: "Wave", icon: "🌊" },
   { value: "glow", label: "Glow", icon: "💫" },
   { value: "blink", label: "Blink", icon: "👁️" },
+  { value: "typing", label: "Typing", icon: "⌨️" },
+  { value: "slideInLeft", label: "Slide Left", icon: "⬅️" },
+  { value: "slideInRight", label: "Slide Right", icon: "➡️" },
+  { value: "slideInUp", label: "Slide Up", icon: "⬆️" },
+  { value: "bounce", label: "Bounce", icon: "🏀" },
   { value: "none", label: "None", icon: "⏸️" },
 ];
 

@@ -16,6 +16,7 @@ const endpoints = [
     params: [
       { name: "username", type: "string", required: true, description: "GitHub username" },
       { name: "theme", type: "string", required: false, description: "Theme name (neon, tokyo-night, dracula, etc.)" },
+      { name: "animation", type: "string", required: false, description: "Animation type (fadeIn, scaleIn, wave, glow, blink, typing, slideInLeft, slideInRight, slideInUp, bounce)" },
       { name: "bg", type: "string", required: false, description: "Background color (hex)" },
       { name: "primary", type: "string", required: false, description: "Primary color (hex)" },
       { name: "secondary", type: "string", required: false, description: "Secondary color (hex)" },
@@ -26,7 +27,7 @@ const endpoints = [
       { name: "width", type: "number", required: false, description: "Card width in pixels" },
       { name: "height", type: "number", required: false, description: "Card height in pixels" },
     ],
-    example: "/api/card/stats?username=octocat&theme=neon",
+    example: "/api/card/stats?username=octocat&theme=neon&animation=fadeIn",
   },
   {
     id: "languages",
@@ -106,6 +107,19 @@ const themes = [
   { name: "midnight", description: "Yellow text on dark purple" },
 ];
 
+const animationsList = [
+  { name: "fadeIn", description: "Fade in with upward motion" },
+  { name: "scaleIn", description: "Scale up from center" },
+  { name: "wave", description: "Continuous wave motion" },
+  { name: "glow", description: "Pulsing glow effect" },
+  { name: "blink", description: "Subtle blinking effect" },
+  { name: "typing", description: "Typewriter text effect" },
+  { name: "slideInLeft", description: "Slide in from left" },
+  { name: "slideInRight", description: "Slide in from right" },
+  { name: "slideInUp", description: "Slide in from bottom" },
+  { name: "bounce", description: "Bouncing animation" },
+];
+
 export default function Docs() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const { toast } = useToast();
@@ -146,6 +160,9 @@ export default function Docs() {
                   </a>
                   <a href="#themes" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
                     Themes
+                  </a>
+                  <a href="#animations" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    Animations
                   </a>
                   <a href="#examples" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
                     Examples
@@ -282,6 +299,31 @@ export default function Docs() {
                         <p className="text-xs text-muted-foreground mt-1">{theme.description}</p>
                       </div>
                     ))}
+                  </div>
+                </GlassPanel>
+              </section>
+
+              {/* Animations */}
+              <section id="animations">
+                <GlassPanel>
+                  <h2 className="text-2xl font-bold mb-6">Available Animations</h2>
+                  <p className="text-muted-foreground mb-4">
+                    Add beautiful SVG animations to your cards using the <code className="text-primary">animation</code> parameter.
+                    Animations work like capsule-render and display in GitHub READMEs.
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    {animationsList.map((anim) => (
+                      <div key={anim.name} className="p-4 border border-border rounded-lg">
+                        <code className="text-secondary font-mono">{anim.name}</code>
+                        <p className="text-xs text-muted-foreground mt-1">{anim.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-6 bg-muted/30 rounded-lg p-4">
+                    <h4 className="font-semibold mb-2">Example Usage</h4>
+                    <code className="font-mono text-sm text-foreground">
+                      ?username=octocat&animation=slideInUp
+                    </code>
                   </div>
                 </GlassPanel>
               </section>

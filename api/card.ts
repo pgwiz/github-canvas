@@ -99,8 +99,10 @@ function getAnimationStyles(animation: string, primaryColor: string): string {
     `,
     typing: `
       @keyframes typing { from { width: 0; } to { width: 100%; } }
-      @keyframes blink { 50% { border-color: transparent; } }
-      .animate { overflow: hidden; white-space: nowrap; animation: typing 2s steps(30) forwards; }
+      @keyframes cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+      .animate { overflow: hidden; white-space: nowrap; animation: typing 2s steps(30) forwards; width: 0; }
+      .cursor { animation: cursor 0.8s infinite; }
+      .delay-1 { animation-delay: 0.3s; } .delay-2 { animation-delay: 0.6s; } .delay-3 { animation-delay: 0.9s; } .delay-4 { animation-delay: 1.2s; }
     `,
     wave: `
       @keyframes wave { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
@@ -119,6 +121,26 @@ function getAnimationStyles(animation: string, primaryColor: string): string {
     glow: `
       @keyframes glow { 0%, 100% { filter: drop-shadow(0 0 3px ${primaryColor}40); } 50% { filter: drop-shadow(0 0 12px ${primaryColor}80); } }
       .animate { animation: glow 2s ease-in-out infinite; }
+    `,
+    slideInLeft: `
+      @keyframes slideInLeft { 0% { opacity: 0; transform: translateX(-30px); } 100% { opacity: 1; transform: translateX(0); } }
+      .animate { animation: slideInLeft 0.6s ease-out forwards; opacity: 0; }
+      .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; }
+    `,
+    slideInRight: `
+      @keyframes slideInRight { 0% { opacity: 0; transform: translateX(30px); } 100% { opacity: 1; transform: translateX(0); } }
+      .animate { animation: slideInRight 0.6s ease-out forwards; opacity: 0; }
+      .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; }
+    `,
+    slideInUp: `
+      @keyframes slideInUp { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }
+      .animate { animation: slideInUp 0.6s ease-out forwards; opacity: 0; }
+      .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; }
+    `,
+    bounce: `
+      @keyframes bounce { 0%, 100% { transform: translateY(0); } 25% { transform: translateY(-8px); } 50% { transform: translateY(0); } 75% { transform: translateY(-4px); } }
+      .animate { animation: bounce 1s ease-in-out infinite; }
+      .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; }
     `,
   };
   return animations[animation] || animations.fadeIn;

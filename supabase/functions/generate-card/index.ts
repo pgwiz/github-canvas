@@ -190,7 +190,30 @@ function generateSVG(params: CardParams): string {
       `,
       typing: `
         @keyframes typing { from { width: 0; } to { width: 100%; } }
-        .anim { overflow: hidden; white-space: nowrap; animation: typing 2s steps(30) forwards; }
+        @keyframes cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .anim { overflow: hidden; white-space: nowrap; animation: typing 2s steps(30) forwards; width: 0; }
+        .cursor { animation: cursor 0.8s infinite; }
+        .d1 { animation-delay: 0.3s; } .d2 { animation-delay: 0.6s; } .d3 { animation-delay: 0.9s; } .d4 { animation-delay: 1.2s; } .d5 { animation-delay: 1.5s; }
+      `,
+      slideInLeft: `
+        @keyframes slideInLeft { 0% { opacity: 0; transform: translateX(-30px); } 100% { opacity: 1; transform: translateX(0); } }
+        .anim { animation: slideInLeft 0.6s ease-out forwards; opacity: 0; }
+        .d1 { animation-delay: 0.1s; } .d2 { animation-delay: 0.2s; } .d3 { animation-delay: 0.3s; } .d4 { animation-delay: 0.4s; } .d5 { animation-delay: 0.5s; }
+      `,
+      slideInRight: `
+        @keyframes slideInRight { 0% { opacity: 0; transform: translateX(30px); } 100% { opacity: 1; transform: translateX(0); } }
+        .anim { animation: slideInRight 0.6s ease-out forwards; opacity: 0; }
+        .d1 { animation-delay: 0.1s; } .d2 { animation-delay: 0.2s; } .d3 { animation-delay: 0.3s; } .d4 { animation-delay: 0.4s; } .d5 { animation-delay: 0.5s; }
+      `,
+      slideInUp: `
+        @keyframes slideInUp { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }
+        .anim { animation: slideInUp 0.6s ease-out forwards; opacity: 0; }
+        .d1 { animation-delay: 0.1s; } .d2 { animation-delay: 0.2s; } .d3 { animation-delay: 0.3s; } .d4 { animation-delay: 0.4s; } .d5 { animation-delay: 0.5s; }
+      `,
+      bounce: `
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 25% { transform: translateY(-8px); } 50% { transform: translateY(0); } 75% { transform: translateY(-4px); } }
+        .anim { animation: bounce 1s ease-in-out infinite; }
+        .d1 { animation-delay: 0.1s; } .d2 { animation-delay: 0.2s; } .d3 { animation-delay: 0.3s; } .d4 { animation-delay: 0.4s; } .d5 { animation-delay: 0.5s; }
       `,
     };
     return animations[animType] || animations.fadeIn;
