@@ -3,24 +3,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Copy, Check, Server, Database, Key, Github, Shield, Play, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { Copy, Check, Server, Database, Key, Github, Shield, Play, Loader2, Info, Heart } from "lucide-react";
+import { useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
 
+// Edge function secrets only - no frontend URLs exposed
 const envTemplate = `# ==========================================
-# GitHub Stats Card Generator - Production Environment
+# GitHub Stats Card Generator - Edge Function Secrets
 # ==========================================
 
 # Required for setup endpoint (optional - only if you want admin access)
 SETPP=true
 SETPP_KEY=your_secure_random_key_here
-
-# ==========================================
-# Supabase Configuration
-# ==========================================
-CUSTOM_SUPABASE_URL=https://your-project.supabase.co
-CUSTOM_SUPABASE_ANON_KEY=your_anon_key_here
-CUSTOM_SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
 
 # ==========================================
 # GitHub Configuration (Recommended)
@@ -30,14 +24,7 @@ GITHUB_TOKEN=ghp_your_token_here
 # ==========================================
 # Cache Configuration
 # ==========================================
-CACHE_TTL_MINUTES=60
-
-# ==========================================
-# Frontend Configuration (for Vite build)
-# ==========================================
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=your_anon_key_here
-VITE_SUPABASE_PROJECT_ID=your_project_id`;
+CACHE_TTL_MINUTES=60`;
 
 const dbSetupSQL = `-- GitHub Stats Cache Table
 CREATE TABLE IF NOT EXISTS public.github_stats_cache (
@@ -81,13 +68,23 @@ $$;`;
 const Setup = () => {
   const [copied, setCopied] = useState<string | null>(null);
   const [setupConfig, setSetupConfig] = useState({
-    endpoint: '',
     setppKey: '',
-    supabaseUrl: '',
     serviceRoleKey: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [testResults, setTestResults] = useState<Record<string, string> | null>(null);
+  const [healthStatus, setHealthStatus] = useState<Record<string, unknown> | null>(null);
+
+  // Auto-detect base URL for setpp endpoint
+  const getSetppEndpoint = () => {
+    const baseUrl = window.location.origin;
+    // For Supabase edge functions, use the VITE_SUPABASE_URL
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (supabaseUrl) {
+      return `${supabaseUrl}/functions/v1/setpp`;
+    }
+    return `${baseUrl}/functions/v1/setpp`;
+  };
 
   const handleCopy = async (text: string, id: string) => {
     await navigator.clipboard.writeText(text);
@@ -100,10 +97,10 @@ const Setup = () => {
   };
 
   const handleTestConnection = async () => {
-    if (!setupConfig.endpoint || !setupConfig.setppKey) {
+    if (!setupConfig.setppKey) {
       toast({
-        title: "Missing fields",
-        description: "Please enter endpoint URL and SETPP key",
+        title: "Missing SETPP Key",
+        description: "Please enter your SETPP key",
         variant: "destructive"
       });
       return;
@@ -111,7 +108,7 @@ const Setup = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`${setupConfig.endpoint}?action=test`, {
+      const response = await fetch(`${getSetppEndpoint()}?action=test`, {
         method: 'POST',
         headers: {
           'x-setpp-key': setupConfig.setppKey,
@@ -150,11 +147,49 @@ const Setup = () => {
     }
   };
 
-  const handleSetupDatabase = async () => {
-    if (!setupConfig.endpoint || !setupConfig.setppKey) {
+  const handleHealthCheck = async () => {
+    if (!setupConfig.setppKey) {
       toast({
-        title: "Missing fields",
-        description: "Please enter endpoint URL and SETPP key",
+        title: "Missing SETPP Key",
+        description: "Please enter your SETPP key",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${getSetppEndpoint()}?action=health`, {
+        method: 'POST',
+        headers: {
+          'x-setpp-key': setupConfig.setppKey,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      setHealthStatus(data);
+      toast({
+        title: data.status === 'healthy' ? "All Services Healthy" : "Issues Detected",
+        description: `Status: ${data.status}`,
+        variant: data.status === 'healthy' ? "default" : "destructive"
+      });
+    } catch (error) {
+      toast({
+        title: "Health Check Failed",
+        description: error instanceof Error ? error.message : "Check failed",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSetupDatabase = async () => {
+    if (!setupConfig.setppKey) {
+      toast({
+        title: "Missing SETPP Key",
+        description: "Please enter your SETPP key",
         variant: "destructive"
       });
       return;
@@ -163,10 +198,9 @@ const Setup = () => {
     setIsLoading(true);
     try {
       const body: Record<string, string> = {};
-      if (setupConfig.supabaseUrl) body.supabase_url = setupConfig.supabaseUrl;
       if (setupConfig.serviceRoleKey) body.supabase_service_role = setupConfig.serviceRoleKey;
 
-      const response = await fetch(`${setupConfig.endpoint}?action=setup-db`, {
+      const response = await fetch(`${getSetppEndpoint()}?action=setup-db`, {
         method: 'POST',
         headers: {
           'x-setpp-key': setupConfig.setppKey,
@@ -239,11 +273,47 @@ const Setup = () => {
             <CardContent className="space-y-4">
               <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
                 <li>Fork or clone the repository</li>
-                <li>Create a Supabase project and get your keys</li>
-                <li>Copy the environment template below and fill in your values</li>
-                <li>Deploy to your preferred platform (Vercel, Netlify, etc.)</li>
+                <li>Set up your edge function secrets (see template below)</li>
+                <li>Deploy to your preferred platform (Vercel, Netlify, Lovable, etc.)</li>
                 <li>Use the setup tools below to initialize your database</li>
               </ol>
+            </CardContent>
+          </Card>
+
+          {/* Where to find credentials */}
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Info className="h-5 w-5" />
+                Where to Get Your Credentials
+              </CardTitle>
+              <CardDescription>
+                Find your keys in these locations
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="border-l-2 border-primary pl-4">
+                  <h4 className="font-medium">Using Lovable Cloud?</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Your backend is pre-configured! The <code className="bg-muted px-1 rounded">VITE_SUPABASE_URL</code> and 
+                    <code className="bg-muted px-1 rounded">VITE_SUPABASE_PUBLISHABLE_KEY</code> are already set in your <code className="bg-muted px-1 rounded">.env</code> file.
+                    You just need to add secrets like <code className="bg-muted px-1 rounded">SETPP_KEY</code> and <code className="bg-muted px-1 rounded">GITHUB_TOKEN</code> via 
+                    the Cloud secrets manager.
+                  </p>
+                </div>
+                <div className="border-l-2 border-muted pl-4">
+                  <h4 className="font-medium">Self-Hosting with Supabase?</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Go to your Supabase project → Settings → API to find:
+                  </p>
+                  <ul className="list-disc list-inside text-sm text-muted-foreground mt-1 space-y-1">
+                    <li><strong>Project URL</strong> → use for <code className="bg-muted px-1 rounded">VITE_SUPABASE_URL</code></li>
+                    <li><strong>anon/public key</strong> → use for <code className="bg-muted px-1 rounded">VITE_SUPABASE_PUBLISHABLE_KEY</code></li>
+                    <li><strong>service_role key</strong> → use for database initialization only (never expose!)</li>
+                  </ul>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -288,16 +358,17 @@ const Setup = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="endpoint">Setup Endpoint URL</Label>
-                  <Input
-                    id="endpoint"
-                    placeholder="https://your-project.supabase.co/functions/v1/setpp"
-                    value={setupConfig.endpoint}
-                    onChange={(e) => setSetupConfig(prev => ({ ...prev, endpoint: e.target.value }))}
-                  />
+              <div className="bg-muted/50 p-4 rounded-lg border">
+                <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <Info className="h-4 w-4 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-medium text-foreground mb-1">Endpoint Auto-Detected</p>
+                    <code className="text-xs bg-background px-2 py-1 rounded">{getSetppEndpoint()}</code>
+                  </div>
                 </div>
+              </div>
+              
+              <div className="grid gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="setppKey">SETPP Key</Label>
                   <Input
@@ -306,15 +377,6 @@ const Setup = () => {
                     placeholder="Your SETPP_KEY value"
                     value={setupConfig.setppKey}
                     onChange={(e) => setSetupConfig(prev => ({ ...prev, setppKey: e.target.value }))}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="supabaseUrl">Supabase URL (optional override)</Label>
-                  <Input
-                    id="supabaseUrl"
-                    placeholder="https://your-project.supabase.co"
-                    value={setupConfig.supabaseUrl}
-                    onChange={(e) => setSetupConfig(prev => ({ ...prev, supabaseUrl: e.target.value }))}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -332,10 +394,14 @@ const Setup = () => {
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <Button onClick={handleTestConnection} disabled={isLoading} variant="outline">
                   {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                   Test Connection
+                </Button>
+                <Button onClick={handleHealthCheck} disabled={isLoading} variant="outline">
+                  {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Heart className="h-4 w-4 mr-2" />}
+                  Health Check
                 </Button>
                 <Button onClick={handleSetupDatabase} disabled={isLoading}>
                   {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Database className="h-4 w-4 mr-2" />}
@@ -343,12 +409,49 @@ const Setup = () => {
                 </Button>
               </div>
 
-              {testResults && (
-                <div className="bg-muted p-4 rounded-lg">
-                  <h4 className="font-medium mb-2">Results:</h4>
-                  <pre className="text-sm overflow-x-auto">
-                    {JSON.stringify(testResults, null, 2)}
-                  </pre>
+              {(testResults || healthStatus) && (
+                <div className="space-y-4">
+                  {healthStatus && (
+                    <div className="bg-muted p-4 rounded-lg">
+                      <h4 className="font-medium mb-3 flex items-center gap-2">
+                        <Heart className="h-4 w-4" />
+                        Health Status: 
+                        <span className={`px-2 py-0.5 rounded text-xs ${
+                          (healthStatus as { status: string }).status === 'healthy' 
+                            ? 'bg-green-500/20 text-green-500' 
+                            : 'bg-destructive/20 text-destructive'
+                        }`}>
+                          {(healthStatus as { status: string }).status}
+                        </span>
+                      </h4>
+                      <div className="grid gap-2 text-sm">
+                        {(healthStatus as { services?: Record<string, { status: string; latency_ms?: number }> }).services && 
+                          Object.entries((healthStatus as { services: Record<string, { status: string; latency_ms?: number }> }).services).map(([key, value]) => (
+                            <div key={key} className="flex items-center justify-between p-2 bg-background rounded">
+                              <span className="font-medium capitalize">{key.replace(/_/g, ' ')}</span>
+                              <span className={`px-2 py-0.5 rounded text-xs ${
+                                value.status === 'healthy' 
+                                  ? 'bg-green-500/20 text-green-500' 
+                                  : value.status === 'not configured'
+                                  ? 'bg-muted text-muted-foreground'
+                                  : 'bg-destructive/20 text-destructive'
+                              }`}>
+                                {value.status} {value.latency_ms ? `(${value.latency_ms}ms)` : ''}
+                              </span>
+                            </div>
+                          ))
+                        }
+                      </div>
+                    </div>
+                  )}
+                  {testResults && (
+                    <div className="bg-muted p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">Test Results:</h4>
+                      <pre className="text-sm overflow-x-auto">
+                        {JSON.stringify(testResults, null, 2)}
+                      </pre>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
