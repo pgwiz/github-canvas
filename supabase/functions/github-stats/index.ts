@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -41,7 +42,7 @@ async function fetchUserRepos(username: string): Promise<GitHubRepo[]> {
   let page = 1;
   const perPage = 100;
   
-  while (page <= 3) { // Limit to 300 repos for performance
+  while (page <= 3) {
     const response = await fetch(
       `https://api.github.com/users/${username}/repos?per_page=${perPage}&page=${page}&sort=updated`,
       {
@@ -69,47 +70,96 @@ async function fetchContributions(username: string): Promise<{
   totalContributions: number;
   currentStreak: number;
   longestStreak: number;
+  startDate: string;
+  longestStreakStart: string;
+  longestStreakEnd: string;
 }> {
-  // Use GitHub's contribution graph (public data)
-  // Note: This is a simplified version - real implementation would need GitHub GraphQL API
   try {
-    const response = await fetch(`https://github-contributions-api.deno.dev/${username}.json`);
-    
-    if (response.ok) {
-      const data = await response.json();
-      const contributions = data.contributions || [];
-      
-      let totalContributions = 0;
-      let currentStreak = 0;
-      let longestStreak = 0;
-      let tempStreak = 0;
-      
-      // Calculate from recent to old
-      const sorted = contributions.flat().reverse();
-      let streakActive = true;
-      
-      for (const day of sorted) {
-        const count = day.count || 0;
-        totalContributions += count;
+    // Try multiple contribution APIs
+    const apis = [
+      `https://github-contributions-api.jogruber.de/v4/${username}?y=last`,
+      `https://github-contributions.vercel.app/api/v1/${username}`,
+    ];
+
+    for (const apiUrl of apis) {
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) continue;
         
-        if (count > 0) {
-          tempStreak++;
-          if (streakActive) currentStreak = tempStreak;
-          if (tempStreak > longestStreak) longestStreak = tempStreak;
-        } else {
-          streakActive = false;
-          tempStreak = 0;
+        const data = await response.json();
+        
+        // Handle jogruber API format
+        if (data.contributions) {
+          let contributions: { date: string; count: number }[] = [];
+          
+          if (Array.isArray(data.contributions)) {
+            contributions = data.contributions;
+          } else if (typeof data.contributions === 'object') {
+            // Convert object format to array
+            contributions = Object.entries(data.contributions).map(([date, count]) => ({
+              date,
+              count: count as number
+            }));
+          }
+
+          // Sort by date descending (most recent first)
+          contributions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          
+          let totalContributions = data.total?.lastYear || contributions.reduce((sum, d) => sum + d.count, 0);
+          let currentStreak = 0;
+          let longestStreak = 0;
+          let tempStreak = 0;
+          let streakActive = true;
+          let longestStreakStart = '';
+          let longestStreakEnd = '';
+          let tempStreakStart = '';
+          
+          const today = new Date().toISOString().split('T')[0];
+          const startDate = contributions.length > 0 ? contributions[contributions.length - 1].date : today;
+          
+          for (const day of contributions) {
+            if (day.count > 0) {
+              if (tempStreak === 0) tempStreakStart = day.date;
+              tempStreak++;
+              if (streakActive) currentStreak = tempStreak;
+              if (tempStreak > longestStreak) {
+                longestStreak = tempStreak;
+                longestStreakEnd = tempStreakStart;
+                longestStreakStart = day.date;
+              }
+            } else {
+              streakActive = false;
+              tempStreak = 0;
+            }
+          }
+          
+          return { 
+            totalContributions, 
+            currentStreak, 
+            longestStreak,
+            startDate,
+            longestStreakStart: longestStreakStart || today,
+            longestStreakEnd: longestStreakEnd || today
+          };
         }
+      } catch (e) {
+        console.log(`API ${apiUrl} failed:`, e);
+        continue;
       }
-      
-      return { totalContributions, currentStreak, longestStreak };
     }
   } catch (e) {
     console.log('Could not fetch contributions:', e);
   }
   
-  // Fallback to estimated values
-  return { totalContributions: 0, currentStreak: 0, longestStreak: 0 };
+  const today = new Date().toISOString().split('T')[0];
+  return { 
+    totalContributions: 0, 
+    currentStreak: 0, 
+    longestStreak: 0,
+    startDate: today,
+    longestStreakStart: today,
+    longestStreakEnd: today
+  };
 }
 
 serve(async (req) => {
@@ -118,7 +168,7 @@ serve(async (req) => {
   }
 
   try {
-    const { username, type } = await req.json();
+    const { username } = await req.json();
     
     if (!username) {
       return new Response(
@@ -127,16 +177,33 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Fetching GitHub stats for: ${username}, type: ${type}`);
+    console.log(`Fetching GitHub stats for: ${username}`);
 
+    // Check cache first
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data: cached } = await supabase
+      .from('github_stats_cache')
+      .select('stats_data, expires_at')
+      .eq('username', username.toLowerCase())
+      .maybeSingle();
+
+    if (cached && new Date(cached.expires_at) > new Date()) {
+      console.log(`Returning cached stats for ${username}`);
+      return new Response(JSON.stringify(cached.stats_data), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Fetch fresh data
     const user = await fetchGitHubUser(username);
     const repos = await fetchUserRepos(username);
     
-    // Calculate stats
     const totalStars = repos.reduce((acc, repo) => acc + repo.stargazers_count, 0);
     const totalForks = repos.reduce((acc, repo) => acc + repo.forks_count, 0);
     
-    // Calculate language stats
     const languageCounts: Record<string, number> = {};
     for (const repo of repos) {
       if (repo.language) {
@@ -154,7 +221,6 @@ serve(async (req) => {
       .sort((a, b) => b.percentage - a.percentage)
       .slice(0, 5);
     
-    // Get contributions for streak data
     const contributions = await fetchContributions(username);
     
     const result = {
@@ -176,12 +242,23 @@ serve(async (req) => {
         current: contributions.currentStreak,
         longest: contributions.longestStreak,
         total: contributions.totalContributions,
+        startDate: contributions.startDate,
+        longestStreakStart: contributions.longestStreakStart,
+        longestStreakEnd: contributions.longestStreakEnd,
       },
-      // Generate last 30 days activity (simplified)
       activity: Array.from({ length: 30 }, () => Math.floor(Math.random() * 15)),
     };
 
-    console.log(`Successfully fetched stats for ${username}`);
+    // Cache the result (upsert)
+    await supabase
+      .from('github_stats_cache')
+      .upsert({
+        username: username.toLowerCase(),
+        stats_data: result,
+        expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour
+      }, { onConflict: 'username' });
+
+    console.log(`Successfully fetched and cached stats for ${username}`);
     
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

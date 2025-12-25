@@ -27,6 +27,9 @@ const mockData = {
     current: 15,
     longest: 87,
     total: 2451,
+    startDate: "2023-01-01",
+    longestStreakStart: "2023-05-07",
+    longestStreakEnd: "2023-07-13",
   },
 };
 
@@ -40,7 +43,6 @@ const defaultQuotes = [
 export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
   const displayQuote = quote || defaultQuotes[Math.floor(Math.random() * defaultQuotes.length)];
 
-  // Use real data if available, otherwise use mock data
   const stats = githubData?.stats || mockData.stats;
   const languages = githubData?.languages || mockData.languages;
   const streak = githubData?.streak || mockData.streak;
@@ -54,6 +56,12 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
     width: "100%",
     maxWidth: `${config.width}px`,
     minHeight: `${config.height}px`,
+  };
+
+  const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return 'Present';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   const renderContent = () => {
@@ -143,38 +151,83 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
         );
 
       case "streak":
+        const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const maxStreak = 100;
+        const progress = Math.min(streak.current / maxStreak, 1);
+        
         return (
-          <div className="p-6 text-center">
-            <h3 className="font-bold text-lg mb-6" style={{ color: config.primaryColor }}>
-              🔥 Contribution Streak
-            </h3>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <div 
-                  className="text-3xl font-bold mb-1"
-                  style={{ color: config.secondaryColor }}
-                >
-                  {streak.current}
-                </div>
-                <div className="text-xs opacity-70">Current Streak</div>
-              </div>
-              <div>
-                <div 
-                  className="text-3xl font-bold mb-1"
-                  style={{ color: config.primaryColor }}
-                >
-                  {streak.longest}
-                </div>
-                <div className="text-xs opacity-70">Longest Streak</div>
-              </div>
-              <div>
+          <div className="p-6">
+            <div className="grid grid-cols-3 gap-4 items-center h-full">
+              {/* Left: Total Contributions */}
+              <div className="text-center">
                 <div 
                   className="text-3xl font-bold mb-1"
                   style={{ color: config.secondaryColor }}
                 >
                   {streak.total.toLocaleString()}
                 </div>
-                <div className="text-xs opacity-70">Total Commits</div>
+                <div className="text-xs opacity-70 mb-1">Total Contributions</div>
+                <div className="text-[10px] opacity-50">
+                  {formatDate(streak.startDate)} - Present
+                </div>
+              </div>
+              
+              {/* Center: Current Streak with Ring */}
+              <div className="text-center relative">
+                <div className="relative inline-block">
+                  {/* Ring SVG */}
+                  <svg width="100" height="100" viewBox="0 0 100 100" className="transform -rotate-90">
+                    {/* Background ring */}
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="none"
+                      stroke={config.primaryColor}
+                      strokeWidth="6"
+                      opacity="0.2"
+                    />
+                    {/* Progress ring */}
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="none"
+                      stroke={config.primaryColor}
+                      strokeWidth="6"
+                      strokeLinecap="round"
+                      strokeDasharray={2 * Math.PI * 40}
+                      strokeDashoffset={2 * Math.PI * 40 * (1 - progress)}
+                      className="transition-all duration-1000"
+                    />
+                  </svg>
+                  {/* Content inside ring */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-lg" style={{ color: config.primaryColor }}>🔥</span>
+                    <span 
+                      className="text-2xl font-bold"
+                      style={{ color: config.primaryColor }}
+                    >
+                      {streak.current}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-xs opacity-70 mt-2">Current Streak</div>
+                <div className="text-[10px] opacity-50">{today}</div>
+              </div>
+              
+              {/* Right: Longest Streak */}
+              <div className="text-center">
+                <div 
+                  className="text-3xl font-bold mb-1"
+                  style={{ color: config.secondaryColor }}
+                >
+                  {streak.longest}
+                </div>
+                <div className="text-xs opacity-70 mb-1">Longest Streak</div>
+                <div className="text-[10px] opacity-50">
+                  {formatDate(streak.longestStreakStart)} - {formatDate(streak.longestStreakEnd)}
+                </div>
               </div>
             </div>
           </div>
