@@ -1,9 +1,42 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-setpp-key',
 };
+
+// Simple in-memory rate limiting
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_MAX = 10; // Max requests per window
+const RATE_LIMIT_WINDOW = 60000; // 1 minute in ms
+
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetIn: number } {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  
+  if (!entry || now > entry.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return { allowed: true, remaining: RATE_LIMIT_MAX - 1, resetIn: RATE_LIMIT_WINDOW };
+  }
+  
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return { allowed: false, remaining: 0, resetIn: entry.resetTime - now };
+  }
+  
+  entry.count++;
+  return { allowed: true, remaining: RATE_LIMIT_MAX - entry.count, resetIn: entry.resetTime - now };
+}
+
+// Clean up old entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of rateLimitMap.entries()) {
+    if (now > entry.resetTime) {
+      rateLimitMap.delete(ip);
+    }
+  }
+}, 60000);
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -12,6 +45,34 @@ serve(async (req) => {
   }
 
   try {
+    // Get client IP for rate limiting
+    const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0] || 
+                     req.headers.get('cf-connecting-ip') || 
+                     'unknown';
+    
+    // Check rate limit
+    const rateLimit = checkRateLimit(clientIP);
+    const rateLimitHeaders = {
+      'X-RateLimit-Limit': RATE_LIMIT_MAX.toString(),
+      'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+      'X-RateLimit-Reset': Math.ceil(rateLimit.resetIn / 1000).toString(),
+    };
+    
+    if (!rateLimit.allowed) {
+      console.log(`Rate limit exceeded for IP: ${clientIP}`);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Too Many Requests',
+          message: `Rate limit exceeded. Try again in ${Math.ceil(rateLimit.resetIn / 1000)} seconds`,
+          retry_after: Math.ceil(rateLimit.resetIn / 1000)
+        }),
+        { 
+          status: 429, 
+          headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     // Check if setpp mode is enabled
     const setppEnabled = Deno.env.get('SETPP') === 'true';
     
@@ -24,7 +85,7 @@ serve(async (req) => {
         }),
         { 
           status: 403, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
@@ -42,7 +103,7 @@ serve(async (req) => {
         }),
         { 
           status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
@@ -56,37 +117,13 @@ serve(async (req) => {
         setpp_enabled: true,
         supabase_url: Deno.env.get('CUSTOM_SUPABASE_URL') ? 'configured' : 'default',
         supabase_key: Deno.env.get('CUSTOM_SUPABASE_ANON_KEY') ? 'configured' : 'default',
+        supabase_service_role: Deno.env.get('CUSTOM_SUPABASE_SERVICE_ROLE_KEY') ? 'configured' : 'not set',
         github_token: Deno.env.get('GITHUB_TOKEN') ? 'configured' : 'not set',
         cache_ttl: Deno.env.get('CACHE_TTL_MINUTES') || '60',
-        environment: {
-          required: [
-            'SETPP=true',
-            'SETPP_KEY=your_secure_key'
-          ],
-          optional: [
-            'CUSTOM_SUPABASE_URL=your_supabase_url',
-            'CUSTOM_SUPABASE_ANON_KEY=your_anon_key',
-            'GITHUB_TOKEN=your_github_pat',
-            'CACHE_TTL_MINUTES=60'
-          ],
-          combined_env_template: `# Required for setup endpoint
-SETPP=true
-SETPP_KEY=your_secure_random_key_here
-
-# Supabase Configuration (use your own or keep defaults)
-CUSTOM_SUPABASE_URL=https://your-project.supabase.co
-CUSTOM_SUPABASE_ANON_KEY=your_anon_key_here
-
-# Optional: GitHub Personal Access Token for higher rate limits
-GITHUB_TOKEN=ghp_your_token_here
-
-# Optional: Cache TTL in minutes (default: 60)
-CACHE_TTL_MINUTES=60
-
-# For Vite frontend (if self-hosting)
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=your_anon_key_here
-VITE_SUPABASE_PROJECT_ID=your_project_id`
+        rate_limit: {
+          max_requests: RATE_LIMIT_MAX,
+          window_seconds: RATE_LIMIT_WINDOW / 1000,
+          remaining: rateLimit.remaining
         }
       };
 
@@ -95,20 +132,20 @@ VITE_SUPABASE_PROJECT_ID=your_project_id`
         JSON.stringify(config, null, 2),
         { 
           status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
-    // POST request - validate configuration
+    // POST request - handle actions
     if (req.method === 'POST') {
-      const body = await req.json();
+      const body = await req.json().catch(() => ({}));
       
       if (action === 'validate') {
-        // Validate provided configuration
         const validation = {
           supabase_url: body.supabase_url ? 'valid' : 'missing',
           supabase_key: body.supabase_key ? 'valid' : 'missing',
+          supabase_service_role: body.supabase_service_role ? 'valid' : 'optional - not provided',
           github_token: body.github_token ? 'valid' : 'optional - not provided'
         };
 
@@ -124,18 +161,32 @@ VITE_SUPABASE_PROJECT_ID=your_project_id`
           }
         }
 
+        // Test Supabase connection if provided
+        if (body.supabase_url && body.supabase_key) {
+          try {
+            const testResponse = await fetch(`${body.supabase_url}/rest/v1/`, {
+              headers: {
+                'apikey': body.supabase_key,
+                'Authorization': `Bearer ${body.supabase_key}`
+              }
+            });
+            validation.supabase_url = testResponse.ok ? 'valid - connected' : `error: ${testResponse.status}`;
+          } catch {
+            validation.supabase_url = 'invalid - connection failed';
+          }
+        }
+
         console.log('Configuration validation:', validation);
         return new Response(
           JSON.stringify({ validation }),
           { 
             status: 200, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
           }
         );
       }
 
       if (action === 'test') {
-        // Test current configuration by making a sample request
         const testResults = {
           timestamp: new Date().toISOString(),
           github_api: 'unknown',
@@ -175,16 +226,108 @@ VITE_SUPABASE_PROJECT_ID=your_project_id`
           JSON.stringify(testResults),
           { 
             status: 200, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      if (action === 'setup-db') {
+        // Initialize database tables using service role key
+        const supabaseUrl = body.supabase_url || Deno.env.get('CUSTOM_SUPABASE_URL') || Deno.env.get('SUPABASE_URL');
+        const serviceRoleKey = body.supabase_service_role || Deno.env.get('CUSTOM_SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+        
+        if (!supabaseUrl || !serviceRoleKey) {
+          return new Response(
+            JSON.stringify({ 
+              error: 'Missing credentials',
+              message: 'supabase_url and supabase_service_role are required for database setup'
+            }),
+            { 
+              status: 400, 
+              headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+
+        const supabase = createClient(supabaseUrl, serviceRoleKey);
+        const results: { step: string; status: string; error?: string }[] = [];
+
+        // Create github_stats_cache table
+        try {
+          const { error } = await supabase.rpc('exec_sql', {
+            sql: `
+              CREATE TABLE IF NOT EXISTS public.github_stats_cache (
+                id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+                username TEXT NOT NULL UNIQUE,
+                stats_data JSONB NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+                expires_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (now() + interval '1 hour')
+              );
+            `
+          });
+          
+          if (error) {
+            // Try direct creation via REST API
+            const directResult = await fetch(`${supabaseUrl}/rest/v1/rpc/exec_sql`, {
+              method: 'POST',
+              headers: {
+                'apikey': serviceRoleKey,
+                'Authorization': `Bearer ${serviceRoleKey}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ sql: 'SELECT 1' })
+            });
+            
+            results.push({ 
+              step: 'github_stats_cache table', 
+              status: 'manual_required',
+              error: 'RPC not available. Please run SQL manually in Supabase dashboard.'
+            });
+          } else {
+            results.push({ step: 'github_stats_cache table', status: 'created' });
+          }
+        } catch (e: unknown) {
+          results.push({ 
+            step: 'github_stats_cache table', 
+            status: 'manual_required',
+            error: 'Database direct access not available. Please run SQL manually.'
+          });
+        }
+
+        // Check if tables exist
+        try {
+          const { data: cacheCheck } = await supabase.from('github_stats_cache').select('id').limit(1);
+          results.push({ step: 'github_stats_cache verification', status: cacheCheck !== null ? 'exists' : 'not_found' });
+        } catch {
+          results.push({ step: 'github_stats_cache verification', status: 'not_found' });
+        }
+
+        try {
+          const { data: quotesCheck } = await supabase.from('quotes_cache').select('id').limit(1);
+          results.push({ step: 'quotes_cache verification', status: quotesCheck !== null ? 'exists' : 'not_found' });
+        } catch {
+          results.push({ step: 'quotes_cache verification', status: 'not_found' });
+        }
+
+        console.log('Database setup results:', results);
+        return new Response(
+          JSON.stringify({ 
+            message: 'Database setup attempted',
+            results,
+            note: 'If tables show as manual_required, please run the SQL from the setup page in your Supabase SQL Editor'
+          }),
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
           }
         );
       }
 
       return new Response(
-        JSON.stringify({ error: 'Unknown action', available: ['validate', 'test'] }),
+        JSON.stringify({ error: 'Unknown action', available: ['validate', 'test', 'setup-db'] }),
         { 
           status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
@@ -193,7 +336,7 @@ VITE_SUPABASE_PROJECT_ID=your_project_id`
       JSON.stringify({ error: 'Method not allowed' }),
       { 
         status: 405, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
       }
     );
 
