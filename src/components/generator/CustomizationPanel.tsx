@@ -5,6 +5,16 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const animations = [
+  { value: "fadeIn", label: "Fade In", icon: "✨" },
+  { value: "scaleIn", label: "Scale In", icon: "🎯" },
+  { value: "wave", label: "Wave", icon: "🌊" },
+  { value: "glow", label: "Glow", icon: "💫" },
+  { value: "blink", label: "Blink", icon: "👁️" },
+  { value: "none", label: "None", icon: "⏸️" },
+];
 
 interface CustomizationPanelProps {
   config: CardConfig;
@@ -167,6 +177,28 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
                 checked={config.showBorder}
                 onCheckedChange={(v) => updateConfig({ showBorder: v })}
               />
+            </div>
+
+            <div>
+              <Label className="text-sm mb-2 block">Animation</Label>
+              <Select
+                value={config.animation}
+                onValueChange={(v) => updateConfig({ animation: v })}
+              >
+                <SelectTrigger className="bg-background/30 border-border/30">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {animations.map((anim) => (
+                    <SelectItem key={anim.value} value={anim.value}>
+                      {anim.icon} {anim.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                SVG animations like capsule-render
+              </p>
             </div>
           </TabsContent>
 

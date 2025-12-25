@@ -33,6 +33,7 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
       showBorder: config.showBorder.toString(),
       width: config.width.toString(),
       height: config.height.toString(),
+      animation: config.animation || "fadeIn",
     });
 
     if (config.customText) {

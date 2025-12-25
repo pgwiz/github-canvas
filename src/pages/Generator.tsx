@@ -30,6 +30,7 @@ export interface CardConfig {
   customText: string;
   width: number;
   height: number;
+  animation: string;
 }
 
 const defaultConfig: CardConfig = {
@@ -46,6 +47,7 @@ const defaultConfig: CardConfig = {
   customText: "",
   width: 495,
   height: 195,
+  animation: "fadeIn",
 };
 
 export default function Generator() {

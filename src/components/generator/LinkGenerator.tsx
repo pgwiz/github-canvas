@@ -25,7 +25,7 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
   
   const apiPath = isVercel ? '/api/card' : '/functions/v1/generate-card';
   
-  const imageUrl = `${baseUrl}${apiPath}?type=${config.type}&username=${config.username}&theme=${config.theme}&bg=${encodeURIComponent(config.bgColor)}&primary=${encodeURIComponent(config.primaryColor)}&secondary=${encodeURIComponent(config.secondaryColor)}&text=${encodeURIComponent(config.textColor)}&border=${encodeURIComponent(config.borderColor)}&radius=${config.borderRadius}&showBorder=${config.showBorder}&width=${config.width}&height=${config.height}${config.customText ? `&customText=${encodeURIComponent(config.customText)}` : ''}`;
+  const imageUrl = `${baseUrl}${apiPath}?type=${config.type}&username=${config.username}&theme=${config.theme}&bg=${encodeURIComponent(config.bgColor)}&primary=${encodeURIComponent(config.primaryColor)}&secondary=${encodeURIComponent(config.secondaryColor)}&text=${encodeURIComponent(config.textColor)}&border=${encodeURIComponent(config.borderColor)}&radius=${config.borderRadius}&showBorder=${config.showBorder}&width=${config.width}&height=${config.height}&animation=${config.animation || 'fadeIn'}${config.customText ? `&customText=${encodeURIComponent(config.customText)}` : ''}`;
   
   const markdownCode = `![${config.username || "GitHub"} Stats](${imageUrl})`;
   

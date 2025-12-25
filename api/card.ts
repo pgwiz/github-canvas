@@ -89,27 +89,68 @@ function getLanguageColor(lang: string): string {
   return colors[lang] || '#8b949e';
 }
 
+// Animation styles generator
+function getAnimationStyles(animation: string, primaryColor: string): string {
+  const animations: Record<string, string> = {
+    fadeIn: `
+      @keyframes fadeIn { 0% { opacity: 0; transform: translateY(-10px); } 100% { opacity: 1; transform: translateY(0); } }
+      .animate { animation: fadeIn 0.8s ease-out forwards; opacity: 0; }
+      .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; }
+    `,
+    typing: `
+      @keyframes typing { from { width: 0; } to { width: 100%; } }
+      @keyframes blink { 50% { border-color: transparent; } }
+      .animate { overflow: hidden; white-space: nowrap; animation: typing 2s steps(30) forwards; }
+    `,
+    wave: `
+      @keyframes wave { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+      .animate { animation: wave 1.5s ease-in-out infinite; }
+      .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; }
+    `,
+    blink: `
+      @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+      .animate { animation: blink 1.5s ease-in-out infinite; }
+    `,
+    scaleIn: `
+      @keyframes scaleIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+      .animate { animation: scaleIn 0.5s ease-out forwards; transform-origin: center; opacity: 0; }
+      .delay-1 { animation-delay: 0.15s; } .delay-2 { animation-delay: 0.3s; } .delay-3 { animation-delay: 0.45s; } .delay-4 { animation-delay: 0.6s; }
+    `,
+    glow: `
+      @keyframes glow { 0%, 100% { filter: drop-shadow(0 0 3px ${primaryColor}40); } 50% { filter: drop-shadow(0 0 12px ${primaryColor}80); } }
+      .animate { animation: glow 2s ease-in-out infinite; }
+    `,
+  };
+  return animations[animation] || animations.fadeIn;
+}
+
 function generateStatsSVG(p: any): string {
-  const { stats } = p;
+  const { stats, animation = 'fadeIn' } = p;
+  const animStyles = getAnimationStyles(animation, p.primaryColor);
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
-  <style>.title{font:600 16px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor}}.stat-value{font:700 18px 'Segoe UI',Ubuntu,sans-serif}.stat-label{font:400 11px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor};opacity:0.8}</style>
+  <style>
+    .title{font:600 16px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor}}
+    .stat-value{font:700 18px 'Segoe UI',Ubuntu,sans-serif}
+    .stat-label{font:400 11px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor};opacity:0.8}
+    ${animStyles}
+  </style>
   <rect width="100%" height="100%" fill="${p.bgColor}" rx="${p.borderRadius}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="1"` : ''}/>
-  <g transform="translate(25, 25)">
+  <g transform="translate(25, 25)" class="animate">
     <text class="title">${p.username}'s GitHub Stats</text>
-    <g transform="translate(0, 45)">
+    <g transform="translate(0, 45)" class="animate delay-1">
       <text class="stat-value" fill="${p.primaryColor}">⭐ ${formatNumber(stats.totalStars)}</text>
       <text class="stat-label" y="22">Total Stars</text>
     </g>
-    <g transform="translate(115, 45)">
+    <g transform="translate(115, 45)" class="animate delay-2">
       <text class="stat-value" fill="${p.secondaryColor}">📦 ${stats.publicRepos}</text>
       <text class="stat-label" y="22">Repositories</text>
     </g>
-    <g transform="translate(230, 45)">
+    <g transform="translate(230, 45)" class="animate delay-3">
       <text class="stat-value" fill="${p.primaryColor}">👥 ${formatNumber(stats.followers)}</text>
       <text class="stat-label" y="22">Followers</text>
     </g>
-    <g transform="translate(345, 45)">
+    <g transform="translate(345, 45)" class="animate delay-4">
       <text class="stat-value" fill="${p.secondaryColor}">🔀 ${formatNumber(stats.totalForks)}</text>
       <text class="stat-label" y="22">Total Forks</text>
     </g>
@@ -118,28 +159,33 @@ function generateStatsSVG(p: any): string {
 }
 
 function generateLanguagesSVG(p: any): string {
-  const { languages } = p;
+  const { languages, animation = 'fadeIn' } = p;
+  const animStyles = getAnimationStyles(animation, p.primaryColor);
   const barWidth = p.width - 50;
   let offset = 0;
-  const bars = languages.map((lang: any) => {
+  const bars = languages.map((lang: any, i: number) => {
     const width = (lang.percentage / 100) * barWidth;
-    const bar = `<rect x="${offset}" y="0" width="${width}" height="8" fill="${lang.color}" rx="2"/>`;
+    const bar = `<rect x="${offset}" y="0" width="${width}" height="8" fill="${lang.color}" rx="2" class="animate delay-${i + 1}"/>`;
     offset += width;
     return bar;
   }).join('');
 
   const labels = languages.map((lang: any, i: number) => `
-    <g transform="translate(${(i % 3) * 140}, ${Math.floor(i / 3) * 20})">
+    <g transform="translate(${(i % 3) * 140}, ${Math.floor(i / 3) * 20})" class="animate delay-${i + 1}">
       <circle r="5" cx="5" cy="5" fill="${lang.color}"/>
       <text x="15" y="9" class="lang-label">${lang.name} ${lang.percentage}%</text>
     </g>`).join('');
 
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
-  <style>.title{font:600 16px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor}}.lang-label{font:400 11px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor}}</style>
+  <style>
+    .title{font:600 16px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor}}
+    .lang-label{font:400 11px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor}}
+    ${animStyles}
+  </style>
   <rect width="100%" height="100%" fill="${p.bgColor}" rx="${p.borderRadius}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="1"` : ''}/>
   <g transform="translate(25, 25)">
-    <text class="title">Most Used Languages</text>
+    <text class="title animate">Most Used Languages</text>
     <g transform="translate(0, 35)">${bars}</g>
     <g transform="translate(0, 55)">${labels}</g>
   </g>
@@ -147,18 +193,25 @@ function generateLanguagesSVG(p: any): string {
 }
 
 function generateStreakSVG(p: any): string {
+  const { animation = 'fadeIn' } = p;
+  const animStyles = getAnimationStyles(animation, p.primaryColor);
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
-  <style>.title{font:600 14px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor}}.streak-num{font:700 28px 'Segoe UI',Ubuntu,sans-serif}.streak-label{font:400 10px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor};opacity:0.7}</style>
+  <style>
+    .title{font:600 14px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor}}
+    .streak-num{font:700 28px 'Segoe UI',Ubuntu,sans-serif}
+    .streak-label{font:400 10px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor};opacity:0.7}
+    ${animStyles}
+  </style>
   <rect width="100%" height="100%" fill="${p.bgColor}" rx="${p.borderRadius}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="1"` : ''}/>
-  <g transform="translate(${p.width / 2}, 20)" text-anchor="middle">
+  <g transform="translate(${p.width / 2}, 20)" text-anchor="middle" class="animate">
     <text class="title">🔥 Contribution Streak</text>
   </g>
-  <g transform="translate(${p.width / 4}, 55)" text-anchor="middle">
+  <g transform="translate(${p.width / 4}, 55)" text-anchor="middle" class="animate delay-1">
     <text class="streak-num" fill="${p.primaryColor}">${p.streak?.current || 0}</text>
     <text class="streak-label" y="20">Current</text>
   </g>
-  <g transform="translate(${(p.width / 4) * 3}, 55)" text-anchor="middle">
+  <g transform="translate(${(p.width / 4) * 3}, 55)" text-anchor="middle" class="animate delay-2">
     <text class="streak-num" fill="${p.secondaryColor}">${p.streak?.longest || 0}</text>
     <text class="streak-label" y="20">Longest</text>
   </g>
@@ -166,6 +219,8 @@ function generateStreakSVG(p: any): string {
 }
 
 function generateQuoteSVG(p: any): string {
+  const { animation = 'fadeIn' } = p;
+  const animStyles = getAnimationStyles(animation, p.primaryColor);
   const quotes = [
     { text: "First, solve the problem. Then, write the code.", author: "John Johnson" },
     { text: "Code is like humor. When you have to explain it, it's bad.", author: "Cory House" },
@@ -177,15 +232,21 @@ function generateQuoteSVG(p: any): string {
   
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
-  <style>.quote{font:italic 14px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor}}.author{font:600 12px 'Segoe UI',Ubuntu,sans-serif;fill:${p.primaryColor}}</style>
+  <style>
+    .quote{font:italic 14px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor}}
+    .author{font:600 12px 'Segoe UI',Ubuntu,sans-serif;fill:${p.primaryColor}}
+    ${animStyles}
+  </style>
   <rect width="100%" height="100%" fill="${p.bgColor}" rx="${p.borderRadius}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="1"` : ''}/>
-  <text x="25" y="35" class="quote" fill="${p.secondaryColor}" font-size="24">"</text>
-  <text x="45" y="50" class="quote">${quote.text}</text>
-  <text x="${p.width - 25}" y="${p.height - 25}" class="author" text-anchor="end">— ${quote.author}</text>
+  <text x="25" y="35" class="quote animate" fill="${p.secondaryColor}" font-size="24">"</text>
+  <text x="45" y="50" class="quote animate delay-1">${quote.text}</text>
+  <text x="${p.width - 25}" y="${p.height - 25}" class="author animate delay-2" text-anchor="end">— ${quote.author}</text>
 </svg>`;
 }
 
 function generateActivitySVG(p: any): string {
+  const { animation = 'fadeIn' } = p;
+  const animStyles = getAnimationStyles(animation, p.primaryColor);
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const activity = p.activity || Array(7).fill(0).map(() => Math.floor(Math.random() * 10));
   const maxVal = Math.max(...activity, 1);
@@ -195,25 +256,34 @@ function generateActivitySVG(p: any): string {
     const height = (val / maxVal) * barHeight;
     const x = 30 + i * 35;
     return `
-      <rect x="${x}" y="${80 - height}" width="25" height="${height}" fill="${p.primaryColor}" rx="3" opacity="0.8"/>
+      <rect x="${x}" y="${80 - height}" width="25" height="${height}" fill="${p.primaryColor}" rx="3" opacity="0.8" class="animate delay-${Math.min(i + 1, 4)}"/>
       <text x="${x + 12}" y="95" text-anchor="middle" class="day-label">${days[i]}</text>`;
   }).join('');
 
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
-  <style>.title{font:600 14px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor}}.day-label{font:400 9px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor};opacity:0.7}</style>
+  <style>
+    .title{font:600 14px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor}}
+    .day-label{font:400 9px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor};opacity:0.7}
+    ${animStyles}
+  </style>
   <rect width="100%" height="100%" fill="${p.bgColor}" rx="${p.borderRadius}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="1"` : ''}/>
-  <text x="25" y="20" class="title">📊 Weekly Activity</text>
+  <text x="25" y="20" class="title animate">📊 Weekly Activity</text>
   ${bars}
 </svg>`;
 }
 
 function generateCustomSVG(p: any): string {
+  const { animation = 'fadeIn' } = p;
+  const animStyles = getAnimationStyles(animation, p.primaryColor);
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
-  <style>.custom-text{font:600 16px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor}}</style>
+  <style>
+    .custom-text{font:600 16px 'Segoe UI',Ubuntu,sans-serif;fill:${p.textColor}}
+    ${animStyles}
+  </style>
   <rect width="100%" height="100%" fill="${p.bgColor}" rx="${p.borderRadius}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="1"` : ''}/>
-  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" class="custom-text">${p.customText || 'Custom Card'}</text>
+  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" class="custom-text animate">${p.customText || 'Custom Card'}</text>
 </svg>`;
 }
 
@@ -240,6 +310,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     width: parseInt(req.query.width as string) || 495,
     height: parseInt(req.query.height as string) || 125,
     customText: req.query.customText as string,
+    animation: (req.query.animation as string) || 'fadeIn',
     stats: null as any,
     languages: [] as any[],
     streak: null as any,

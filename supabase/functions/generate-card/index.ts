@@ -20,6 +20,7 @@ interface CardParams {
   height?: number;
   customText?: string;
   animate?: boolean;
+  animation?: string;
   stats?: {
     totalStars: number;
     publicRepos: number;
@@ -64,6 +65,7 @@ serve(async (req) => {
         height: parseInt(url.searchParams.get('height') || '195'),
         customText: url.searchParams.get('customText') || '',
         animate: url.searchParams.get('animate') !== 'false',
+        animation: url.searchParams.get('animation') || 'fadeIn',
       };
       
       if (params.username && params.type !== 'quote' && params.type !== 'custom') {
@@ -148,6 +150,7 @@ function generateSVG(params: CardParams): string {
     height = 195,
     customText = '',
     animate = true,
+    animation = 'fadeIn',
     stats,
     languages,
     streak,
@@ -159,31 +162,41 @@ function generateSVG(params: CardParams): string {
     ? `stroke="${borderColor}" stroke-width="2"` 
     : '';
 
-  const animations = animate ? `
-    @keyframes svgFadeIn {
-      from { opacity: 0.3; }
-      to { opacity: 1; }
-    }
-    @keyframes svgPulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.8; }
-    }
-    @keyframes svgGrow {
-      from { width: 0; }
-    }
-    @keyframes svgDash {
-      to { stroke-dashoffset: 0; }
-    }
-    .animate-fade { animation: svgFadeIn 0.6s ease-out forwards; }
-    .animate-scale { animation: svgFadeIn 0.5s ease-out forwards; }
-    .animate-pulse { animation: svgPulse 2s ease-in-out infinite; }
-    .animate-grow { animation: svgGrow 1s ease-out forwards; }
-    .stagger-1 { animation-delay: 0.1s; }
-    .stagger-2 { animation-delay: 0.2s; }
-    .stagger-3 { animation-delay: 0.3s; }
-    .stagger-4 { animation-delay: 0.4s; }
-    .stagger-5 { animation-delay: 0.5s; }
-  ` : '';
+  // Animation styles based on animation type
+  const getAnimationStyles = (animType: string) => {
+    const animations: Record<string, string> = {
+      fadeIn: `
+        @keyframes fadeIn { 0% { opacity: 0; transform: translateY(-10px); } 100% { opacity: 1; transform: translateY(0); } }
+        .anim { animation: fadeIn 0.8s ease-out forwards; opacity: 0; }
+        .d1 { animation-delay: 0.1s; } .d2 { animation-delay: 0.2s; } .d3 { animation-delay: 0.3s; } .d4 { animation-delay: 0.4s; } .d5 { animation-delay: 0.5s; }
+      `,
+      wave: `
+        @keyframes wave { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .anim { animation: wave 1.5s ease-in-out infinite; }
+        .d1 { animation-delay: 0.1s; } .d2 { animation-delay: 0.2s; } .d3 { animation-delay: 0.3s; } .d4 { animation-delay: 0.4s; } .d5 { animation-delay: 0.5s; }
+      `,
+      scaleIn: `
+        @keyframes scaleIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .anim { animation: scaleIn 0.5s ease-out forwards; transform-origin: center; opacity: 0; }
+        .d1 { animation-delay: 0.15s; } .d2 { animation-delay: 0.3s; } .d3 { animation-delay: 0.45s; } .d4 { animation-delay: 0.6s; } .d5 { animation-delay: 0.75s; }
+      `,
+      glow: `
+        @keyframes glow { 0%, 100% { filter: drop-shadow(0 0 3px ${primaryColor}40); } 50% { filter: drop-shadow(0 0 12px ${primaryColor}80); } }
+        .anim { animation: glow 2s ease-in-out infinite; }
+      `,
+      blink: `
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .anim { animation: blink 1.5s ease-in-out infinite; }
+      `,
+      typing: `
+        @keyframes typing { from { width: 0; } to { width: 100%; } }
+        .anim { overflow: hidden; white-space: nowrap; animation: typing 2s steps(30) forwards; }
+      `,
+    };
+    return animations[animType] || animations.fadeIn;
+  };
+
+  const animStyles = animate ? getAnimationStyles(animation) : '';
 
   const commonStyles = `
     <style>
@@ -195,7 +208,7 @@ function generateSVG(params: CardParams): string {
       .small { font: 400 10px 'Inter', sans-serif; fill: ${textColor}; opacity: 0.5; }
       .quote { font: italic 400 16px 'Inter', sans-serif; fill: ${textColor}; }
       .author { font: 400 13px 'Inter', sans-serif; fill: ${secondaryColor}; }
-      ${animations}
+      ${animStyles}
     </style>
   `;
 
