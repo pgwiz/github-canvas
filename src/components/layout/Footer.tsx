@@ -10,12 +10,12 @@ export function Footer() {
             <Heart className="w-4 h-4 text-destructive fill-destructive" />
             <span>by</span>
             <a 
-              href="https://github.com" 
+              href="https://github.com/pgwiz" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-primary hover:underline"
             >
-              GitStats Team
+              pgwiz
             </a>
           </div>
           
@@ -27,7 +27,7 @@ export function Footer() {
               Documentation
             </a>
             <a 
-              href="https://github.com" 
+              href="https://github.com/pgwiz" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground transition-colors"
