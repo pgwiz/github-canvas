@@ -92,7 +92,7 @@ export function GlassPanel({
   );
 }
 
-// Inner frosted glass sub-panel component
+// Inner frosted glass sub-panel component - truly transparent
 export function GlassInnerPanel({ 
   children, 
   className,
@@ -102,25 +102,32 @@ export function GlassInnerPanel({
   className?: string;
   accent?: "green" | "teal" | "purple" | "none";
 }) {
-  const accentColors = {
-    green: "rgba(12, 247, 9, 0.08)",
-    teal: "rgba(0, 225, 255, 0.08)",
-    purple: "rgba(139, 92, 246, 0.08)",
-    none: "rgba(255, 255, 255, 0.03)"
+  const accentBorders = {
+    green: "rgba(12, 247, 9, 0.2)",
+    teal: "rgba(0, 225, 255, 0.2)",
+    purple: "rgba(139, 92, 246, 0.2)",
+    none: "rgba(255, 255, 255, 0.08)"
   };
 
   return (
     <div
       className={cn(
-        "relative rounded-xl overflow-hidden backdrop-blur-sm",
+        "relative rounded-xl overflow-hidden",
         className
       )}
       style={{
-        background: `linear-gradient(135deg, ${accentColors[accent]} 0%, rgba(255, 255, 255, 0.02) 100%)`,
-        border: `1px solid rgba(255, 255, 255, 0.06)`,
-        boxShadow: `inset 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -1px 0 rgba(255, 255, 255, 0.05)`
+        background: `transparent`,
+        border: `1px solid ${accentBorders[accent]}`,
+        boxShadow: `inset 0 1px 0 rgba(255, 255, 255, 0.05)`
       }}
     >
+      {/* Top edge highlight */}
+      <div 
+        className="absolute top-0 left-2 right-2 h-px"
+        style={{
+          background: `linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent)`
+        }}
+      />
       {children}
     </div>
   );
