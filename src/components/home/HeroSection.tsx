@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
-import { GlassPanel } from "@/components/ui/GlassPanel";
+import { GlassPanel, GlassInnerPanel } from "@/components/ui/GlassPanel";
 
 export function HeroSection() {
   return (
@@ -61,13 +61,13 @@ export function HeroSection() {
                   <span className="text-2xl">📊</span>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground">User Stats</h3>
-                  <p className="text-sm text-muted-foreground">Stars, commits, repos</p>
+                  <h3 className="font-semibold text-white">User Stats</h3>
+                  <p className="text-sm text-white/60">Stars, commits, repos</p>
                 </div>
               </div>
-              <div className="h-24 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center border border-primary/20 backdrop-blur-sm">
-                <span className="text-muted-foreground font-mono text-sm">Preview Card</span>
-              </div>
+              <GlassInnerPanel accent="green" className="h-24 flex items-center justify-center">
+                <span className="text-white/40 font-mono text-sm">Preview Card</span>
+              </GlassInnerPanel>
             </GlassPanel>
             
             {/* Streak Tracker Card - Teal accent (active/highlighted) */}
@@ -77,13 +77,13 @@ export function HeroSection() {
                   <span className="text-2xl">🔥</span>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground">Streak Tracker</h3>
-                  <p className="text-sm text-muted-foreground">Current & longest streak</p>
+                  <h3 className="font-semibold text-white">Streak Tracker</h3>
+                  <p className="text-sm text-white/60">Current & longest streak</p>
                 </div>
               </div>
-              <div className="h-24 rounded-lg bg-gradient-to-br from-secondary/15 to-secondary/5 flex items-center justify-center border border-secondary/20 backdrop-blur-sm">
-                <span className="text-muted-foreground font-mono text-sm">Preview Card</span>
-              </div>
+              <GlassInnerPanel accent="teal" className="h-24 flex items-center justify-center">
+                <span className="text-white/40 font-mono text-sm">Preview Card</span>
+              </GlassInnerPanel>
             </GlassPanel>
             
             {/* Languages Card - Purple accent */}
@@ -93,13 +93,13 @@ export function HeroSection() {
                   <span className="text-2xl">💻</span>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground">Languages</h3>
-                  <p className="text-sm text-muted-foreground">Top programming languages</p>
+                  <h3 className="font-semibold text-white">Languages</h3>
+                  <p className="text-sm text-white/60">Top programming languages</p>
                 </div>
               </div>
-              <div className="h-24 rounded-lg bg-gradient-to-br from-chart-3/15 to-chart-3/5 flex items-center justify-center border border-chart-3/20 backdrop-blur-sm">
-                <span className="text-muted-foreground font-mono text-sm">Preview Card</span>
-              </div>
+              <GlassInnerPanel accent="purple" className="h-24 flex items-center justify-center">
+                <span className="text-white/40 font-mono text-sm">Preview Card</span>
+              </GlassInnerPanel>
             </GlassPanel>
           </div>
         </div>
