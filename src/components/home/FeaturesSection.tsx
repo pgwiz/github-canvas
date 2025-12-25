@@ -82,13 +82,20 @@ export function FeaturesSection() {
             const Icon = feature.icon;
             return (
               <GlassPanel key={index} hover accent={feature.accent} className="group">
-                <div className={`w-14 h-14 rounded-xl ${feature.iconBg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform backdrop-blur-sm`}>
+                <div 
+                  className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                  }}
+                >
                   <Icon className={`w-7 h-7 ${feature.iconColor}`} />
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-foreground">
+                <h3 className="text-xl font-semibold mb-2 text-white">
                   {feature.title}
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-white/60">
                   {feature.description}
                 </p>
               </GlassPanel>
