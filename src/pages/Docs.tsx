@@ -11,13 +11,18 @@ const endpoints = [
     id: "stats",
     name: "User Statistics",
     method: "GET",
-    path: "/api/card/stats",
+    path: "/api/card?type=stats",
     description: "Generate a stats card showing user's GitHub statistics",
     params: [
       { name: "username", type: "string", required: true, description: "GitHub username" },
       { name: "theme", type: "string", required: false, description: "Theme name (neon, tokyo-night, dracula, etc.)" },
       { name: "animation", type: "string", required: false, description: "Animation type (fadeIn, scaleIn, wave, glow, blink, typing, slideInLeft, slideInRight, slideInUp, bounce)" },
       { name: "speed", type: "string", required: false, description: "Animation speed (slow, normal, fast)" },
+      { name: "gradient", type: "boolean", required: false, description: "Enable gradient background" },
+      { name: "gradientType", type: "string", required: false, description: "Gradient type (linear, radial)" },
+      { name: "gradientAngle", type: "number", required: false, description: "Linear gradient angle (0-360)" },
+      { name: "gradientStart", type: "string", required: false, description: "Gradient start color (hex)" },
+      { name: "gradientEnd", type: "string", required: false, description: "Gradient end color (hex)" },
       { name: "bg", type: "string", required: false, description: "Background color (hex)" },
       { name: "primary", type: "string", required: false, description: "Primary color (hex)" },
       { name: "secondary", type: "string", required: false, description: "Secondary color (hex)" },
@@ -28,72 +33,80 @@ const endpoints = [
       { name: "width", type: "number", required: false, description: "Card width in pixels" },
       { name: "height", type: "number", required: false, description: "Card height in pixels" },
     ],
-    example: "/api/card/stats?username=octocat&theme=neon&animation=fadeIn&speed=normal",
+    example: "/api/card?type=stats&username=octocat&theme=neon&animation=fadeIn&speed=normal",
   },
   {
     id: "languages",
     name: "Language Breakdown",
     method: "GET",
-    path: "/api/card/languages",
+    path: "/api/card?type=languages",
     description: "Generate a card showing user's most used programming languages",
     params: [
       { name: "username", type: "string", required: true, description: "GitHub username" },
-      { name: "count", type: "number", required: false, description: "Number of languages to display (default: 5)" },
       { name: "theme", type: "string", required: false, description: "Theme name" },
+      { name: "gradient", type: "boolean", required: false, description: "Enable gradient background" },
+      { name: "gradientStart", type: "string", required: false, description: "Gradient start color (hex)" },
+      { name: "gradientEnd", type: "string", required: false, description: "Gradient end color (hex)" },
     ],
-    example: "/api/card/languages?username=octocat&count=8",
+    example: "/api/card?type=languages&username=octocat&gradient=true&gradientStart=%23667eea&gradientEnd=%23764ba2",
   },
   {
     id: "streak",
     name: "Contribution Streak",
     method: "GET",
-    path: "/api/card/streak",
+    path: "/api/card?type=streak",
     description: "Generate a card showing contribution streak statistics",
     params: [
       { name: "username", type: "string", required: true, description: "GitHub username" },
       { name: "theme", type: "string", required: false, description: "Theme name" },
+      { name: "gradient", type: "boolean", required: false, description: "Enable gradient background" },
     ],
-    example: "/api/card/streak?username=octocat",
+    example: "/api/card?type=streak&username=octocat",
   },
   {
     id: "activity",
     name: "Activity Graph",
     method: "GET",
-    path: "/api/card/activity",
+    path: "/api/card?type=activity",
     description: "Generate an activity graph showing contributions over time",
     params: [
       { name: "username", type: "string", required: true, description: "GitHub username" },
-      { name: "days", type: "number", required: false, description: "Number of days to display (default: 30)" },
       { name: "theme", type: "string", required: false, description: "Theme name" },
+      { name: "gradient", type: "boolean", required: false, description: "Enable gradient background" },
     ],
-    example: "/api/card/activity?username=octocat&days=90",
+    example: "/api/card?type=activity&username=octocat",
   },
   {
     id: "quote",
     name: "Dev Quote",
     method: "GET",
-    path: "/api/card/quote",
+    path: "/api/card?type=quote",
     description: "Generate a card with a random developer quote",
     params: [
       { name: "theme", type: "string", required: false, description: "Theme name" },
-      { name: "category", type: "string", required: false, description: "Quote category (motivation, coding, wisdom)" },
+      { name: "animation", type: "string", required: false, description: "Animation type" },
+      { name: "gradient", type: "boolean", required: false, description: "Enable gradient background" },
     ],
-    example: "/api/card/quote?theme=tokyo-night",
+    example: "/api/card?type=quote&theme=tokyo-night&animation=typing",
   },
   {
     id: "custom",
     name: "Custom Image",
     method: "GET",
-    path: "/api/card/custom",
+    path: "/api/card?type=custom",
     description: "Generate a fully customizable image with your own text and styling",
     params: [
-      { name: "text", type: "string", required: true, description: "Text to display on the card" },
+      { name: "customText", type: "string", required: true, description: "Text to display on the card" },
       { name: "theme", type: "string", required: false, description: "Theme name" },
-      { name: "fontSize", type: "number", required: false, description: "Font size in pixels" },
+      { name: "gradient", type: "boolean", required: false, description: "Enable gradient background" },
+      { name: "gradientType", type: "string", required: false, description: "Gradient type (linear, radial)" },
+      { name: "gradientAngle", type: "number", required: false, description: "Linear gradient angle (0-360)" },
+      { name: "gradientStart", type: "string", required: false, description: "Gradient start color (hex)" },
+      { name: "gradientEnd", type: "string", required: false, description: "Gradient end color (hex)" },
       { name: "width", type: "number", required: false, description: "Image width" },
       { name: "height", type: "number", required: false, description: "Image height" },
     ],
-    example: "/api/card/custom?text=Hello%20World&theme=neon",
+    example: "/api/card?type=custom&customText=Hello%20World&gradient=true&gradientStart=%23f093fb&gradientEnd=%23f5576c",
   },
 ];
 
@@ -164,6 +177,9 @@ export default function Docs() {
                   </a>
                   <a href="#animations" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
                     Animations
+                  </a>
+                  <a href="#gradients" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    Gradients
                   </a>
                   <a href="#examples" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
                     Examples
@@ -310,7 +326,7 @@ export default function Docs() {
                   <h2 className="text-2xl font-bold mb-6">Available Animations</h2>
                   <p className="text-muted-foreground mb-4">
                     Add beautiful SVG animations to your cards using the <code className="text-primary">animation</code> parameter.
-                    Animations work like capsule-render and display in GitHub READMEs.
+                    Control speed with the <code className="text-primary">speed</code> parameter (slow, normal, fast).
                   </p>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     {animationsList.map((anim) => (
@@ -323,7 +339,61 @@ export default function Docs() {
                   <div className="mt-6 bg-muted/30 rounded-lg p-4">
                     <h4 className="font-semibold mb-2">Example Usage</h4>
                     <code className="font-mono text-sm text-foreground">
-                      ?username=octocat&animation=slideInUp
+                      ?username=octocat&animation=slideInUp&speed=fast
+                    </code>
+                  </div>
+                </GlassPanel>
+              </section>
+
+              {/* Gradients */}
+              <section id="gradients">
+                <GlassPanel>
+                  <h2 className="text-2xl font-bold mb-6">Gradient Backgrounds</h2>
+                  <p className="text-muted-foreground mb-4">
+                    Add vibrant gradient backgrounds to your cards using these parameters:
+                  </p>
+                  <div className="overflow-x-auto mb-6">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="text-left py-2 px-3">Parameter</th>
+                          <th className="text-left py-2 px-3">Type</th>
+                          <th className="text-left py-2 px-3">Description</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b border-border/50">
+                          <td className="py-2 px-3 font-mono text-primary">gradient</td>
+                          <td className="py-2 px-3 text-muted-foreground">boolean</td>
+                          <td className="py-2 px-3 text-muted-foreground">Enable gradient (true/false)</td>
+                        </tr>
+                        <tr className="border-b border-border/50">
+                          <td className="py-2 px-3 font-mono text-primary">gradientType</td>
+                          <td className="py-2 px-3 text-muted-foreground">string</td>
+                          <td className="py-2 px-3 text-muted-foreground">linear or radial</td>
+                        </tr>
+                        <tr className="border-b border-border/50">
+                          <td className="py-2 px-3 font-mono text-primary">gradientAngle</td>
+                          <td className="py-2 px-3 text-muted-foreground">number</td>
+                          <td className="py-2 px-3 text-muted-foreground">Angle for linear gradient (0-360)</td>
+                        </tr>
+                        <tr className="border-b border-border/50">
+                          <td className="py-2 px-3 font-mono text-primary">gradientStart</td>
+                          <td className="py-2 px-3 text-muted-foreground">string</td>
+                          <td className="py-2 px-3 text-muted-foreground">Start color (hex, URL encoded)</td>
+                        </tr>
+                        <tr className="border-b border-border/50">
+                          <td className="py-2 px-3 font-mono text-primary">gradientEnd</td>
+                          <td className="py-2 px-3 text-muted-foreground">string</td>
+                          <td className="py-2 px-3 text-muted-foreground">End color (hex, URL encoded)</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="bg-muted/30 rounded-lg p-4">
+                    <h4 className="font-semibold mb-2">Example Usage</h4>
+                    <code className="font-mono text-sm text-foreground break-all">
+                      ?username=octocat&gradient=true&gradientType=linear&gradientAngle=135&gradientStart=%23667eea&gradientEnd=%23764ba2
                     </code>
                   </div>
                 </GlassPanel>

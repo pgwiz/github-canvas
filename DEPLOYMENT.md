@@ -78,34 +78,46 @@ https://your-app.vercel.app/api/card?type=stats&username=YOUR_USERNAME
 |-----------|---------|-------------|
 | `type` | `stats` | Card type: `stats`, `languages`, `streak`, `activity`, `quote`, `custom` |
 | `username` | - | GitHub username |
-| `theme` | `github` | Color theme |
+| `theme` | `neon` | Color theme |
+| `animation` | `fadeIn` | Animation: `fadeIn`, `scaleIn`, `wave`, `glow`, `blink`, `typing`, `slideInLeft`, `slideInRight`, `slideInUp`, `bounce` |
+| `speed` | `normal` | Animation speed: `slow`, `normal`, `fast` |
+| `gradient` | `false` | Enable gradient background |
+| `gradientType` | `linear` | Gradient type: `linear`, `radial` |
+| `gradientAngle` | `135` | Linear gradient angle (0-360) |
+| `gradientStart` | `#667eea` | Gradient start color (hex, URL encoded) |
+| `gradientEnd` | `#764ba2` | Gradient end color (hex, URL encoded) |
 | `bg` | - | Background color (hex) |
 | `primary` | - | Primary color (hex) |
 | `secondary` | - | Secondary color (hex) |
 | `text` | - | Text color (hex) |
 | `border` | - | Border color (hex) |
-| `radius` | `10` | Border radius |
+| `radius` | `12` | Border radius |
 | `showBorder` | `true` | Show/hide border |
 | `width` | `495` | Card width |
-| `height` | `125` | Card height |
+| `height` | `195` | Card height |
 
 ### Example Usage
 
 **Markdown (for GitHub README):**
 ```markdown
-![GitHub Stats](https://your-app.vercel.app/api/card?type=stats&username=octocat&theme=dracula)
+![GitHub Stats](https://your-app.vercel.app/api/card?type=stats&username=octocat&theme=dracula&animation=fadeIn)
+```
+
+**With Gradient:**
+```markdown
+![GitHub Stats](https://your-app.vercel.app/api/card?type=stats&username=octocat&gradient=true&gradientStart=%23667eea&gradientEnd=%23764ba2)
 ```
 
 **HTML:**
 ```html
-<img src="https://your-app.vercel.app/api/card?type=stats&username=octocat" alt="GitHub Stats" />
+<img src="https://your-app.vercel.app/api/card?type=stats&username=octocat&animation=slideInUp&speed=fast" alt="GitHub Stats" />
 ```
 
 ---
 
 ## 🎨 Available Themes
 
-- `github` (default)
+- `neon` (default)
 - `dracula`
 - `nord`
 - `tokyonight`
