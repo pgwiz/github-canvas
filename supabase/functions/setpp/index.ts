@@ -186,6 +186,98 @@ serve(async (req) => {
         );
       }
 
+      if (action === 'health') {
+        const healthStatus: {
+          timestamp: string;
+          status: string;
+          services: {
+            github_api: { status: string; latency_ms: number; rate_limit?: { remaining: number; limit: number; resets_at: string | null }; error?: string };
+            cloud: { status: string; latency_ms: number; error?: string };
+            cache: { status: string; entries: number };
+          };
+        } = {
+          timestamp: new Date().toISOString(),
+          status: 'healthy',
+          services: {
+            github_api: { status: 'unknown', latency_ms: 0 },
+            cloud: { status: 'unknown', latency_ms: 0 },
+            cache: { status: 'unknown', entries: 0 }
+          }
+        };
+
+        // Test GitHub API
+        try {
+          const ghStart = Date.now();
+          const ghResponse = await fetch('https://api.github.com/rate_limit', {
+            headers: {
+              'User-Agent': 'DevCard-Health-Check'
+            }
+          });
+          healthStatus.services.github_api.latency_ms = Date.now() - ghStart;
+          
+          if (ghResponse.ok) {
+            const rateData = await ghResponse.json();
+            healthStatus.services.github_api.status = 'healthy';
+            healthStatus.services.github_api.rate_limit = {
+              remaining: rateData.rate?.remaining || 0,
+              limit: rateData.rate?.limit || 60,
+              resets_at: rateData.rate?.reset ? new Date(rateData.rate.reset * 1000).toISOString() : null
+            };
+          } else {
+            healthStatus.services.github_api.status = 'degraded';
+            healthStatus.status = 'degraded';
+          }
+        } catch (e: unknown) {
+          healthStatus.services.github_api.status = 'unhealthy';
+          healthStatus.services.github_api.error = e instanceof Error ? e.message : 'unknown';
+          healthStatus.status = 'unhealthy';
+        }
+
+        // Test Cloud (database) status
+        try {
+          const dbStart = Date.now();
+          const supabaseUrl = Deno.env.get('CUSTOM_SUPABASE_URL') || Deno.env.get('SUPABASE_URL');
+          const supabaseKey = Deno.env.get('CUSTOM_SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_ANON_KEY');
+          
+          if (supabaseUrl && supabaseKey) {
+            const supabase = createClient(supabaseUrl, supabaseKey);
+            
+            // Check cache table and get entry count
+            const { count, error } = await supabase
+              .from('github_stats_cache')
+              .select('*', { count: 'exact', head: true });
+            
+            healthStatus.services.cloud.latency_ms = Date.now() - dbStart;
+            
+            if (!error) {
+              healthStatus.services.cloud.status = 'healthy';
+              healthStatus.services.cache.status = 'healthy';
+              healthStatus.services.cache.entries = count || 0;
+            } else {
+              healthStatus.services.cloud.status = 'degraded';
+              healthStatus.services.cloud.error = error.message;
+              healthStatus.status = 'degraded';
+            }
+          } else {
+            healthStatus.services.cloud.status = 'not configured';
+            healthStatus.services.cache.status = 'not configured';
+          }
+        } catch (e: unknown) {
+          healthStatus.services.cloud.status = 'unhealthy';
+          healthStatus.services.cloud.error = e instanceof Error ? e.message : 'unknown';
+          healthStatus.status = 'unhealthy';
+        }
+
+        console.log('Health check:', healthStatus);
+        return new Response(
+          JSON.stringify(healthStatus, null, 2),
+          { 
+            status: healthStatus.status === 'healthy' ? 200 : healthStatus.status === 'degraded' ? 200 : 503, 
+            headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
       if (action === 'test') {
         const testResults = {
           timestamp: new Date().toISOString(),
