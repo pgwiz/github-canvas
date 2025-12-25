@@ -14,13 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      github_stats_cache: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          stats_data: Json
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          stats_data: Json
+          username: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          stats_data?: Json
+          username?: string
+        }
+        Relationships: []
+      }
+      quotes_cache: {
+        Row: {
+          author: string
+          created_at: string
+          id: string
+          quote: string
+        }
+        Insert: {
+          author: string
+          created_at?: string
+          id?: string
+          quote: string
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          id?: string
+          quote?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_expired_cache: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
