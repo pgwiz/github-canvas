@@ -160,33 +160,33 @@ function generateSVG(params: CardParams): string {
     : '';
 
   const animations = animate ? `
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
+    @keyframes svgFadeIn {
+      from { opacity: 0.2; transform: translateY(5px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    @keyframes scaleIn {
-      from { transform: scale(0.8); opacity: 0; }
+    @keyframes svgScaleIn {
+      from { transform: scale(0.9); opacity: 0.5; }
       to { transform: scale(1); opacity: 1; }
     }
-    @keyframes pulse {
+    @keyframes svgPulse {
       0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
+      50% { opacity: 0.8; }
     }
-    @keyframes grow {
+    @keyframes svgGrow {
       from { width: 0; }
     }
-    @keyframes dash {
+    @keyframes svgDash {
       to { stroke-dashoffset: 0; }
     }
-    .animate-fade { animation: fadeIn 0.6s ease-out forwards; }
-    .animate-scale { animation: scaleIn 0.5s ease-out forwards; }
-    .animate-pulse { animation: pulse 2s ease-in-out infinite; }
-    .animate-grow { animation: grow 1s ease-out forwards; }
-    .stagger-1 { animation-delay: 0.1s; opacity: 0; }
-    .stagger-2 { animation-delay: 0.2s; opacity: 0; }
-    .stagger-3 { animation-delay: 0.3s; opacity: 0; }
-    .stagger-4 { animation-delay: 0.4s; opacity: 0; }
-    .stagger-5 { animation-delay: 0.5s; opacity: 0; }
+    .animate-fade { animation: svgFadeIn 0.6s ease-out forwards; }
+    .animate-scale { animation: svgScaleIn 0.5s ease-out forwards; }
+    .animate-pulse { animation: svgPulse 2s ease-in-out infinite; }
+    .animate-grow { animation: svgGrow 1s ease-out forwards; }
+    .stagger-1 { animation-delay: 0.1s; }
+    .stagger-2 { animation-delay: 0.2s; }
+    .stagger-3 { animation-delay: 0.3s; }
+    .stagger-4 { animation-delay: 0.4s; }
+    .stagger-5 { animation-delay: 0.5s; }
   ` : '';
 
   const commonStyles = `
