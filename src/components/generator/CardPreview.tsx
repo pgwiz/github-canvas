@@ -1,7 +1,11 @@
 import { CardConfig } from "@/pages/Generator";
+import { GitHubStats } from "@/hooks/useGitHubStats";
+import { DevQuote } from "@/hooks/useDevQuote";
 
 interface CardPreviewProps {
   config: CardConfig;
+  githubData?: GitHubStats | null;
+  quote?: DevQuote | null;
 }
 
 const mockData = {
@@ -26,15 +30,21 @@ const mockData = {
   },
 };
 
-const devQuotes = [
+const defaultQuotes = [
   { quote: "Code is poetry.", author: "Automattic" },
   { quote: "First, solve the problem. Then, write the code.", author: "John Johnson" },
   { quote: "Any fool can write code that a computer can understand.", author: "Martin Fowler" },
   { quote: "Talk is cheap. Show me the code.", author: "Linus Torvalds" },
 ];
 
-export function CardPreview({ config }: CardPreviewProps) {
-  const randomQuote = devQuotes[Math.floor(Math.random() * devQuotes.length)];
+export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
+  const displayQuote = quote || defaultQuotes[Math.floor(Math.random() * defaultQuotes.length)];
+
+  // Use real data if available, otherwise use mock data
+  const stats = githubData?.stats || mockData.stats;
+  const languages = githubData?.languages || mockData.languages;
+  const streak = githubData?.streak || mockData.streak;
+  const activity = githubData?.activity || Array.from({ length: 30 }, () => Math.floor(Math.random() * 15));
 
   const cardStyle = {
     backgroundColor: config.bgColor,
@@ -53,10 +63,18 @@ export function CardPreview({ config }: CardPreviewProps) {
           <div className="p-6">
             <div className="flex items-center gap-3 mb-6">
               <div 
-                className="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
+                className="w-12 h-12 rounded-full flex items-center justify-center text-2xl overflow-hidden"
                 style={{ backgroundColor: `${config.primaryColor}20` }}
               >
-                👤
+                {githubData?.user.avatar_url ? (
+                  <img 
+                    src={githubData.user.avatar_url} 
+                    alt={githubData.user.login}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  "👤"
+                )}
               </div>
               <div>
                 <h3 className="font-bold text-lg" style={{ color: config.primaryColor }}>
@@ -68,25 +86,25 @@ export function CardPreview({ config }: CardPreviewProps) {
               <StatItem 
                 icon="⭐" 
                 label="Total Stars" 
-                value={mockData.stats.stars}
+                value={'totalStars' in stats ? stats.totalStars : stats.stars}
                 color={config.primaryColor}
               />
               <StatItem 
                 icon="📦" 
                 label="Repositories" 
-                value={mockData.stats.repos}
+                value={'publicRepos' in stats ? stats.publicRepos : stats.repos}
                 color={config.secondaryColor}
               />
               <StatItem 
-                icon="💻" 
-                label="Commits" 
-                value={mockData.stats.commits}
+                icon="🔀" 
+                label="Total Forks" 
+                value={'totalForks' in stats ? stats.totalForks : 0}
                 color={config.primaryColor}
               />
               <StatItem 
                 icon="👥" 
                 label="Followers" 
-                value={mockData.stats.followers}
+                value={stats.followers}
                 color={config.secondaryColor}
               />
             </div>
@@ -100,7 +118,7 @@ export function CardPreview({ config }: CardPreviewProps) {
               Most Used Languages
             </h3>
             <div className="space-y-3">
-              {mockData.languages.map((lang, i) => (
+              {languages.slice(0, 5).map((lang, i) => (
                 <div key={i}>
                   <div className="flex justify-between text-sm mb-1">
                     <span>{lang.name}</span>
@@ -136,7 +154,7 @@ export function CardPreview({ config }: CardPreviewProps) {
                   className="text-3xl font-bold mb-1"
                   style={{ color: config.secondaryColor }}
                 >
-                  {mockData.streak.current}
+                  {streak.current}
                 </div>
                 <div className="text-xs opacity-70">Current Streak</div>
               </div>
@@ -145,7 +163,7 @@ export function CardPreview({ config }: CardPreviewProps) {
                   className="text-3xl font-bold mb-1"
                   style={{ color: config.primaryColor }}
                 >
-                  {mockData.streak.longest}
+                  {streak.longest}
                 </div>
                 <div className="text-xs opacity-70">Longest Streak</div>
               </div>
@@ -154,7 +172,7 @@ export function CardPreview({ config }: CardPreviewProps) {
                   className="text-3xl font-bold mb-1"
                   style={{ color: config.secondaryColor }}
                 >
-                  {mockData.streak.total}
+                  {streak.total.toLocaleString()}
                 </div>
                 <div className="text-xs opacity-70">Total Commits</div>
               </div>
@@ -169,8 +187,9 @@ export function CardPreview({ config }: CardPreviewProps) {
               Activity Graph
             </h3>
             <div className="flex items-end gap-1 h-24">
-              {Array.from({ length: 30 }).map((_, i) => {
-                const height = Math.random() * 100;
+              {activity.map((value, i) => {
+                const maxValue = Math.max(...activity, 1);
+                const height = (value / maxValue) * 100;
                 return (
                   <div
                     key={i}
@@ -199,10 +218,10 @@ export function CardPreview({ config }: CardPreviewProps) {
           <div className="p-6 flex flex-col items-center justify-center text-center h-full">
             <div className="text-4xl mb-4" style={{ color: config.primaryColor }}>💬</div>
             <p className="text-lg italic mb-3" style={{ color: config.textColor }}>
-              "{randomQuote.quote}"
+              "{displayQuote.quote}"
             </p>
             <p className="text-sm" style={{ color: config.secondaryColor }}>
-              — {randomQuote.author}
+              — {displayQuote.author}
             </p>
           </div>
         );

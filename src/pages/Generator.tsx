@@ -1,16 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { CardPreview } from "@/components/generator/CardPreview";
 import { TemplateGallery } from "@/components/generator/TemplateGallery";
 import { CustomizationPanel } from "@/components/generator/CustomizationPanel";
 import { LinkGenerator } from "@/components/generator/LinkGenerator";
-import { Search, Sparkles } from "lucide-react";
+import { Search, Sparkles, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useGitHubStats, GitHubStats } from "@/hooks/useGitHubStats";
+import { useDevQuote, DevQuote } from "@/hooks/useDevQuote";
 
 export type CardType = "stats" | "languages" | "streak" | "activity" | "quote" | "custom";
 
@@ -48,8 +50,14 @@ const defaultConfig: CardConfig = {
 
 export default function Generator() {
   const [config, setConfig] = useState<CardConfig>(defaultConfig);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [githubData, setGithubData] = useState<GitHubStats | null>(null);
+  const [currentQuote, setCurrentQuote] = useState<DevQuote | null>(null);
   const { toast } = useToast();
+  
+  const { loading: statsLoading, error: statsError, fetchStats } = useGitHubStats();
+  const { loading: quoteLoading, generateQuote } = useDevQuote();
+
+  const isGenerating = statsLoading || quoteLoading;
 
   const handleGenerate = async () => {
     if (!config.username && config.type !== "quote" && config.type !== "custom") {
@@ -60,16 +68,56 @@ export default function Generator() {
       });
       return;
     }
+
+    if (config.type === "quote") {
+      const quote = await generateQuote();
+      if (quote) {
+        setCurrentQuote(quote);
+        toast({
+          title: "Quote generated!",
+          description: "A unique dev quote has been created.",
+        });
+      }
+      return;
+    }
+
+    if (config.type === "custom") {
+      toast({
+        title: "Card ready!",
+        description: "Your custom card is ready. Copy the link below.",
+      });
+      return;
+    }
+
+    const result = await fetchStats(config.username);
     
-    setIsGenerating(true);
-    // Simulate generation delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsGenerating(false);
-    
-    toast({
-      title: "Card generated!",
-      description: "Your stats card is ready. Copy the link below.",
-    });
+    if (result) {
+      setGithubData(result);
+      toast({
+        title: "Stats fetched!",
+        description: `Successfully fetched data for ${config.username}`,
+      });
+    } else if (statsError) {
+      toast({
+        title: "Error fetching stats",
+        description: statsError,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Generate a quote when switching to quote type
+  useEffect(() => {
+    if (config.type === "quote" && !currentQuote) {
+      generateQuote().then(setCurrentQuote);
+    }
+  }, [config.type]);
+
+  const handleRefreshQuote = async () => {
+    const quote = await generateQuote();
+    if (quote) {
+      setCurrentQuote(quote);
+    }
   };
 
   const updateConfig = (updates: Partial<CardConfig>) => {
@@ -106,7 +154,9 @@ export default function Generator() {
                       placeholder="Enter GitHub username..."
                       value={config.username}
                       onChange={(e) => updateConfig({ username: e.target.value })}
+                      onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
                       className="pl-10 h-12 bg-background/50"
+                      disabled={config.type === "quote" || config.type === "custom"}
                     />
                   </div>
                   <Button 
@@ -117,16 +167,21 @@ export default function Generator() {
                     {isGenerating ? (
                       <>
                         <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
-                        Generating...
+                        {config.type === "quote" ? "Generating..." : "Fetching..."}
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-4 h-4 mr-2" />
-                        Generate
+                        {config.type === "quote" ? "Generate Quote" : "Fetch Stats"}
                       </>
                     )}
                   </Button>
                 </div>
+                {config.type !== "quote" && config.type !== "custom" && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Fetches real data from GitHub API
+                  </p>
+                )}
               </GlassPanel>
 
               {/* Card Type Selection */}
@@ -148,6 +203,28 @@ export default function Generator() {
                   </TabsList>
                 </Tabs>
               </GlassPanel>
+
+              {/* Quote Refresh Button */}
+              {config.type === "quote" && (
+                <GlassPanel>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-lg font-semibold block">AI-Powered Quote</Label>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Generate unique developer quotes with AI
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={handleRefreshQuote}
+                      disabled={quoteLoading}
+                    >
+                      <RefreshCw className={`w-4 h-4 mr-2 ${quoteLoading ? 'animate-spin' : ''}`} />
+                      New Quote
+                    </Button>
+                  </div>
+                </GlassPanel>
+              )}
 
               {/* Template Gallery */}
               <GlassPanel>
@@ -179,7 +256,16 @@ export default function Generator() {
                 <Label className="text-lg font-semibold mb-4 block">
                   Live Preview
                 </Label>
-                <CardPreview config={config} />
+                <CardPreview 
+                  config={config} 
+                  githubData={githubData}
+                  quote={currentQuote}
+                />
+                {githubData && config.type !== "quote" && config.type !== "custom" && (
+                  <p className="text-xs text-muted-foreground mt-4 text-center">
+                    ✓ Showing real data for @{githubData.user.login}
+                  </p>
+                )}
               </GlassPanel>
 
               {/* Link Generator */}

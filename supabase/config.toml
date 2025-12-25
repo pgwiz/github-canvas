@@ -1,1 +1,10 @@
 project_id = "sbyckljjjfxwmugmmbrl"
+
+[functions.github-stats]
+verify_jwt = false
+
+[functions.generate-quote]
+verify_jwt = false
+
+[functions.generate-card]
+verify_jwt = false

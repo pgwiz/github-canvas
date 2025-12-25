@@ -14,9 +14,10 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
   const [copiedTab, setCopiedTab] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const baseUrl = window.location.origin;
+  // Use the edge function URL for embeddable images
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   
-  const imageUrl = `${baseUrl}/api/card/${config.type}?username=${config.username}&theme=${config.theme}&bg=${encodeURIComponent(config.bgColor)}&primary=${encodeURIComponent(config.primaryColor)}&secondary=${encodeURIComponent(config.secondaryColor)}&text=${encodeURIComponent(config.textColor)}&border=${encodeURIComponent(config.borderColor)}&radius=${config.borderRadius}&showBorder=${config.showBorder}&width=${config.width}&height=${config.height}`;
+  const imageUrl = `${supabaseUrl}/functions/v1/generate-card?type=${config.type}&username=${config.username}&theme=${config.theme}&bg=${encodeURIComponent(config.bgColor)}&primary=${encodeURIComponent(config.primaryColor)}&secondary=${encodeURIComponent(config.secondaryColor)}&text=${encodeURIComponent(config.textColor)}&border=${encodeURIComponent(config.borderColor)}&radius=${config.borderRadius}&showBorder=${config.showBorder}&width=${config.width}&height=${config.height}${config.customText ? `&customText=${encodeURIComponent(config.customText)}` : ''}`;
   
   const markdownCode = `![${config.username || "GitHub"} Stats](${imageUrl})`;
   
@@ -82,7 +83,7 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
           <CopyButton text={imageUrl} tab="image" />
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Direct link to your stats image
+          Direct link to your SVG stats image — works in READMEs!
         </p>
       </TabsContent>
 
