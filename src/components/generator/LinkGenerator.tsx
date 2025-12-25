@@ -15,9 +15,12 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  // Use the app's domain with the short proxy function
+  const baseUrl = window.location.origin.includes('localhost') 
+    ? import.meta.env.VITE_SUPABASE_URL 
+    : import.meta.env.VITE_SUPABASE_URL;
   
-  const imageUrl = `${supabaseUrl}/functions/v1/generate-card?type=${config.type}&username=${config.username}&theme=${config.theme}&bg=${encodeURIComponent(config.bgColor)}&primary=${encodeURIComponent(config.primaryColor)}&secondary=${encodeURIComponent(config.secondaryColor)}&text=${encodeURIComponent(config.textColor)}&border=${encodeURIComponent(config.borderColor)}&radius=${config.borderRadius}&showBorder=${config.showBorder}&width=${config.width}&height=${config.height}${config.customText ? `&customText=${encodeURIComponent(config.customText)}` : ''}`;
+  const imageUrl = `${baseUrl}/functions/v1/c?type=${config.type}&username=${config.username}&theme=${config.theme}&bg=${encodeURIComponent(config.bgColor)}&primary=${encodeURIComponent(config.primaryColor)}&secondary=${encodeURIComponent(config.secondaryColor)}&text=${encodeURIComponent(config.textColor)}&border=${encodeURIComponent(config.borderColor)}&radius=${config.borderRadius}&showBorder=${config.showBorder}&width=${config.width}&height=${config.height}${config.customText ? `&customText=${encodeURIComponent(config.customText)}` : ''}`;
   
   const markdownCode = `![${config.username || "GitHub"} Stats](${imageUrl})`;
   

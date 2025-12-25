@@ -38,7 +38,7 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
       params.set("t", Date.now().toString());
     }
 
-    return `${supabaseUrl}/functions/v1/generate-card?${params.toString()}`;
+    return `${supabaseUrl}/functions/v1/c?${params.toString()}`;
   }, [config, supabaseUrl, quote]);
 
   // Check if we need a username
