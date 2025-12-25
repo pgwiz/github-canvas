@@ -19,9 +19,9 @@ export function GlassPanel({
   active = false
 }: GlassPanelProps) {
   const accentStyles = {
-    green: "before:bg-gradient-to-br before:from-primary/10 before:to-transparent border-primary/20 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.15)]",
-    teal: "before:bg-gradient-to-br before:from-secondary/10 before:to-transparent border-secondary/20 shadow-[0_8px_32px_-8px_hsl(var(--secondary)/0.15)]",
-    purple: "before:bg-gradient-to-br before:from-chart-3/10 before:to-transparent border-chart-3/20 shadow-[0_8px_32px_-8px_hsl(var(--chart-3)/0.15)]",
+    green: "border-primary/20 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.15)]",
+    teal: "border-secondary/20 shadow-[0_8px_32px_-8px_hsl(var(--secondary)/0.15)]",
+    purple: "border-chart-3/20 shadow-[0_8px_32px_-8px_hsl(var(--chart-3)/0.15)]",
     none: ""
   };
 
@@ -32,14 +32,21 @@ export function GlassPanel({
     none: ""
   };
 
+  const glowColors = {
+    green: "hsl(var(--primary))",
+    teal: "hsl(var(--secondary))",
+    purple: "hsl(var(--chart-3))",
+    none: "hsl(var(--primary))"
+  };
+
   return (
     <div
       className={cn(
         "relative overflow-hidden rounded-xl p-6 transition-all duration-300",
-        "bg-background/40 backdrop-blur-xl",
-        "border border-border/30",
-        "before:absolute before:inset-0 before:rounded-xl before:pointer-events-none",
-        hover && "hover:scale-[1.02] hover:shadow-lg cursor-pointer hover:border-border/50",
+        "bg-[rgba(13,17,23,0.3)] backdrop-blur-xl",
+        "border border-white/10",
+        "text-white",
+        hover && "hover:scale-[1.02] hover:shadow-lg cursor-pointer hover:border-white/20",
         glow === "primary" && "shadow-glow",
         glow === "secondary" && "shadow-glow-secondary",
         accent !== "none" && accentStyles[accent],
@@ -47,6 +54,29 @@ export function GlassPanel({
         className
       )}
     >
+      {/* Slice animation border effect */}
+      <div 
+        className="absolute inset-0 rounded-xl pointer-events-none"
+        style={{
+          background: `linear-gradient(90deg, transparent, ${glowColors[accent]}, transparent)`,
+          backgroundSize: '200% 100%',
+          animation: 'slice 3s linear infinite',
+          opacity: 0.3,
+          mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          maskComposite: 'exclude',
+          WebkitMaskComposite: 'xor',
+          padding: '1px',
+        }}
+      />
+      {/* Inner accent glow */}
+      {accent !== "none" && (
+        <div 
+          className="absolute inset-0 rounded-xl pointer-events-none opacity-10"
+          style={{
+            background: `radial-gradient(ellipse at top left, ${glowColors[accent]}, transparent 70%)`
+          }}
+        />
+      )}
       <div className="relative z-10">{children}</div>
     </div>
   );

@@ -237,3 +237,13 @@
     transform-style: preserve-3d;
   }
 }
+
+/* Slice animation for glass panel border */
+@keyframes slice {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
