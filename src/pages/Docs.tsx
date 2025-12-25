@@ -17,6 +17,7 @@ const endpoints = [
       { name: "username", type: "string", required: true, description: "GitHub username" },
       { name: "theme", type: "string", required: false, description: "Theme name (neon, tokyo-night, dracula, etc.)" },
       { name: "animation", type: "string", required: false, description: "Animation type (fadeIn, scaleIn, wave, glow, blink, typing, slideInLeft, slideInRight, slideInUp, bounce)" },
+      { name: "speed", type: "string", required: false, description: "Animation speed (slow, normal, fast)" },
       { name: "bg", type: "string", required: false, description: "Background color (hex)" },
       { name: "primary", type: "string", required: false, description: "Primary color (hex)" },
       { name: "secondary", type: "string", required: false, description: "Secondary color (hex)" },
@@ -27,7 +28,7 @@ const endpoints = [
       { name: "width", type: "number", required: false, description: "Card width in pixels" },
       { name: "height", type: "number", required: false, description: "Card height in pixels" },
     ],
-    example: "/api/card/stats?username=octocat&theme=neon&animation=fadeIn",
+    example: "/api/card/stats?username=octocat&theme=neon&animation=fadeIn&speed=normal",
   },
   {
     id: "languages",

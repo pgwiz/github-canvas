@@ -89,66 +89,77 @@ function getLanguageColor(lang: string): string {
   return colors[lang] || '#8b949e';
 }
 
+// Speed multipliers for animations
+function getSpeedMultiplier(speed: string): number {
+  const multipliers: Record<string, number> = {
+    slow: 2,
+    normal: 1,
+    fast: 0.5,
+  };
+  return multipliers[speed] || 1;
+}
+
 // Animation styles generator
-function getAnimationStyles(animation: string, primaryColor: string): string {
+function getAnimationStyles(animation: string, primaryColor: string, speed: string = 'normal'): string {
+  const m = getSpeedMultiplier(speed);
   const animations: Record<string, string> = {
     fadeIn: `
       @keyframes fadeIn { 0% { opacity: 0; transform: translateY(-10px); } 100% { opacity: 1; transform: translateY(0); } }
-      .animate { animation: fadeIn 0.8s ease-out forwards; opacity: 0; }
-      .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; }
+      .animate { animation: fadeIn ${0.8 * m}s ease-out forwards; opacity: 0; }
+      .delay-1 { animation-delay: ${0.1 * m}s; } .delay-2 { animation-delay: ${0.2 * m}s; } .delay-3 { animation-delay: ${0.3 * m}s; } .delay-4 { animation-delay: ${0.4 * m}s; }
     `,
     typing: `
       @keyframes typing { from { width: 0; } to { width: 100%; } }
       @keyframes cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-      .animate { overflow: hidden; white-space: nowrap; animation: typing 2s steps(30) forwards; width: 0; }
-      .cursor { animation: cursor 0.8s infinite; }
-      .delay-1 { animation-delay: 0.3s; } .delay-2 { animation-delay: 0.6s; } .delay-3 { animation-delay: 0.9s; } .delay-4 { animation-delay: 1.2s; }
+      .animate { overflow: hidden; white-space: nowrap; animation: typing ${2 * m}s steps(30) forwards; width: 0; }
+      .cursor { animation: cursor ${0.8 * m}s infinite; }
+      .delay-1 { animation-delay: ${0.3 * m}s; } .delay-2 { animation-delay: ${0.6 * m}s; } .delay-3 { animation-delay: ${0.9 * m}s; } .delay-4 { animation-delay: ${1.2 * m}s; }
     `,
     wave: `
       @keyframes wave { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-      .animate { animation: wave 1.5s ease-in-out infinite; }
-      .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; }
+      .animate { animation: wave ${1.5 * m}s ease-in-out infinite; }
+      .delay-1 { animation-delay: ${0.1 * m}s; } .delay-2 { animation-delay: ${0.2 * m}s; } .delay-3 { animation-delay: ${0.3 * m}s; } .delay-4 { animation-delay: ${0.4 * m}s; }
     `,
     blink: `
       @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-      .animate { animation: blink 1.5s ease-in-out infinite; }
+      .animate { animation: blink ${1.5 * m}s ease-in-out infinite; }
     `,
     scaleIn: `
       @keyframes scaleIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-      .animate { animation: scaleIn 0.5s ease-out forwards; transform-origin: center; opacity: 0; }
-      .delay-1 { animation-delay: 0.15s; } .delay-2 { animation-delay: 0.3s; } .delay-3 { animation-delay: 0.45s; } .delay-4 { animation-delay: 0.6s; }
+      .animate { animation: scaleIn ${0.5 * m}s ease-out forwards; transform-origin: center; opacity: 0; }
+      .delay-1 { animation-delay: ${0.15 * m}s; } .delay-2 { animation-delay: ${0.3 * m}s; } .delay-3 { animation-delay: ${0.45 * m}s; } .delay-4 { animation-delay: ${0.6 * m}s; }
     `,
     glow: `
       @keyframes glow { 0%, 100% { filter: drop-shadow(0 0 3px ${primaryColor}40); } 50% { filter: drop-shadow(0 0 12px ${primaryColor}80); } }
-      .animate { animation: glow 2s ease-in-out infinite; }
+      .animate { animation: glow ${2 * m}s ease-in-out infinite; }
     `,
     slideInLeft: `
       @keyframes slideInLeft { 0% { opacity: 0; transform: translateX(-30px); } 100% { opacity: 1; transform: translateX(0); } }
-      .animate { animation: slideInLeft 0.6s ease-out forwards; opacity: 0; }
-      .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; }
+      .animate { animation: slideInLeft ${0.6 * m}s ease-out forwards; opacity: 0; }
+      .delay-1 { animation-delay: ${0.1 * m}s; } .delay-2 { animation-delay: ${0.2 * m}s; } .delay-3 { animation-delay: ${0.3 * m}s; } .delay-4 { animation-delay: ${0.4 * m}s; }
     `,
     slideInRight: `
       @keyframes slideInRight { 0% { opacity: 0; transform: translateX(30px); } 100% { opacity: 1; transform: translateX(0); } }
-      .animate { animation: slideInRight 0.6s ease-out forwards; opacity: 0; }
-      .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; }
+      .animate { animation: slideInRight ${0.6 * m}s ease-out forwards; opacity: 0; }
+      .delay-1 { animation-delay: ${0.1 * m}s; } .delay-2 { animation-delay: ${0.2 * m}s; } .delay-3 { animation-delay: ${0.3 * m}s; } .delay-4 { animation-delay: ${0.4 * m}s; }
     `,
     slideInUp: `
       @keyframes slideInUp { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }
-      .animate { animation: slideInUp 0.6s ease-out forwards; opacity: 0; }
-      .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; }
+      .animate { animation: slideInUp ${0.6 * m}s ease-out forwards; opacity: 0; }
+      .delay-1 { animation-delay: ${0.1 * m}s; } .delay-2 { animation-delay: ${0.2 * m}s; } .delay-3 { animation-delay: ${0.3 * m}s; } .delay-4 { animation-delay: ${0.4 * m}s; }
     `,
     bounce: `
       @keyframes bounce { 0%, 100% { transform: translateY(0); } 25% { transform: translateY(-8px); } 50% { transform: translateY(0); } 75% { transform: translateY(-4px); } }
-      .animate { animation: bounce 1s ease-in-out infinite; }
-      .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; }
+      .animate { animation: bounce ${1 * m}s ease-in-out infinite; }
+      .delay-1 { animation-delay: ${0.1 * m}s; } .delay-2 { animation-delay: ${0.2 * m}s; } .delay-3 { animation-delay: ${0.3 * m}s; } .delay-4 { animation-delay: ${0.4 * m}s; }
     `,
   };
   return animations[animation] || animations.fadeIn;
 }
 
 function generateStatsSVG(p: any): string {
-  const { stats, animation = 'fadeIn' } = p;
-  const animStyles = getAnimationStyles(animation, p.primaryColor);
+  const { stats, animation = 'fadeIn', speed = 'normal' } = p;
+  const animStyles = getAnimationStyles(animation, p.primaryColor, speed);
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
   <style>
@@ -181,8 +192,8 @@ function generateStatsSVG(p: any): string {
 }
 
 function generateLanguagesSVG(p: any): string {
-  const { languages, animation = 'fadeIn' } = p;
-  const animStyles = getAnimationStyles(animation, p.primaryColor);
+  const { languages, animation = 'fadeIn', speed = 'normal' } = p;
+  const animStyles = getAnimationStyles(animation, p.primaryColor, speed);
   const barWidth = p.width - 50;
   let offset = 0;
   const bars = languages.map((lang: any, i: number) => {
@@ -215,8 +226,8 @@ function generateLanguagesSVG(p: any): string {
 }
 
 function generateStreakSVG(p: any): string {
-  const { animation = 'fadeIn' } = p;
-  const animStyles = getAnimationStyles(animation, p.primaryColor);
+  const { animation = 'fadeIn', speed = 'normal' } = p;
+  const animStyles = getAnimationStyles(animation, p.primaryColor, speed);
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
   <style>
@@ -241,8 +252,8 @@ function generateStreakSVG(p: any): string {
 }
 
 function generateQuoteSVG(p: any): string {
-  const { animation = 'fadeIn' } = p;
-  const animStyles = getAnimationStyles(animation, p.primaryColor);
+  const { animation = 'fadeIn', speed = 'normal' } = p;
+  const animStyles = getAnimationStyles(animation, p.primaryColor, speed);
   const quotes = [
     { text: "First, solve the problem. Then, write the code.", author: "John Johnson" },
     { text: "Code is like humor. When you have to explain it, it's bad.", author: "Cory House" },
@@ -267,8 +278,8 @@ function generateQuoteSVG(p: any): string {
 }
 
 function generateActivitySVG(p: any): string {
-  const { animation = 'fadeIn' } = p;
-  const animStyles = getAnimationStyles(animation, p.primaryColor);
+  const { animation = 'fadeIn', speed = 'normal' } = p;
+  const animStyles = getAnimationStyles(animation, p.primaryColor, speed);
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const activity = p.activity || Array(7).fill(0).map(() => Math.floor(Math.random() * 10));
   const maxVal = Math.max(...activity, 1);
@@ -296,8 +307,8 @@ function generateActivitySVG(p: any): string {
 }
 
 function generateCustomSVG(p: any): string {
-  const { animation = 'fadeIn' } = p;
-  const animStyles = getAnimationStyles(animation, p.primaryColor);
+  const { animation = 'fadeIn', speed = 'normal' } = p;
+  const animStyles = getAnimationStyles(animation, p.primaryColor, speed);
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
   <style>
@@ -333,6 +344,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     height: parseInt(req.query.height as string) || 125,
     customText: req.query.customText as string,
     animation: (req.query.animation as string) || 'fadeIn',
+    speed: (req.query.speed as string) || 'normal',
     stats: null as any,
     languages: [] as any[],
     streak: null as any,

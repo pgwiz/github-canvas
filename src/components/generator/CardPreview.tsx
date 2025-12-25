@@ -34,6 +34,7 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
       width: config.width.toString(),
       height: config.height.toString(),
       animation: config.animation || "fadeIn",
+      speed: config.animationSpeed || "normal",
     });
 
     if (config.customText) {

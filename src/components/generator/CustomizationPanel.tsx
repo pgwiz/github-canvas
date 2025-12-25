@@ -21,6 +21,12 @@ const animations = [
   { value: "none", label: "None", icon: "⏸️" },
 ];
 
+const speeds = [
+  { value: "slow", label: "Slow", icon: "🐢" },
+  { value: "normal", label: "Normal", icon: "🚶" },
+  { value: "fast", label: "Fast", icon: "🚀" },
+];
+
 interface CustomizationPanelProps {
   config: CardConfig;
   updateConfig: (updates: Partial<CardConfig>) => void;
@@ -201,8 +207,27 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <Label className="text-sm mb-2 block">Animation Speed</Label>
+              <Select
+                value={config.animationSpeed}
+                onValueChange={(v) => updateConfig({ animationSpeed: v })}
+              >
+                <SelectTrigger className="bg-background/30 border-border/30">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {speeds.map((speed) => (
+                    <SelectItem key={speed.value} value={speed.value}>
+                      {speed.icon} {speed.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground mt-1">
-                SVG animations like capsule-render
+                Controls animation timing
               </p>
             </div>
           </TabsContent>
