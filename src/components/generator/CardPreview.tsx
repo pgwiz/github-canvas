@@ -12,6 +12,12 @@ interface CardPreviewProps {
 export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 
+  // Detect if self-hosted (Vercel) or using Lovable Cloud
+  const isVercel = !window.location.hostname.includes('lovable.app') && !window.location.hostname.includes('localhost');
+  
+  const baseUrl = isVercel ? window.location.origin : supabaseUrl;
+  const apiPath = isVercel ? '/api/card' : '/functions/v1/generate-card';
+
   // Build the image URL
   const imageUrl = useMemo(() => {
     const params = new URLSearchParams({
@@ -38,8 +44,8 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
       params.set("t", Date.now().toString());
     }
 
-    return `${supabaseUrl}/functions/v1/c?${params.toString()}`;
-  }, [config, supabaseUrl, quote]);
+    return `${baseUrl}${apiPath}?${params.toString()}`;
+  }, [config, baseUrl, apiPath, quote]);
 
   // Check if we need a username
   const needsUsername = !config.username && config.type !== "quote" && config.type !== "custom";

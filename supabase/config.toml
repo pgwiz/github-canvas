@@ -11,6 +11,3 @@ verify_jwt = false
 
 [functions.setpp]
 verify_jwt = false
-
-[functions.c]
-verify_jwt = false

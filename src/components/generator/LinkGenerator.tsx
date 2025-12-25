@@ -15,12 +15,17 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
 
-  // Use the app's domain with the short proxy function
-  const baseUrl = window.location.origin.includes('localhost') 
-    ? import.meta.env.VITE_SUPABASE_URL 
+  // Detect if self-hosted (Vercel) or using Lovable Cloud
+  const isVercel = !window.location.hostname.includes('lovable.app') && !window.location.hostname.includes('localhost');
+  
+  // Use /api/card for self-hosted, Supabase function for Lovable
+  const baseUrl = isVercel 
+    ? window.location.origin
     : import.meta.env.VITE_SUPABASE_URL;
   
-  const imageUrl = `${baseUrl}/functions/v1/c?type=${config.type}&username=${config.username}&theme=${config.theme}&bg=${encodeURIComponent(config.bgColor)}&primary=${encodeURIComponent(config.primaryColor)}&secondary=${encodeURIComponent(config.secondaryColor)}&text=${encodeURIComponent(config.textColor)}&border=${encodeURIComponent(config.borderColor)}&radius=${config.borderRadius}&showBorder=${config.showBorder}&width=${config.width}&height=${config.height}${config.customText ? `&customText=${encodeURIComponent(config.customText)}` : ''}`;
+  const apiPath = isVercel ? '/api/card' : '/functions/v1/generate-card';
+  
+  const imageUrl = `${baseUrl}${apiPath}?type=${config.type}&username=${config.username}&theme=${config.theme}&bg=${encodeURIComponent(config.bgColor)}&primary=${encodeURIComponent(config.primaryColor)}&secondary=${encodeURIComponent(config.secondaryColor)}&text=${encodeURIComponent(config.textColor)}&border=${encodeURIComponent(config.borderColor)}&radius=${config.borderRadius}&showBorder=${config.showBorder}&width=${config.width}&height=${config.height}${config.customText ? `&customText=${encodeURIComponent(config.customText)}` : ''}`;
   
   const markdownCode = `![${config.username || "GitHub"} Stats](${imageUrl})`;
   
