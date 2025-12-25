@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.generate-card]
 verify_jwt = false
+
+[functions.setpp]
+verify_jwt = false
