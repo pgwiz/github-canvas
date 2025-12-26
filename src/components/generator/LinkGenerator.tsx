@@ -2,7 +2,7 @@ import { CardConfig } from "@/pages/Generator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Copy, Check, Image, Code, FileText, Twitter, Linkedin, Download } from "lucide-react";
+import { Copy, Check, Image, Code, FileText, Twitter, Linkedin, Download, Link2 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -200,6 +200,27 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent backdrop-blur-sm" />
       <div className="relative p-4 rounded-lg border border-primary/10 bg-background/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]">
         <div className="space-y-6">
+          {/* Copy Quote URL Button (shown only for quote type) */}
+          {config.type === "quote" && (
+            <Button
+              onClick={() => copyToClipboard(imageUrl, "quoteUrl")}
+              className="w-full bg-primary/20 hover:bg-primary/30 border border-primary/30"
+              variant="outline"
+            >
+              {copiedTab === "quoteUrl" ? (
+                <>
+                  <Check className="w-4 h-4 mr-2 text-primary" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Link2 className="w-4 h-4 mr-2" />
+                  Copy Quote Card URL
+                </>
+              )}
+            </Button>
+          )}
+
           {/* Download & Share Buttons */}
           <div className="flex flex-wrap gap-3">
             <Button
