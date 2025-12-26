@@ -16,27 +16,30 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Determine API endpoint
-  const getApiEndpoint = () => {
+  // Determine API endpoint - memoized to prevent recreation
+  const apiEndpoint = useMemo(() => {
     // If a custom API URL is explicitly set, use it
     if (selfHostedApiUrl) {
       return selfHostedApiUrl;
     }
     
     const hostname = window.location.hostname;
+    console.log('Hostname detected:', hostname, 'Supabase URL:', supabaseUrl);
     
     // On Lovable preview or localhost - always use Supabase edge function
     if (hostname.includes('lovable.app') || hostname.includes('lovableproject.com') || hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
       if (supabaseUrl) {
-        return `${supabaseUrl}/functions/v1/generate-card`;
+        const endpoint = `${supabaseUrl}/functions/v1/generate-card`;
+        console.log('Using Supabase endpoint:', endpoint);
+        return endpoint;
       }
     }
     
     // Self-hosted (Vercel, Netlify, custom domain) - use /api/card route
-    return `${window.location.origin}/api/card`;
-  };
-  
-  const apiEndpoint = getApiEndpoint();
+    const endpoint = `${window.location.origin}/api/card`;
+    console.log('Using self-hosted endpoint:', endpoint);
+    return endpoint;
+  }, [supabaseUrl, selfHostedApiUrl]);
 
   // Build the base params URL
   const paramsUrl = useMemo(() => {
