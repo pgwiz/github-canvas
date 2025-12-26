@@ -547,14 +547,14 @@ function generateActivitySVG(p: any): string {
 function generateQuoteSVG(p: any): string {
   const { quote, animate } = p;
   const centerX = p.width / 2;
-  const centerY = p.height / 2;
   
+  // Word wrap the quote text - max ~40 chars per line for better display
   const words = quote.quote.split(' ');
   let lines: string[] = [];
   let currentLine = '';
   
   for (const word of words) {
-    if ((currentLine + ' ' + word).length > 45) {
+    if ((currentLine + ' ' + word).length > 40) {
       lines.push(currentLine);
       currentLine = word;
     } else {
@@ -563,22 +563,48 @@ function generateQuoteSVG(p: any): string {
   }
   if (currentLine) lines.push(currentLine);
   
+  // Calculate vertical positioning based on number of lines
+  const lineHeight = 24;
+  const totalTextHeight = lines.length * lineHeight;
+  const startY = (p.height - totalTextHeight - 60) / 2 + 70; // Account for header and author
+  
   const quoteLines = lines.map((line, i) => 
-    `<tspan x="${centerX}" dy="${i === 0 ? 0 : 22}">${i === 0 ? '"' : ''}${line}${i === lines.length - 1 ? '"' : ''}</tspan>`
+    `<tspan x="${centerX}" dy="${i === 0 ? 0 : lineHeight}">${line}</tspan>`
   ).join('');
   
-  const scaleClass = animate ? 'class="animate-scale"' : '';
-  const fadeClass = animate ? 'class="animate-fade stagger-2"' : '';
+  const fadeClass = animate ? 'class="anim d1"' : '';
+  const fadeClass2 = animate ? 'class="anim d2"' : '';
+  const fadeClass3 = animate ? 'class="anim d3"' : '';
   
+  // Create decorative quote marks like the reference
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
+  ${p.gradientDefs || ''}
   ${p.commonStyles}
+  <style>
+    .quote-mark { font: 700 48px 'Inter', sans-serif; fill: ${p.secondaryColor}; opacity: 0.8; }
+    .quote-text { font: italic 400 16px 'Inter', sans-serif; fill: ${p.textColor}; }
+    .quote-author { font: 400 14px 'Inter', sans-serif; fill: ${p.secondaryColor}; }
+  </style>
   <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${p.bgColor}" ${p.borderStyle}/>
-  <g ${scaleClass}>
-    <text x="${centerX}" y="40" text-anchor="middle" font-size="32" fill="${p.primaryColor}">💬</text>
+  
+  <!-- Header with icon -->
+  <g transform="translate(${centerX}, 30)" ${fadeClass}>
+    <text text-anchor="middle" font-size="20" y="0">🤙</text>
+    <text text-anchor="middle" class="title" y="24">Random Dev Quote</text>
   </g>
-  <text class="quote" x="${centerX}" y="${centerY}" text-anchor="middle" ${fadeClass}>${quoteLines}</text>
-  <text class="author" x="${centerX}" y="${p.height - 25}" text-anchor="middle">— ${quote.author}</text>
+  
+  <!-- Opening quote mark -->
+  <text class="quote-mark" x="30" y="${startY - 10}" ${fadeClass2}>"</text>
+  
+  <!-- Quote text -->
+  <text class="quote-text" x="${centerX}" y="${startY + 20}" text-anchor="middle" ${fadeClass2}>${quoteLines}</text>
+  
+  <!-- Closing quote mark -->
+  <text class="quote-mark" x="${p.width - 50}" y="${startY + totalTextHeight + 10}" ${fadeClass2}>"</text>
+  
+  <!-- Author -->
+  <text class="quote-author" x="${centerX}" y="${p.height - 25}" text-anchor="middle" ${fadeClass3}>- ${quote.author}</text>
 </svg>`;
 }
 
