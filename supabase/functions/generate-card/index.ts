@@ -410,12 +410,12 @@ function generateStatsSVG(p: any): string {
 
 function generateLanguagesSVG(p: any): string {
   const { languages, animate } = p;
-  const langs = languages.slice(0, 5);
-  const barWidth = p.width - 50;
-  const barHeight = 8;
-  const barY = 35;
+  const langs = languages.slice(0, 6);
+  const barWidth = p.width - 60;
+  const barHeight = 10;
+  const centerX = p.width / 2;
   
-  // Generate the stacked progress bar
+  // Generate the stacked progress bar with rounded ends
   let barSegments = '';
   let currentX = 0;
   
@@ -423,27 +423,34 @@ function generateLanguagesSVG(p: any): string {
     const lang = langs[i];
     const segmentWidth = barWidth * (lang.percentage / 100);
     const animClass = animate ? `class="animate delay-${i + 1}"` : '';
-    barSegments += `<rect x="${currentX}" y="0" width="${segmentWidth}" height="${barHeight}" fill="${lang.color}" rx="2" ${animClass}/>`;
+    // First segment gets left rounded, last gets right rounded
+    const isFirst = i === 0;
+    const isLast = i === langs.length - 1;
+    const rx = isFirst || isLast ? 5 : 0;
+    barSegments += `<rect x="${currentX}" y="0" width="${segmentWidth}" height="${barHeight}" fill="${lang.color}" ${isFirst ? 'rx="5"' : ''} ${animClass}/>`;
     currentX += segmentWidth;
   }
+  // Add rounded cap at end
+  barSegments = `<clipPath id="barClip"><rect x="0" y="0" width="${barWidth}" height="${barHeight}" rx="5"/></clipPath><g clip-path="url(#barClip)">${barSegments}</g>`;
   
-  // Generate the legend - 2 items per row with proper spacing
+  // Generate the legend - 2 columns, 3 rows
   let legendItems = '';
-  const legendY = barY + 20;
-  const colWidth = Math.floor((p.width - 50) / 2);
+  const legendStartY = 65;
+  const colWidth = (p.width - 60) / 2;
+  const rowHeight = 24;
   
   for (let i = 0; i < langs.length; i++) {
     const lang = langs[i];
-    const row = Math.floor(i / 2);
     const col = i % 2;
-    const x = col * colWidth;
-    const y = row * 22;
+    const row = Math.floor(i / 2);
+    const x = 30 + col * colWidth;
+    const y = legendStartY + row * rowHeight;
     const animClass = animate ? `class="animate delay-${i + 1}"` : '';
     
     legendItems += `
     <g transform="translate(${x}, ${y})" ${animClass}>
       <circle r="5" cx="5" cy="5" fill="${lang.color}"/>
-      <text x="15" y="9" class="lang-label">${lang.name} ${lang.percentage}%</text>
+      <text x="16" y="9" class="lang-label">${lang.name} ${lang.percentage}%</text>
     </g>`;
   }
   
@@ -452,20 +459,24 @@ function generateLanguagesSVG(p: any): string {
   ${p.gradientDefs || ''}
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap');
-    .title { font: 600 18px 'Inter', sans-serif; fill: ${p.primaryColor}; }
-    .lang-label { font: 400 11px 'Inter', sans-serif; fill: ${p.textColor}; }
+    .title { font: 600 16px 'Inter', sans-serif; fill: ${p.primaryColor}; }
+    .lang-label { font: 400 12px 'Inter', sans-serif; fill: ${p.textColor}; }
     ${animate ? `
       @keyframes fadeIn { 0% { opacity: 0; transform: translateY(-10px); } 100% { opacity: 1; transform: translateY(0); } }
       .animate { animation: fadeIn 0.8s ease-out forwards; opacity: 0; }
-      .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; } .delay-5 { animation-delay: 0.5s; }
+      .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; } .delay-5 { animation-delay: 0.5s; } .delay-6 { animation-delay: 0.6s; }
     ` : ''}
   </style>
   <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${p.bgColor}" ${p.borderStyle}/>
-  <g transform="translate(25, 25)">
-    <text class="title">Most Used Languages</text>
-    <g transform="translate(0, ${barY})">${barSegments}</g>
-    <g transform="translate(0, ${legendY})">${legendItems}</g>
-  </g>
+  
+  <!-- Centered Title -->
+  <text class="title ${animate ? 'animate delay-1' : ''}" x="${centerX}" y="30" text-anchor="middle">Most Used Languages</text>
+  
+  <!-- Stacked Bar -->
+  <g transform="translate(30, 45)">${barSegments}</g>
+  
+  <!-- Legend -->
+  ${legendItems}
 </svg>`;
 }
 
