@@ -410,31 +410,62 @@ function generateStatsSVG(p: any): string {
 
 function generateLanguagesSVG(p: any): string {
   const { languages, animate } = p;
-  let langBars = '';
-  let yOffset = 50;
+  const langs = languages.slice(0, 5);
+  const barWidth = p.width - 50;
+  const barHeight = 8;
+  const barY = 35;
   
-  for (let i = 0; i < languages.slice(0, 5).length; i++) {
-    const lang = languages[i];
-    const animClass = animate ? `class="animate-fade stagger-${i + 1}"` : '';
-    const barAnimClass = animate ? 'class="animate-grow"' : '';
-    langBars += `
-      <g transform="translate(25, ${yOffset})" ${animClass}>
-        <text class="text">${lang.name}</text>
-        <text class="text" x="${p.width - 70}" fill="${p.secondaryColor}">${lang.percentage}%</text>
-        <rect y="18" width="${p.width - 50}" height="6" rx="3" fill="${p.primaryColor}" opacity="0.2"/>
-        <rect y="18" width="${(p.width - 50) * (lang.percentage / 100)}" height="6" rx="3" fill="${lang.color}" ${barAnimClass}/>
-      </g>
-    `;
-    yOffset += 35;
+  // Generate the stacked progress bar
+  let barSegments = '';
+  let currentX = 0;
+  
+  for (let i = 0; i < langs.length; i++) {
+    const lang = langs[i];
+    const segmentWidth = barWidth * (lang.percentage / 100);
+    const animClass = animate ? `class="animate delay-${i + 1}"` : '';
+    barSegments += `<rect x="${currentX}" y="0" width="${segmentWidth}" height="${barHeight}" fill="${lang.color}" rx="2" ${animClass}/>`;
+    currentX += segmentWidth;
+  }
+  
+  // Generate the legend - 3 items per row with proper spacing
+  let legendItems = '';
+  const legendY = barY + 20;
+  const colWidth = Math.floor((p.width - 50) / 3);
+  
+  for (let i = 0; i < langs.length; i++) {
+    const lang = langs[i];
+    const row = Math.floor(i / 3);
+    const col = i % 3;
+    const x = col * colWidth;
+    const y = row * 22;
+    const animClass = animate ? `class="animate delay-${i + 1}"` : '';
+    
+    legendItems += `
+    <g transform="translate(${x}, ${y})" ${animClass}>
+      <circle r="5" cx="5" cy="5" fill="${lang.color}"/>
+      <text x="15" y="9" class="lang-label">${lang.name} ${lang.percentage}%</text>
+    </g>`;
   }
   
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
   ${p.gradientDefs || ''}
-  ${p.commonStyles}
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap');
+    .title { font: 600 18px 'Inter', sans-serif; fill: ${p.primaryColor}; }
+    .lang-label { font: 400 11px 'Inter', sans-serif; fill: ${p.textColor}; }
+    ${animate ? `
+      @keyframes fadeIn { 0% { opacity: 0; transform: translateY(-10px); } 100% { opacity: 1; transform: translateY(0); } }
+      .animate { animation: fadeIn 0.8s ease-out forwards; opacity: 0; }
+      .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; } .delay-5 { animation-delay: 0.5s; }
+    ` : ''}
+  </style>
   <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${p.bgColor}" ${p.borderStyle}/>
-  <text class="title" x="25" y="35">Most Used Languages</text>
-  ${langBars}
+  <g transform="translate(25, 25)">
+    <text class="title">Most Used Languages</text>
+    <g transform="translate(0, ${barY})">${barSegments}</g>
+    <g transform="translate(0, ${legendY})">${legendItems}</g>
+  </g>
 </svg>`;
 }
 
