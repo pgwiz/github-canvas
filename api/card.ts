@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Theme configurations
 const themes: Record<string, any> = {
+  neon: { bg: '#0d1117', primary: '#0CF709', secondary: '#00e1ff', text: '#c9d1d9', border: '#0CF709' },
   github: { bg: '#0d1117', primary: '#58a6ff', secondary: '#8b949e', text: '#c9d1d9', border: '#30363d' },
   dracula: { bg: '#282a36', primary: '#bd93f9', secondary: '#ff79c6', text: '#f8f8f2', border: '#44475a' },
   nord: { bg: '#2e3440', primary: '#88c0d0', secondary: '#81a1c1', text: '#eceff4', border: '#4c566a' },
@@ -401,8 +402,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  const { type = 'stats', username = '', theme = 'github', format = 'svg' } = req.query;
-  const themeColors = themes[theme as string] || themes.github;
+  const { type = 'stats', username = '', theme = 'neon', format = 'svg' } = req.query;
+  const themeColors = themes[theme as string] || themes.neon;
 
   const params = {
     type,
@@ -413,10 +414,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     secondaryColor: (req.query.secondary as string) || themeColors.secondary,
     textColor: (req.query.text as string) || themeColors.text,
     borderColor: (req.query.border as string) || themeColors.border,
-    borderRadius: parseInt(req.query.radius as string) || 10,
+    borderRadius: parseInt(req.query.radius as string) || 12,
     showBorder: req.query.showBorder !== 'false',
     width: parseInt(req.query.width as string) || 495,
-    height: parseInt(req.query.height as string) || 125,
+    height: parseInt(req.query.height as string) || 195,
     customText: req.query.customText as string,
     animation: (req.query.animation as string) || 'fadeIn',
     speed: (req.query.speed as string) || 'normal',
