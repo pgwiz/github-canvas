@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Copy, Check, Image, Code, FileText, Twitter, Linkedin, Download } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface LinkGeneratorProps {
@@ -15,9 +15,10 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
 
-  // Determine API endpoint
-  const getApiEndpoint = () => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  // Determine API endpoint with fallback
+  const apiEndpoint = useMemo(() => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 
+      (import.meta.env.VITE_SUPABASE_PROJECT_ID ? `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co` : null);
     const selfHostedApiUrl = import.meta.env.VITE_API_URL;
     
     // If a custom API URL is explicitly set, use it
@@ -28,17 +29,15 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
     const hostname = window.location.hostname;
     
     // On Lovable preview or localhost - always use Supabase edge function
-    if (hostname.includes('lovable.app') || hostname.includes('lovableproject.com') || hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-      if (supabaseUrl) {
-        return `${supabaseUrl}/functions/v1/generate-card`;
-      }
+    const isLovable = hostname.includes('lovable.app') || hostname.includes('lovableproject.com') || hostname.includes('localhost') || hostname.includes('127.0.0.1');
+    
+    if (isLovable && supabaseUrl) {
+      return `${supabaseUrl}/functions/v1/generate-card`;
     }
     
     // Self-hosted (Vercel, Netlify, custom domain) - use /api/card route
     return `${window.location.origin}/api/card`;
-  };
-  
-  const apiEndpoint = getApiEndpoint();
+  }, []);
   
   const imageUrl = `${apiEndpoint}?type=${config.type}&username=${config.username}&theme=${config.theme}&bg=${encodeURIComponent(config.bgColor)}&primary=${encodeURIComponent(config.primaryColor)}&secondary=${encodeURIComponent(config.secondaryColor)}&text=${encodeURIComponent(config.textColor)}&border=${encodeURIComponent(config.borderColor)}&radius=${config.borderRadius}&showBorder=${config.showBorder}&width=${config.width}&height=${config.height}&animation=${config.animation || 'fadeIn'}&speed=${config.animationSpeed || 'normal'}&gradient=${config.gradientEnabled}&gradientType=${config.gradientType}&gradientAngle=${config.gradientAngle}&gradientStart=${encodeURIComponent(config.gradientStart)}&gradientEnd=${encodeURIComponent(config.gradientEnd)}${config.customText ? `&customText=${encodeURIComponent(config.customText)}` : ''}`;
   
