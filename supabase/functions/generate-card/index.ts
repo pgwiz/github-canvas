@@ -427,15 +427,15 @@ function generateLanguagesSVG(p: any): string {
     currentX += segmentWidth;
   }
   
-  // Generate the legend - 3 items per row with proper spacing
+  // Generate the legend - 2 items per row with proper spacing
   let legendItems = '';
   const legendY = barY + 20;
-  const colWidth = Math.floor((p.width - 50) / 3);
+  const colWidth = Math.floor((p.width - 50) / 2);
   
   for (let i = 0; i < langs.length; i++) {
     const lang = langs[i];
-    const row = Math.floor(i / 3);
-    const col = i % 3;
+    const row = Math.floor(i / 2);
+    const col = i % 2;
     const x = col * colWidth;
     const y = row * 22;
     const animClass = animate ? `class="animate delay-${i + 1}"` : '';
