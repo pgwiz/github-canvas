@@ -10,8 +10,11 @@ interface CardPreviewProps {
 }
 
 export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  // Get env variables - with fallback construction from project ID
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 
+    (import.meta.env.VITE_SUPABASE_PROJECT_ID ? `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co` : null);
   const selfHostedApiUrl = import.meta.env.VITE_API_URL;
+  
   const [imageSrc, setImageSrc] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,21 +27,16 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
     }
     
     const hostname = window.location.hostname;
-    console.log('Hostname detected:', hostname, 'Supabase URL:', supabaseUrl);
     
     // On Lovable preview or localhost - always use Supabase edge function
-    if (hostname.includes('lovable.app') || hostname.includes('lovableproject.com') || hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-      if (supabaseUrl) {
-        const endpoint = `${supabaseUrl}/functions/v1/generate-card`;
-        console.log('Using Supabase endpoint:', endpoint);
-        return endpoint;
-      }
+    const isLovable = hostname.includes('lovable.app') || hostname.includes('lovableproject.com') || hostname.includes('localhost') || hostname.includes('127.0.0.1');
+    
+    if (isLovable && supabaseUrl) {
+      return `${supabaseUrl}/functions/v1/generate-card`;
     }
     
     // Self-hosted (Vercel, Netlify, custom domain) - use /api/card route
-    const endpoint = `${window.location.origin}/api/card`;
-    console.log('Using self-hosted endpoint:', endpoint);
-    return endpoint;
+    return `${window.location.origin}/api/card`;
   }, [supabaseUrl, selfHostedApiUrl]);
 
   // Build the base params URL
