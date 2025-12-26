@@ -363,24 +363,6 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
               </p>
             </div>
 
-            <div>
-              <Label className="text-sm mb-2 block">Preview Format</Label>
-              <Select
-                value={config.previewFormat}
-                onValueChange={(v) => updateConfig({ previewFormat: v as "svg" | "img" })}
-              >
-                <SelectTrigger className="bg-background/30 border-border/30">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="svg">🖼️ SVG (Direct)</SelectItem>
-                  <SelectItem value="img">📷 Image (Base64)</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                SVG is recommended for README embeds
-              </p>
-            </div>
           </TabsContent>
 
           <TabsContent value="content" className="space-y-4">
