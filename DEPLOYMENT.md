@@ -50,16 +50,61 @@
 
 ## 🔧 Vercel Configuration
 
+### Prerequisites
+
+1. **Install Vercel CLI**
+   ```bash
+   npm install -g vercel
+   ```
+
+2. **Login to Vercel**
+   ```bash
+   vercel login
+   ```
+
+### Deploy from CLI
+
+```bash
+# First deployment (links project)
+vercel
+
+# Production deployment
+vercel --prod
+```
+
 ### Add Environment Variables in Vercel Dashboard
 
 1. Go to your project on [vercel.com](https://vercel.com)
 2. Navigate to **Settings** → **Environment Variables**
 3. Add your variables:
-   - `GITHUB_TOKEN`: Your GitHub PAT (optional but recommended)
+   - `GITHUB_TOKEN`: Your GitHub PAT (optional but recommended for higher rate limits)
+
+### Test the API Endpoints
+
+After deployment, verify the endpoints work:
+
+```bash
+# Health check endpoint
+curl https://your-app.vercel.app/api/health
+
+# Card endpoint
+curl "https://your-app.vercel.app/api/card?type=stats&username=pgwiz&theme=github"
+```
+
+**Expected Response for `/api/health`:**
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-12-26T12:00:00.000Z",
+  "env": { "nodeVersion": "v18.x.x", "hasGitHubToken": false },
+  "endpoints": { "card": "/api/card?type=stats&username=YOUR_USERNAME&theme=github", "health": "/api/health" }
+}
+```
 
 **Note:** The Vercel API (`/api/card`) is fully self-contained and does NOT require Supabase Edge Functions or any external dependencies. It works independently out of the box.
 
 ### Custom Domain
+
 
 1. Go to **Settings** → **Domains**
 2. Add your custom domain

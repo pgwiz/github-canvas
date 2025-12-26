@@ -435,14 +435,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Return based on format
   if (format === 'base64') {
     // Return base64 data URL for img src usage
-    const base64 = Buffer.from(svg).toString('base64');
+    const base64 = Buffer.from(svg, 'utf-8').toString('base64');
     const dataUrl = `data:image/svg+xml;base64,${base64}`;
-    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=3600');
     return res.status(200).send(dataUrl);
   }
 
-  res.setHeader('Content-Type', 'image/svg+xml');
+  res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
   res.setHeader('Cache-Control', 'public, max-age=3600');
   return res.status(200).send(svg);
 }
