@@ -13,8 +13,11 @@ import { Search, Sparkles, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGitHubStats, GitHubStats } from "@/hooks/useGitHubStats";
 import { useDevQuote, DevQuote } from "@/hooks/useDevQuote";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export type CardType = "stats" | "languages" | "streak" | "activity" | "quote" | "custom";
+
+export type QuoteTopic = "random" | "debugging" | "coffee" | "deadlines" | "code-reviews" | "testing";
 
 export interface CardConfig {
   username: string;
@@ -38,6 +41,7 @@ export interface CardConfig {
   gradientStart: string;
   gradientEnd: string;
   previewFormat: "svg" | "img";
+  quoteTopic: QuoteTopic;
 }
 
 const defaultConfig: CardConfig = {
@@ -62,7 +66,17 @@ const defaultConfig: CardConfig = {
   gradientStart: "#667eea",
   gradientEnd: "#764ba2",
   previewFormat: "img",
+  quoteTopic: "random",
 };
+
+const quoteTopics: { value: QuoteTopic; label: string; emoji: string }[] = [
+  { value: "random", label: "Random", emoji: "🎲" },
+  { value: "debugging", label: "Debugging", emoji: "🐛" },
+  { value: "coffee", label: "Coffee & Code", emoji: "☕" },
+  { value: "deadlines", label: "Deadlines", emoji: "⏰" },
+  { value: "code-reviews", label: "Code Reviews", emoji: "👀" },
+  { value: "testing", label: "Testing", emoji: "🧪" },
+];
 
 export default function Generator() {
   const [config, setConfig] = useState<CardConfig>(defaultConfig);
@@ -86,7 +100,8 @@ export default function Generator() {
     }
 
     if (config.type === "quote") {
-      const quote = await generateQuote();
+      const topic = config.quoteTopic === "random" ? undefined : config.quoteTopic;
+      const quote = await generateQuote(topic);
       if (quote) {
         setCurrentQuote(quote);
         toast({
@@ -125,12 +140,14 @@ export default function Generator() {
   // Generate a quote when switching to quote type
   useEffect(() => {
     if (config.type === "quote" && !currentQuote) {
-      generateQuote().then(setCurrentQuote);
+      const topic = config.quoteTopic === "random" ? undefined : config.quoteTopic;
+      generateQuote(topic).then(setCurrentQuote);
     }
   }, [config.type]);
 
   const handleRefreshQuote = async () => {
-    const quote = await generateQuote();
+    const topic = config.quoteTopic === "random" ? undefined : config.quoteTopic;
+    const quote = await generateQuote(topic);
     if (quote) {
       setCurrentQuote(quote);
     }
@@ -220,25 +237,43 @@ export default function Generator() {
                 </Tabs>
               </GlassPanel>
 
-              {/* Quote Refresh Button */}
+              {/* Quote Options */}
               {config.type === "quote" && (
                 <GlassPanel accent="purple">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-lg font-semibold block">AI-Powered Quote</Label>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Generate unique developer quotes with AI
-                      </p>
+                  <Label className="text-lg font-semibold mb-4 block">Quote Options</Label>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <Label className="text-sm text-muted-foreground mb-2 block">Topic</Label>
+                        <Select
+                          value={config.quoteTopic}
+                          onValueChange={(v) => updateConfig({ quoteTopic: v as QuoteTopic })}
+                        >
+                          <SelectTrigger className="bg-background/30 backdrop-blur-sm border-border/30">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {quoteTopics.map((topic) => (
+                              <SelectItem key={topic.value} value={topic.value}>
+                                {topic.emoji} {topic.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={handleRefreshQuote}
+                        disabled={quoteLoading}
+                        className="bg-background/30 backdrop-blur-sm border-border/30 mt-6"
+                      >
+                        <RefreshCw className={`w-4 h-4 mr-2 ${quoteLoading ? 'animate-spin' : ''}`} />
+                        New Quote
+                      </Button>
                     </div>
-                    <Button
-                      variant="outline"
-                      onClick={handleRefreshQuote}
-                      disabled={quoteLoading}
-                      className="bg-background/30 backdrop-blur-sm border-border/30"
-                    >
-                      <RefreshCw className={`w-4 h-4 mr-2 ${quoteLoading ? 'animate-spin' : ''}`} />
-                      New Quote
-                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      Generate unique developer quotes powered by AI
+                    </p>
                   </div>
                 </GlassPanel>
               )}

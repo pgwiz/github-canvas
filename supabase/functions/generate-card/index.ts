@@ -572,9 +572,9 @@ function generateQuoteSVG(p: any): string {
     `<tspan x="${centerX}" dy="${i === 0 ? 0 : lineHeight}">${line}</tspan>`
   ).join('');
   
-  const fadeClass = animate ? 'class="anim d1"' : '';
-  const fadeClass2 = animate ? 'class="anim d2"' : '';
-  const fadeClass3 = animate ? 'class="anim d3"' : '';
+  const animClass1 = animate ? 'class="anim d1"' : '';
+  const animClass2 = animate ? 'class="anim d2"' : '';
+  const animClass3 = animate ? 'class="anim d3"' : '';
   
   // Create decorative quote marks like the reference
   return `
@@ -589,22 +589,22 @@ function generateQuoteSVG(p: any): string {
   <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${p.bgColor}" ${p.borderStyle}/>
   
   <!-- Header with icon -->
-  <g transform="translate(${centerX}, 30)" ${fadeClass}>
+  <g transform="translate(${centerX}, 30)" ${animClass1}>
     <text text-anchor="middle" font-size="20" y="0">🤙</text>
     <text text-anchor="middle" class="title" y="24">Random Dev Quote</text>
   </g>
   
   <!-- Opening quote mark -->
-  <text class="quote-mark" x="30" y="${startY - 10}" ${fadeClass2}>"</text>
+  <text class="quote-mark${animate ? ' anim d2' : ''}" x="30" y="${startY - 10}">"</text>
   
   <!-- Quote text -->
-  <text class="quote-text" x="${centerX}" y="${startY + 20}" text-anchor="middle" ${fadeClass2}>${quoteLines}</text>
+  <text class="quote-text${animate ? ' anim d2' : ''}" x="${centerX}" y="${startY + 20}" text-anchor="middle">${quoteLines}</text>
   
   <!-- Closing quote mark -->
-  <text class="quote-mark" x="${p.width - 50}" y="${startY + totalTextHeight + 10}" ${fadeClass2}>"</text>
+  <text class="quote-mark${animate ? ' anim d2' : ''}" x="${p.width - 50}" y="${startY + totalTextHeight + 10}">"</text>
   
   <!-- Author -->
-  <text class="quote-author" x="${centerX}" y="${p.height - 25}" text-anchor="middle" ${fadeClass3}>- ${quote.author}</text>
+  <text class="quote-author${animate ? ' anim d3' : ''}" x="${centerX}" y="${p.height - 25}" text-anchor="middle">- ${quote.author}</text>
 </svg>`;
 }
 
