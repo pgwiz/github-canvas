@@ -38,6 +38,41 @@ export type Database = {
         }
         Relationships: []
       }
+      quote_of_the_day: {
+        Row: {
+          author: string
+          created_at: string
+          date: string
+          id: string
+          quote: string
+          quote_id: string | null
+        }
+        Insert: {
+          author: string
+          created_at?: string
+          date?: string
+          id?: string
+          quote: string
+          quote_id?: string | null
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          date?: string
+          id?: string
+          quote?: string
+          quote_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_of_the_day_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes_cache"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quotes_cache: {
         Row: {
           author: string

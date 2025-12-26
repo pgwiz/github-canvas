@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.generate-batch-quotes]
 verify_jwt = false
+
+[functions.quote-of-the-day]
+verify_jwt = false

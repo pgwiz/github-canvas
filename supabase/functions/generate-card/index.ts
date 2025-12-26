@@ -548,63 +548,72 @@ function generateQuoteSVG(p: any): string {
   const { quote, animate } = p;
   const centerX = p.width / 2;
   
-  // Word wrap the quote text - max ~40 chars per line for better display
+  // Word wrap the quote text - max ~38 chars per line for better display with margins
   const words = quote.quote.split(' ');
   let lines: string[] = [];
   let currentLine = '';
   
   for (const word of words) {
-    if ((currentLine + ' ' + word).length > 40) {
-      lines.push(currentLine);
+    if ((currentLine + ' ' + word).length > 38) {
+      lines.push(currentLine.trim());
       currentLine = word;
     } else {
       currentLine = currentLine ? currentLine + ' ' + word : word;
     }
   }
-  if (currentLine) lines.push(currentLine);
+  if (currentLine) lines.push(currentLine.trim());
   
-  // Calculate vertical positioning based on number of lines
-  const lineHeight = 24;
+  // Limit to max 4 lines to prevent overflow
+  if (lines.length > 4) {
+    lines = lines.slice(0, 4);
+    lines[3] = lines[3].substring(0, lines[3].length - 3) + '...';
+  }
+  
+  // Calculate vertical positioning
+  const headerHeight = 55; // Icon + title
+  const authorHeight = 30; // Author at bottom
+  const quoteMarkSize = 30; // Space for quote marks
+  const lineHeight = 22;
   const totalTextHeight = lines.length * lineHeight;
-  const startY = (p.height - totalTextHeight - 60) / 2 + 70; // Account for header and author
+  
+  // Center the quote vertically in the available space
+  const availableSpace = p.height - headerHeight - authorHeight - quoteMarkSize;
+  const startY = headerHeight + (availableSpace - totalTextHeight) / 2 + 20;
   
   const quoteLines = lines.map((line, i) => 
     `<tspan x="${centerX}" dy="${i === 0 ? 0 : lineHeight}">${line}</tspan>`
   ).join('');
   
   const animClass1 = animate ? 'class="anim d1"' : '';
-  const animClass2 = animate ? 'class="anim d2"' : '';
-  const animClass3 = animate ? 'class="anim d3"' : '';
   
-  // Create decorative quote marks like the reference
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
   ${p.gradientDefs || ''}
   ${p.commonStyles}
   <style>
-    .quote-mark { font: 700 48px 'Inter', sans-serif; fill: ${p.secondaryColor}; opacity: 0.8; }
-    .quote-text { font: italic 400 16px 'Inter', sans-serif; fill: ${p.textColor}; }
-    .quote-author { font: 400 14px 'Inter', sans-serif; fill: ${p.secondaryColor}; }
+    .quote-mark { font: 700 36px 'Inter', sans-serif; fill: ${p.secondaryColor}; opacity: 0.6; }
+    .quote-text { font: italic 400 15px 'Inter', sans-serif; fill: ${p.textColor}; }
+    .quote-author { font: 400 13px 'Inter', sans-serif; fill: ${p.secondaryColor}; }
   </style>
   <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${p.bgColor}" ${p.borderStyle}/>
   
   <!-- Header with icon -->
-  <g transform="translate(${centerX}, 30)" ${animClass1}>
-    <text text-anchor="middle" font-size="20" y="0">🤙</text>
-    <text text-anchor="middle" class="title" y="24">Random Dev Quote</text>
+  <g transform="translate(${centerX}, 28)" ${animClass1}>
+    <text text-anchor="middle" font-size="18" y="0">🤙</text>
+    <text text-anchor="middle" class="title" y="22">Random Dev Quote</text>
   </g>
   
   <!-- Opening quote mark -->
-  <text class="quote-mark${animate ? ' anim d2' : ''}" x="30" y="${startY - 10}">"</text>
+  <text class="quote-mark${animate ? ' anim d2' : ''}" x="50" y="${startY}">"</text>
   
-  <!-- Quote text -->
-  <text class="quote-text${animate ? ' anim d2' : ''}" x="${centerX}" y="${startY + 20}" text-anchor="middle">${quoteLines}</text>
+  <!-- Quote text - centered with padding -->
+  <text class="quote-text${animate ? ' anim d2' : ''}" x="${centerX}" y="${startY + 10}" text-anchor="middle">${quoteLines}</text>
   
   <!-- Closing quote mark -->
-  <text class="quote-mark${animate ? ' anim d2' : ''}" x="${p.width - 50}" y="${startY + totalTextHeight + 10}">"</text>
+  <text class="quote-mark${animate ? ' anim d2' : ''}" x="${p.width - 70}" y="${startY + totalTextHeight}">"</text>
   
-  <!-- Author -->
-  <text class="quote-author${animate ? ' anim d3' : ''}" x="${centerX}" y="${p.height - 25}" text-anchor="middle">- ${quote.author}</text>
+  <!-- Author - fixed at bottom with proper spacing -->
+  <text class="quote-author${animate ? ' anim d3' : ''}" x="${centerX}" y="${p.height - 18}" text-anchor="middle">— ${quote.author}</text>
 </svg>`;
 }
 

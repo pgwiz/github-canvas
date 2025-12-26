@@ -13,6 +13,7 @@ import { Search, Sparkles, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGitHubStats, GitHubStats } from "@/hooks/useGitHubStats";
 import { useDevQuote, DevQuote } from "@/hooks/useDevQuote";
+import { useQuoteOfTheDay } from "@/hooks/useQuoteOfTheDay";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export type CardType = "stats" | "languages" | "streak" | "activity" | "quote" | "custom";
@@ -86,6 +87,7 @@ export default function Generator() {
   
   const { loading: statsLoading, error: statsError, fetchStats } = useGitHubStats();
   const { loading: quoteLoading, generateQuote } = useDevQuote();
+  const { qotd } = useQuoteOfTheDay();
 
   const isGenerating = statsLoading || quoteLoading;
 
@@ -333,6 +335,15 @@ export default function Generator() {
                 </Label>
                 <LinkGenerator config={config} />
               </GlassPanel>
+
+              {/* Quote of the Day */}
+              {qotd && (
+                <div className="text-center py-4">
+                  <p className="text-[10px] italic text-muted-foreground/70 leading-relaxed max-w-md mx-auto">
+                    Quote of the Day: "{qotd.quote}" — {qotd.author}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
