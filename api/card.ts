@@ -26,16 +26,13 @@ function formatNumber(num: number): string {
 }
 
 function escapeXml(str: string): string {
-  return str.replace(/[<>&'"]/g, (c) => {
-    switch (c) {
-      case '<': return '&lt;';
-      case '>': return '&gt;';
-      case '&': return '&amp;';
-      case "'": return '&apos;';
-      case '"': return '&quot;';
-      default: return c;
-    }
-  });
+  if (!str) return '';
+  return str
+    .split('&').join('&amp;')
+    .split('<').join('&lt;')
+    .split('>').join('&gt;')
+    .split("'").join('&apos;')
+    .split('"').join('&quot;');
 }
 
 async function fetchGitHubStats(username: string) {
@@ -347,7 +344,7 @@ function generateQuoteSVG(p: any): string {
   <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${bgFill}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="2"` : ''}/>
   <text x="25" y="35" fill="${p.secondaryColor}" font-size="24">"</text>
   <text x="45" y="50" class="quote">${escapeXml(quote.text)}</text>
-  <text x="${p.width - 25}" y="${p.height - 25}" class="author" text-anchor="end">— ${escapeXml(quote.author)}</text>
+  <text x="${p.width - 25}" y="${p.height - 25}" class="author" text-anchor="end">- ${escapeXml(quote.author)}</text>
 </svg>`;
 }
 
