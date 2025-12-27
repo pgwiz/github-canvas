@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect } from "react";
 
 const animations = [
   { value: "fadeIn", label: "Fade In", icon: "✨" },
@@ -53,12 +54,20 @@ interface CustomizationPanelProps {
 }
 
 export function CustomizationPanel({ config, updateConfig }: CustomizationPanelProps) {
+  const [activeTab, setActiveTab] = useState("colors");
+
+  useEffect(() => {
+    if (config.type === "banner" || config.type === "custom") {
+      setActiveTab("content");
+    }
+  }, [config.type]);
+
   return (
     <div className="relative rounded-lg overflow-hidden">
       {/* Inner frosted glass panel */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent backdrop-blur-sm" />
       <div className="relative p-4 rounded-lg border border-primary/10 bg-background/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]">
-        <Tabs defaultValue="colors" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-3 w-full mb-4 bg-background/30 backdrop-blur-sm">
             <TabsTrigger value="colors" className="data-[state=active]:bg-primary/20">Colors</TabsTrigger>
             <TabsTrigger value="layout" className="data-[state=active]:bg-primary/20">Layout</TabsTrigger>

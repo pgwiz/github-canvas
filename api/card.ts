@@ -396,6 +396,51 @@ function generateCustomSVG(p: any): string {
 </svg>`;
 }
 
+function generateBannerSVG(p: any): string {
+  const { bannerName, bannerDescription, waveStyle, animation = 'fadeIn', speed = 'normal' } = p;
+  const animStyles = getAnimationStyles(animation, p.primaryColor, speed);
+  const gradientDefs = getGradientDefs(p);
+  const bgFill = getBgFill(p);
+
+  const w = p.width;
+  const h = p.height;
+
+  let wavePath = '';
+  // Simple wave path generation logic
+  if (waveStyle === 'wave') {
+      wavePath = `M0 ${h} L0 ${h-60} C${w*0.3} ${h-100} ${w*0.7} ${h-20} ${w} ${h-60} L${w} ${h} Z`;
+  } else if (waveStyle === 'pulse') {
+      wavePath = `M0 ${h} L0 ${h-50} L${w*0.25} ${h-50} L${w*0.35} ${h-80} L${w*0.45} ${h-50} L${w} ${h-50} L${w} ${h} Z`;
+  } else if (waveStyle === 'flow') {
+       wavePath = `M0 ${h} L0 ${h-40} Q${w*0.5} ${h-90} ${w} ${h-40} L${w} ${h} Z`;
+  } else { // glitch or default
+      wavePath = `M0 ${h} L0 ${h-50} L${w*0.2} ${h-50} L${w*0.2} ${h-20} L${w*0.4} ${h-20} L${w*0.4} ${h-50} L${w} ${h-50} L${w} ${h} Z`;
+  }
+
+  // Second wave for depth
+  const wavePath2 = `M0 ${h} L0 ${h-40} C${w*0.4} ${h-10} ${w*0.8} ${h-80} ${w} ${h-40} L${w} ${h} Z`;
+
+  return `
+<svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
+  ${gradientDefs}
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap');
+    .banner-name { font: 700 48px 'Inter', sans-serif; fill: ${p.primaryColor}; text-anchor: middle; }
+    .banner-desc { font: 600 18px 'Inter', sans-serif; fill: ${p.secondaryColor}; text-anchor: middle; }
+    ${animStyles}
+  </style>
+  <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${bgFill}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="2"` : ''}/>
+
+  <path d="${wavePath}" fill="${p.primaryColor}" opacity="0.2" class="animate delay-1" />
+  <path d="${wavePath2}" fill="${p.secondaryColor}" opacity="0.2" class="animate delay-2" />
+
+  <g transform="translate(${p.width/2}, ${p.height/2 - 10})">
+    <text y="0" class="banner-name animate">${escapeXml(bannerName)}</text>
+    <text y="40" class="banner-desc animate delay-1">${escapeXml(bannerDescription)}</text>
+  </g>
+</svg>`;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS
   if (req.method === 'OPTIONS') {
@@ -426,6 +471,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     gradientAngle: parseInt(req.query.gradientAngle as string) || 135,
     gradientStart: decodeURIComponent((req.query.gradientStart as string) || '#667eea'),
     gradientEnd: decodeURIComponent((req.query.gradientEnd as string) || '#764ba2'),
+    bannerName: (req.query.bannerName as string) || 'Your Name',
+    bannerDescription: (req.query.bannerDescription as string) || 'Developer | Creator | Builder',
+    waveStyle: (req.query.waveStyle as string) || 'wave',
     stats: null as any,
     languages: [] as any[],
     streak: null as any,
@@ -451,6 +499,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     case 'activity': svg = generateActivitySVG(params); break;
     case 'quote': svg = generateQuoteSVG(params); break;
     case 'custom': svg = generateCustomSVG(params); break;
+    case 'banner': svg = generateBannerSVG(params); break;
     default: svg = generateStatsSVG(params);
   }
 
