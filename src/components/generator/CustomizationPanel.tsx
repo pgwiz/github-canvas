@@ -1,4 +1,4 @@
-import { CardConfig } from "@/pages/Generator";
+import { CardConfig, WaveStyle } from "@/pages/Generator";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -39,6 +39,13 @@ const gradientPresets = [
   { name: "Forest", start: "#38ef7d", end: "#11998e" },
   { name: "Fire", start: "#f12711", end: "#f5af19" },
   { name: "Night Sky", start: "#0f0c29", end: "#302b63" },
+];
+
+const waveStyles: { value: WaveStyle; label: string; icon: string; description: string }[] = [
+  { value: "wave", label: "Wave", icon: "🌊", description: "Smooth flowing waves" },
+  { value: "pulse", label: "Pulse", icon: "💓", description: "Pulsing motion" },
+  { value: "flow", label: "Flow", icon: "〰️", description: "Flowing curves" },
+  { value: "glitch", label: "Glitch", icon: "⚡", description: "Dev-style glitch effect" },
 ];
 interface CustomizationPanelProps {
   config: CardConfig;
@@ -366,6 +373,54 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
           </TabsContent>
 
           <TabsContent value="content" className="space-y-4">
+            {config.type === "banner" && (
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm mb-2 block">Your Name</Label>
+                  <Input
+                    value={config.bannerName}
+                    onChange={(e) => updateConfig({ bannerName: e.target.value })}
+                    placeholder="e.g., PETER BRIAN GWADENYA"
+                    className="bg-background/30 border-border/30"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm mb-2 block">Description / Tagline</Label>
+                  <Input
+                    value={config.bannerDescription}
+                    onChange={(e) => updateConfig({ bannerDescription: e.target.value })}
+                    placeholder="e.g., Full-Stack Developer | AI Architect | System Designer"
+                    className="bg-background/30 border-border/30"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm mb-2 block">Wave Animation Style</Label>
+                  <Select
+                    value={config.waveStyle}
+                    onValueChange={(v) => updateConfig({ waveStyle: v as WaveStyle })}
+                  >
+                    <SelectTrigger className="bg-background/30 border-border/30">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {waveStyles.map((style) => (
+                        <SelectItem key={style.value} value={style.value}>
+                          <div className="flex items-center gap-2">
+                            <span>{style.icon}</span>
+                            <span>{style.label}</span>
+                            <span className="text-xs text-muted-foreground">- {style.description}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Create an animated header/footer banner for your GitHub profile
+                </p>
+              </div>
+            )}
+
             {config.type === "custom" && (
               <div>
                 <Label className="text-sm mb-2 block">Custom Text</Label>
@@ -378,10 +433,10 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
               </div>
             )}
             
-            {config.type !== "custom" && (
+            {config.type !== "custom" && config.type !== "banner" && (
               <div className="text-center py-8 text-muted-foreground">
-                <p>Content settings are available for custom cards.</p>
-                <p className="text-sm mt-2 opacity-70">Select "Custom" card type to add custom text.</p>
+                <p>Content settings are available for Banner and Custom cards.</p>
+                <p className="text-sm mt-2 opacity-70">Select "Banner" or "Custom" card type to customize content.</p>
               </div>
             )}
           </TabsContent>

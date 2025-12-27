@@ -16,9 +16,11 @@ import { useDevQuote, DevQuote } from "@/hooks/useDevQuote";
 import { useQuoteOfTheDay } from "@/hooks/useQuoteOfTheDay";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export type CardType = "stats" | "languages" | "streak" | "activity" | "quote" | "custom";
+export type CardType = "stats" | "languages" | "streak" | "activity" | "quote" | "custom" | "banner";
 
 export type QuoteTopic = "random" | "debugging" | "coffee" | "deadlines" | "code-reviews" | "testing";
+
+export type WaveStyle = "wave" | "pulse" | "flow" | "glitch";
 
 export interface CardConfig {
   username: string;
@@ -43,6 +45,10 @@ export interface CardConfig {
   gradientEnd: string;
   previewFormat: "svg" | "img";
   quoteTopic: QuoteTopic;
+  // Banner fields
+  bannerName: string;
+  bannerDescription: string;
+  waveStyle: WaveStyle;
 }
 
 const defaultConfig: CardConfig = {
@@ -68,6 +74,9 @@ const defaultConfig: CardConfig = {
   gradientEnd: "#764ba2",
   previewFormat: "img",
   quoteTopic: "random",
+  bannerName: "",
+  bannerDescription: "",
+  waveStyle: "wave",
 };
 
 const quoteTopics: { value: QuoteTopic; label: string; emoji: string }[] = [
@@ -191,7 +200,7 @@ export default function Generator() {
                       onChange={(e) => updateConfig({ username: e.target.value })}
                       onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
                       className="pl-10 h-12 bg-background/30 backdrop-blur-sm border-border/30"
-                      disabled={config.type === "quote" || config.type === "custom"}
+                      disabled={config.type === "quote" || config.type === "custom" || config.type === "banner"}
                     />
                   </div>
                   <Button 
@@ -212,7 +221,7 @@ export default function Generator() {
                     )}
                   </Button>
                 </div>
-                {config.type !== "quote" && config.type !== "custom" && (
+                {config.type !== "quote" && config.type !== "custom" && config.type !== "banner" && (
                   <p className="text-xs text-muted-foreground mt-2">
                     Fetches real data from GitHub API
                   </p>
@@ -228,12 +237,13 @@ export default function Generator() {
                   value={config.type} 
                   onValueChange={(v) => updateConfig({ type: v as CardType })}
                 >
-                  <TabsList className="grid grid-cols-3 lg:grid-cols-6 w-full h-auto bg-background/30 backdrop-blur-sm">
+                  <TabsList className="grid grid-cols-4 lg:grid-cols-7 w-full h-auto bg-background/30 backdrop-blur-sm">
                     <TabsTrigger value="stats" className="py-3 data-[state=active]:bg-secondary/20">📊 Stats</TabsTrigger>
                     <TabsTrigger value="languages" className="py-3 data-[state=active]:bg-secondary/20">💻 Languages</TabsTrigger>
                     <TabsTrigger value="streak" className="py-3 data-[state=active]:bg-secondary/20">🔥 Streak</TabsTrigger>
                     <TabsTrigger value="activity" className="py-3 data-[state=active]:bg-secondary/20">📈 Activity</TabsTrigger>
                     <TabsTrigger value="quote" className="py-3 data-[state=active]:bg-secondary/20">💬 Quote</TabsTrigger>
+                    <TabsTrigger value="banner" className="py-3 data-[state=active]:bg-secondary/20">🎨 Banner</TabsTrigger>
                     <TabsTrigger value="custom" className="py-3 data-[state=active]:bg-secondary/20">✨ Custom</TabsTrigger>
                   </TabsList>
                 </Tabs>

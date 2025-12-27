@@ -27,6 +27,10 @@ interface CardParams {
   gradientAngle?: number;
   gradientStart?: string;
   gradientEnd?: string;
+  // Banner card fields
+  bannerName?: string;
+  bannerDescription?: string;
+  waveStyle?: string;
   stats?: {
     totalStars: number;
     publicRepos: number;
@@ -81,6 +85,9 @@ serve(async (req) => {
         gradientAngle: parseInt(url.searchParams.get('gradientAngle') || '135'),
         gradientStart: decodeURIComponent(url.searchParams.get('gradientStart') || '#667eea'),
         gradientEnd: decodeURIComponent(url.searchParams.get('gradientEnd') || '#764ba2'),
+        bannerName: decodeURIComponent(url.searchParams.get('bannerName') || ''),
+        bannerDescription: decodeURIComponent(url.searchParams.get('bannerDescription') || ''),
+        waveStyle: url.searchParams.get('waveStyle') || 'wave',
       };
       
       if (params.username && params.type !== 'quote' && params.type !== 'custom') {
@@ -188,6 +195,9 @@ function generateSVG(params: CardParams): string {
     gradientAngle = 135,
     gradientStart = '#667eea',
     gradientEnd = '#764ba2',
+    bannerName = '',
+    bannerDescription = '',
+    waveStyle = 'wave',
     stats,
     languages,
     streak,
@@ -360,6 +370,17 @@ function generateSVG(params: CardParams): string {
       return generateCustomSVG({
         width, height, bgColor: bgFill, borderRadius, borderStyle,
         primaryColor, textColor, customText, animate,
+        commonStyles, gradientDefs,
+      });
+    
+    case 'banner':
+      return generateBannerSVG({
+        width, height, bgColor: bgFill, borderRadius, borderStyle,
+        primaryColor, secondaryColor, textColor, animate, speed,
+        bannerName: bannerName || 'Your Name',
+        bannerDescription: bannerDescription || 'Developer | Creator | Builder',
+        waveStyle,
+        gradientStart, gradientEnd,
         commonStyles, gradientDefs,
       });
     
@@ -680,6 +701,138 @@ function generateCustomSVG(p: any): string {
   ${p.commonStyles}
   <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${p.bgColor}" ${p.borderStyle}/>
   <text class="title" x="${centerX}" y="${centerY}" text-anchor="middle" font-size="20" ${scaleClass}>${p.customText || 'Your custom text here'}</text>
+</svg>`;
+}
+
+function generateBannerSVG(p: any): string {
+  const { bannerName, bannerDescription, waveStyle, animate, speed, gradientStart, gradientEnd } = p;
+  const centerX = p.width / 2;
+  
+  // Get speed multiplier for animations
+  const getSpeedMultiplier = (s: string): number => {
+    const multipliers: Record<string, number> = { slow: 2, normal: 1, fast: 0.5 };
+    return multipliers[s] || 1;
+  };
+  const m = getSpeedMultiplier(speed);
+  const waveDuration = 20 * m;
+  
+  // Generate wave paths based on style
+  const getWavePaths = (style: string): string => {
+    const h = p.height;
+    const w = p.width;
+    
+    const waveStyles: Record<string, { path1: string; path2: string }> = {
+      wave: {
+        path1: `M0 0L 0 ${h * 0.6}Q ${w * 0.25} ${h * 0.8} ${w * 0.5} ${h * 0.65}T ${w} ${h * 0.78}L ${w} 0 Z;M0 0L 0 ${h * 0.73}Q ${w * 0.25} ${h * 0.8} ${w * 0.5} ${h * 0.7}T ${w} ${h * 0.65}L ${w} 0 Z;M0 0L 0 ${h * 0.83}Q ${w * 0.25} ${h * 0.68} ${w * 0.5} ${h * 0.83}T ${w} ${h * 0.65}L ${w} 0 Z;M0 0L 0 ${h * 0.6}Q ${w * 0.25} ${h * 0.8} ${w * 0.5} ${h * 0.65}T ${w} ${h * 0.78}L ${w} 0 Z`,
+        path2: `M0 0L 0 ${h * 0.68}Q ${w * 0.25} ${h * 0.9} ${w * 0.5} ${h * 0.75}T ${w} ${h * 0.8}L ${w} 0 Z;M0 0L 0 ${h * 0.75}Q ${w * 0.25} ${h * 0.6} ${w * 0.5} ${h * 0.6}T ${w} ${h * 0.7}L ${w} 0 Z;M0 0L 0 ${h * 0.73}Q ${w * 0.25} ${h * 0.63} ${w * 0.5} ${h * 0.75}T ${w} ${h * 0.83}L ${w} 0 Z;M0 0L 0 ${h * 0.68}Q ${w * 0.25} ${h * 0.9} ${w * 0.5} ${h * 0.75}T ${w} ${h * 0.8}L ${w} 0 Z`,
+      },
+      pulse: {
+        path1: `M0 0L 0 ${h * 0.5}Q ${w * 0.25} ${h * 0.7} ${w * 0.5} ${h * 0.5}T ${w} ${h * 0.6}L ${w} 0 Z;M0 0L 0 ${h * 0.7}Q ${w * 0.25} ${h * 0.5} ${w * 0.5} ${h * 0.7}T ${w} ${h * 0.5}L ${w} 0 Z;M0 0L 0 ${h * 0.5}Q ${w * 0.25} ${h * 0.7} ${w * 0.5} ${h * 0.5}T ${w} ${h * 0.6}L ${w} 0 Z`,
+        path2: `M0 0L 0 ${h * 0.6}Q ${w * 0.25} ${h * 0.4} ${w * 0.5} ${h * 0.6}T ${w} ${h * 0.5}L ${w} 0 Z;M0 0L 0 ${h * 0.4}Q ${w * 0.25} ${h * 0.6} ${w * 0.5} ${h * 0.4}T ${w} ${h * 0.6}L ${w} 0 Z;M0 0L 0 ${h * 0.6}Q ${w * 0.25} ${h * 0.4} ${w * 0.5} ${h * 0.6}T ${w} ${h * 0.5}L ${w} 0 Z`,
+      },
+      flow: {
+        path1: `M0 0L 0 ${h * 0.55}C ${w * 0.33} ${h * 0.75} ${w * 0.66} ${h * 0.45} ${w} ${h * 0.65}L ${w} 0 Z;M0 0L 0 ${h * 0.65}C ${w * 0.33} ${h * 0.45} ${w * 0.66} ${h * 0.75} ${w} ${h * 0.55}L ${w} 0 Z;M0 0L 0 ${h * 0.55}C ${w * 0.33} ${h * 0.75} ${w * 0.66} ${h * 0.45} ${w} ${h * 0.65}L ${w} 0 Z`,
+        path2: `M0 0L 0 ${h * 0.45}C ${w * 0.33} ${h * 0.65} ${w * 0.66} ${h * 0.35} ${w} ${h * 0.55}L ${w} 0 Z;M0 0L 0 ${h * 0.55}C ${w * 0.33} ${h * 0.35} ${w * 0.66} ${h * 0.65} ${w} ${h * 0.45}L ${w} 0 Z;M0 0L 0 ${h * 0.45}C ${w * 0.33} ${h * 0.65} ${w * 0.66} ${h * 0.35} ${w} ${h * 0.55}L ${w} 0 Z`,
+      },
+      glitch: {
+        path1: `M0 0L 0 ${h * 0.6}L ${w * 0.2} ${h * 0.55}L ${w * 0.4} ${h * 0.7}L ${w * 0.6} ${h * 0.5}L ${w * 0.8} ${h * 0.65}L ${w} ${h * 0.6}L ${w} 0 Z;M0 0L 0 ${h * 0.55}L ${w * 0.2} ${h * 0.7}L ${w * 0.4} ${h * 0.5}L ${w * 0.6} ${h * 0.65}L ${w * 0.8} ${h * 0.55}L ${w} ${h * 0.7}L ${w} 0 Z;M0 0L 0 ${h * 0.65}L ${w * 0.2} ${h * 0.5}L ${w * 0.4} ${h * 0.6}L ${w * 0.6} ${h * 0.55}L ${w * 0.8} ${h * 0.7}L ${w} ${h * 0.5}L ${w} 0 Z;M0 0L 0 ${h * 0.6}L ${w * 0.2} ${h * 0.55}L ${w * 0.4} ${h * 0.7}L ${w * 0.6} ${h * 0.5}L ${w * 0.8} ${h * 0.65}L ${w} ${h * 0.6}L ${w} 0 Z`,
+        path2: `M0 0L 0 ${h * 0.5}L ${w * 0.3} ${h * 0.65}L ${w * 0.5} ${h * 0.45}L ${w * 0.7} ${h * 0.6}L ${w} ${h * 0.5}L ${w} 0 Z;M0 0L 0 ${h * 0.65}L ${w * 0.3} ${h * 0.45}L ${w * 0.5} ${h * 0.6}L ${w * 0.7} ${h * 0.5}L ${w} ${h * 0.65}L ${w} 0 Z;M0 0L 0 ${h * 0.45}L ${w * 0.3} ${h * 0.6}L ${w * 0.5} ${h * 0.5}L ${w * 0.7} ${h * 0.65}L ${w} ${h * 0.45}L ${w} 0 Z;M0 0L 0 ${h * 0.5}L ${w * 0.3} ${h * 0.65}L ${w * 0.5} ${h * 0.45}L ${w * 0.7} ${h * 0.6}L ${w} ${h * 0.5}L ${w} 0 Z`,
+      },
+    };
+    
+    return waveStyles[style] ? JSON.stringify(waveStyles[style]) : JSON.stringify(waveStyles.wave);
+  };
+  
+  const wavePaths = JSON.parse(getWavePaths(waveStyle));
+  const keyTimes = waveStyle === 'pulse' || waveStyle === 'flow' ? '0;0.5;1' : '0;0.333;0.667;1';
+  const keySplines = waveStyle === 'pulse' || waveStyle === 'flow' 
+    ? '0.4 0 0.6 1;0.4 0 0.6 1' 
+    : '0.2 0 0.2 1;0.2 0 0.2 1;0.2 0 0.2 1';
+  
+  const waveAnimation = animate ? `
+    <animate 
+      attributeName="d" 
+      dur="${waveDuration}s" 
+      repeatCount="indefinite" 
+      keyTimes="${keyTimes}" 
+      calcMode="spline" 
+      keySplines="${keySplines}"
+      values="${wavePaths.path1}"/>
+  ` : '';
+  
+  const waveAnimation2 = animate ? `
+    <animate 
+      attributeName="d" 
+      dur="${waveDuration}s" 
+      repeatCount="indefinite" 
+      keyTimes="${keyTimes}" 
+      calcMode="spline" 
+      keySplines="${keySplines}"
+      begin="-${waveDuration / 2}s"
+      values="${wavePaths.path2}"/>
+  ` : '';
+  
+  // Calculate font sizes based on width
+  const nameFontSize = Math.min(50, p.width / 12);
+  const descFontSize = Math.min(20, p.width / 30);
+  
+  return `
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}">
+  <style>
+    .banner-name { 
+      font-size: ${nameFontSize}px; 
+      font-weight: 700; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; 
+      fill: ${p.primaryColor};
+    }
+    .banner-desc { 
+      font-size: ${descFontSize}px; 
+      font-weight: 500; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; 
+      fill: ${p.primaryColor};
+    }
+    ${animate ? `
+    .banner-name, .banner-desc {
+      animation: fadeIn 1.2s ease-in-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    ` : ''}
+  </style>
+  
+  <defs>
+    <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="${gradientStart}"/>
+      <stop offset="100%" stop-color="${gradientEnd}"/>
+    </linearGradient>
+    <clipPath id="roundedClip">
+      <rect x="0" y="0" width="${p.width}" height="${p.height}" rx="${p.borderRadius}"/>
+    </clipPath>
+  </defs>
+  
+  <!-- Background -->
+  <rect x="0" y="0" width="${p.width}" height="${p.height}" rx="${p.borderRadius}" fill="${p.bgColor}"/>
+  
+  <!-- Animated Waves -->
+  <g clip-path="url(#roundedClip)">
+    <g transform="translate(${centerX}, ${p.height / 2}) scale(1, 1) translate(-${centerX}, -${p.height / 2})">
+      <path d="" fill="url(#waveGradient)" opacity="0.4">
+        ${waveAnimation}
+      </path>
+      <path d="" fill="url(#waveGradient)" opacity="0.4">
+        ${waveAnimation2}
+      </path>
+    </g>
+  </g>
+  
+  <!-- Border -->
+  ${p.borderStyle ? `<rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="none" ${p.borderStyle}/>` : ''}
+  
+  <!-- Text Content -->
+  <text text-anchor="middle" alignment-baseline="middle" x="50%" y="40%" class="banner-name">${bannerName}</text>
+  <text text-anchor="middle" alignment-baseline="middle" x="50%" y="60%" class="banner-desc">${bannerDescription}</text>
 </svg>`;
 }
 
