@@ -411,72 +411,83 @@ function generateStatsSVG(p: any): string {
 function generateLanguagesSVG(p: any): string {
   const { languages, animate } = p;
   const langs = languages.slice(0, 6);
-  const barWidth = p.width - 60;
-  const barHeight = 10;
-  const centerX = p.width / 2;
+  const barWidth = p.width - 50;
+  const barHeight = 8;
+  const leftPadding = 25;
   
-  // Generate the stacked progress bar with rounded ends
+  // Generate the stacked progress bar segments
   let barSegments = '';
   let currentX = 0;
   
   for (let i = 0; i < langs.length; i++) {
     const lang = langs[i];
     const segmentWidth = barWidth * (lang.percentage / 100);
-    const animClass = animate ? `class="animate delay-${i + 1}"` : '';
-    // First segment gets left rounded, last gets right rounded
-    const isFirst = i === 0;
-    const isLast = i === langs.length - 1;
-    const rx = isFirst || isLast ? 5 : 0;
-    barSegments += `<rect x="${currentX}" y="0" width="${segmentWidth}" height="${barHeight}" fill="${lang.color}" ${isFirst ? 'rx="5"' : ''} ${animClass}/>`;
+    const animClass = animate ? `class="lang-progress"` : '';
+    barSegments += `<rect mask="url(#rect-mask)" data-testid="lang-progress" x="${currentX}" y="0" width="${segmentWidth}" height="${barHeight}" fill="${lang.color}" ${animClass}/>`;
     currentX += segmentWidth;
   }
-  // Add rounded cap at end
-  barSegments = `<clipPath id="barClip"><rect x="0" y="0" width="${barWidth}" height="${barHeight}" rx="5"/></clipPath><g clip-path="url(#barClip)">${barSegments}</g>`;
   
-  // Generate the legend - 2 columns, 3 rows
-  let legendItems = '';
-  const legendStartY = 65;
-  const colWidth = (p.width - 60) / 2;
-  const rowHeight = 24;
+  // Generate the legend - 2 columns, 3 rows (first 3 in left column, next 3 in right column)
+  let leftColumn = '';
+  let rightColumn = '';
+  const colSpacing = 150;
+  const rowSpacing = 25;
   
   for (let i = 0; i < langs.length; i++) {
     const lang = langs[i];
-    const col = i % 2;
-    const row = Math.floor(i / 2);
-    const x = 30 + col * colWidth;
-    const y = legendStartY + row * rowHeight;
-    const animClass = animate ? `class="animate delay-${i + 1}"` : '';
+    const col = i < 3 ? 0 : 1;
+    const row = i < 3 ? i : i - 3;
+    const delay = animate ? `style="animation-delay: ${450 + (i * 150)}ms"` : '';
     
-    legendItems += `
-    <g transform="translate(${x}, ${y})" ${animClass}>
-      <circle r="5" cx="5" cy="5" fill="${lang.color}"/>
-      <text x="16" y="9" class="lang-label">${lang.name} ${lang.percentage}%</text>
-    </g>`;
+    const item = `<g transform="translate(0, ${row * rowSpacing})">
+    <g class="${animate ? 'stagger' : ''}" ${delay}>
+      <circle cx="5" cy="6" r="5" fill="${lang.color}"/>
+      <text data-testid="lang-name" x="15" y="10" class="lang-name">${lang.name} ${lang.percentage}%</text>
+    </g>
+  </g>`;
+    
+    if (col === 0) {
+      leftColumn += item;
+    } else {
+      rightColumn += item;
+    }
   }
   
-  return `
-<svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" fill="none" role="img">
   ${p.gradientDefs || ''}
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap');
-    .title { font: 600 16px 'Inter', sans-serif; fill: ${p.primaryColor}; }
-    .lang-label { font: 400 12px 'Inter', sans-serif; fill: ${p.textColor}; }
+    .header { font: 600 18px 'Segoe UI', Ubuntu, Sans-Serif; fill: ${p.primaryColor}; animation: fadeInAnimation 0.8s ease-in-out forwards; }
+    @supports(-moz-appearance: auto) { .header { font-size: 15.5px; } }
+    .lang-name { font: 400 11px "Segoe UI", Ubuntu, Sans-Serif; fill: ${p.textColor}; }
     ${animate ? `
-      @keyframes fadeIn { 0% { opacity: 0; transform: translateY(-10px); } 100% { opacity: 1; transform: translateY(0); } }
-      .animate { animation: fadeIn 0.8s ease-out forwards; opacity: 0; }
-      .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; } .delay-5 { animation-delay: 0.5s; } .delay-6 { animation-delay: 0.6s; }
+    @keyframes slideInAnimation { from { width: 0; } to { width: calc(100%-100px); } }
+    @keyframes growWidthAnimation { from { width: 0; } to { width: 100%; } }
+    @keyframes fadeInAnimation { from { opacity: 0; } to { opacity: 1; } }
+    .stagger { opacity: 0; animation: fadeInAnimation 0.3s ease-in-out forwards; }
+    #rect-mask rect { animation: slideInAnimation 1s ease-in-out forwards; }
+    .lang-progress { animation: growWidthAnimation 0.6s ease-in-out forwards; }
     ` : ''}
   </style>
-  <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${p.bgColor}" ${p.borderStyle}/>
   
-  <!-- Centered Title -->
-  <text class="title ${animate ? 'animate delay-1' : ''}" x="${centerX}" y="30" text-anchor="middle">Most Used Languages</text>
+  <rect data-testid="card-bg" x="0.5" y="0.5" rx="${p.borderRadius}" height="99%" width="${p.width - 1}" fill="${p.bgColor}" ${p.borderStyle}/>
   
-  <!-- Stacked Bar -->
-  <g transform="translate(30, 45)">${barSegments}</g>
+  <g data-testid="card-title" transform="translate(${leftPadding}, 35)">
+    <text x="0" y="0" class="header" data-testid="header">Most Used Languages</text>
+  </g>
   
-  <!-- Legend -->
-  ${legendItems}
+  <g data-testid="main-card-body" transform="translate(0, 55)">
+    <svg data-testid="lang-items" x="${leftPadding}">
+      <mask id="rect-mask">
+        <rect x="0" y="0" width="${barWidth}" height="${barHeight}" fill="white" rx="5"/>
+      </mask>
+      ${barSegments}
+      
+      <g transform="translate(0, 25)">
+        <g transform="translate(0, 0)">${leftColumn}</g>
+        <g transform="translate(${colSpacing}, 0)">${rightColumn}</g>
+      </g>
+    </svg>
+  </g>
 </svg>`;
 }
 
