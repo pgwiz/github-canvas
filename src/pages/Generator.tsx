@@ -16,7 +16,7 @@ import { useDevQuote, DevQuote } from "@/hooks/useDevQuote";
 import { useQuoteOfTheDay } from "@/hooks/useQuoteOfTheDay";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export type CardType = "stats" | "languages" | "streak" | "activity" | "quote" | "custom" | "banner";
+export type CardType = "stats" | "languages" | "streak" | "activity" | "quote" | "custom" | "banner" | "contribution";
 
 export type QuoteTopic = "random" | "debugging" | "coffee" | "deadlines" | "code-reviews" | "testing";
 
@@ -237,13 +237,14 @@ export default function Generator() {
                   value={config.type} 
                   onValueChange={(v) => updateConfig({ type: v as CardType })}
                 >
-                  <TabsList className="grid grid-cols-4 lg:grid-cols-7 w-full h-auto bg-background/30 backdrop-blur-sm">
+                  <TabsList className="grid grid-cols-4 lg:grid-cols-4 w-full h-auto bg-background/30 backdrop-blur-sm">
                     <TabsTrigger value="stats" className="py-3 data-[state=active]:bg-secondary/20">📊 Stats</TabsTrigger>
                     <TabsTrigger value="languages" className="py-3 data-[state=active]:bg-secondary/20">💻 Languages</TabsTrigger>
                     <TabsTrigger value="streak" className="py-3 data-[state=active]:bg-secondary/20">🔥 Streak</TabsTrigger>
                     <TabsTrigger value="activity" className="py-3 data-[state=active]:bg-secondary/20">📈 Activity</TabsTrigger>
                     <TabsTrigger value="quote" className="py-3 data-[state=active]:bg-secondary/20">💬 Quote</TabsTrigger>
                     <TabsTrigger value="banner" className="py-3 data-[state=active]:bg-secondary/20">🎨 Banner</TabsTrigger>
+                    <TabsTrigger value="contribution" className="py-3 data-[state=active]:bg-secondary/20">🟩 Contribution</TabsTrigger>
                     <TabsTrigger value="custom" className="py-3 data-[state=active]:bg-secondary/20">✨ Custom</TabsTrigger>
                   </TabsList>
                 </Tabs>

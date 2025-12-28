@@ -72,16 +72,19 @@ async function fetchGitHubStats(username: string) {
     const languages = Object.entries(languageBytes)
       .map(([name, bytes]) => ({
         name,
-        percentage: totalBytes > 0 ? Math.round((bytes / totalBytes) * 100) : 0,
+        percentage: totalBytes > 0 ? (bytes / totalBytes) * 100 : 0, // Keep precision for now
         color: getLanguageColor(name),
       }))
       .sort((a, b) => b.percentage - a.percentage)
-      .slice(0, 5);
+      .slice(0, 6); // Take top 6
+
+    // Normalize percentages to sum to 100 for visualization if needed, but display raw
+    // Actually, usually we just display what we have.
 
     return {
       user: { login: user.login, name: user.name, avatar_url: user.avatar_url, created_at: user.created_at },
       stats: { totalStars, totalForks, publicRepos: user.public_repos, followers: user.followers, following: user.following },
-      languages,
+      languages: languages.map(l => ({...l, percentage: parseFloat(l.percentage.toFixed(2))})),
       streak: { current: 0, longest: 0, total: repos.length },
       activity: Array(7).fill(Math.floor(Math.random() * 10)),
     };
@@ -252,20 +255,35 @@ function generateLanguagesSVG(p: any): string {
   const animStyles = getAnimationStyles(animation, p.primaryColor, speed);
   const gradientDefs = getGradientDefs(p);
   const bgFill = getBgFill(p);
+
   const barWidth = p.width - 50;
+  const barHeight = 10;
+
+  // Calculate segments
   let offset = 0;
-  const bars = languages.map((lang: any, i: number) => {
+  const segments = languages.map((lang: any, i: number) => {
     const width = (lang.percentage / 100) * barWidth;
-    const bar = `<rect x="${offset}" y="0" width="${width}" height="8" fill="${lang.color}" rx="2" class="animate delay-${i + 1}"/>`;
-    offset += width;
-    return bar;
+    // ensure minimum visible width if percentage > 0
+    const w = Math.max(width, width > 0 ? 2 : 0);
+    const rect = `<rect x="${offset}" y="0" width="${w}" height="${barHeight}" fill="${lang.color}"/>`;
+    offset += w;
+    return rect;
   }).join('');
 
-  const labels = languages.map((lang: any, i: number) => `
-    <g transform="translate(${(i % 3) * 140}, ${Math.floor(i / 3) * 20})" class="animate delay-${i + 1}">
-      <circle r="5" cx="5" cy="5" fill="${lang.color}"/>
-      <text x="15" y="9" class="lang-label">${lang.name} ${lang.percentage}%</text>
-    </g>`).join('');
+  // Prepare legend items
+  const mid = Math.ceil(languages.length / 2);
+  const leftCol = languages.slice(0, mid);
+  const rightCol = languages.slice(mid);
+
+  const renderItem = (lang: any, y: number) => `
+    <g transform="translate(0, ${y})">
+      <circle cx="5" cy="5" r="5" fill="${lang.color}"/>
+      <text x="15" y="9" class="lang-label" font-weight="700">${lang.name} <tspan font-weight="400">${lang.percentage}%</tspan></text>
+    </g>
+  `;
+
+  const leftItems = leftCol.map((l: any, i: number) => renderItem(l, i * 25)).join('');
+  const rightItems = rightCol.map((l: any, i: number) => renderItem(l, i * 25)).join('');
 
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
@@ -273,14 +291,31 @@ function generateLanguagesSVG(p: any): string {
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap');
     .title { font: 600 18px 'Inter', sans-serif; fill: ${p.primaryColor}; }
-    .lang-label { font: 400 11px 'Inter', sans-serif; fill: ${p.textColor}; }
+    .lang-label { font: 400 12px 'Inter', sans-serif; fill: ${p.textColor}; }
     ${animStyles}
   </style>
   <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${bgFill}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="2"` : ''}/>
-  <g transform="translate(25, 25)">
+
+  <g transform="translate(25, 25)" class="animate">
     <text class="title">Most Used Languages</text>
-    <g transform="translate(0, 35)">${bars}</g>
-    <g transform="translate(0, 55)">${labels}</g>
+
+    <!-- Progress Bar -->
+    <g transform="translate(0, 30)">
+      <defs>
+        <clipPath id="barClip">
+          <rect width="${barWidth}" height="${barHeight}" rx="${barHeight/2}"/>
+        </clipPath>
+      </defs>
+      <g clip-path="url(#barClip)">
+        ${segments}
+      </g>
+    </g>
+
+    <!-- Legend -->
+    <g transform="translate(0, 60)">
+      <g>${leftItems}</g>
+      <g transform="translate(${barWidth / 2}, 0)">${rightItems}</g>
+    </g>
   </g>
 </svg>`;
 }
@@ -401,20 +436,16 @@ function generateBannerSVG(p: any): string {
   const gradientDefs = getGradientDefs(p);
   const bgFill = getBgFill(p);
 
-  // Use user provided colors or gradient for the waves
-  // We'll create a special gradient for the waves based on primary/secondary or user's gradient settings
   const waveGradientId = 'waveGradient';
   let waveGradientDef = '';
 
   if (p.gradient) {
-     // If user enabled gradient, reuse it or create a variation
      waveGradientDef = `
       <linearGradient id="${waveGradientId}" x1="0%" y1="0%" x2="100%" y2="0%">
         <stop offset="0%" stop-color="${p.gradientStart}"/>
         <stop offset="100%" stop-color="${p.gradientEnd}"/>
       </linearGradient>`;
   } else {
-    // If not, use primary to secondary
      waveGradientDef = `
       <linearGradient id="${waveGradientId}" x1="0%" y1="0%" x2="100%" y2="0%">
         <stop offset="0%" stop-color="${p.primaryColor}"/>
@@ -422,22 +453,8 @@ function generateBannerSVG(p: any): string {
       </linearGradient>`;
   }
 
-  // Animation durations adjusted by speed
   const m = getSpeedMultiplier(speed);
   const dur = 20 * m;
-
-  const w = p.width;
-  // Scaling factor for width if width is not 854 (from reference)
-  const scaleX = w / 854;
-
-  // We can just use viewBox to scale everything instead of calculating paths manually
-  // But we need to keep the aspect ratio or stretch? The reference is 854x200.
-  // We should render the content in a group scaled to fit p.width and p.height
-  // The waves are at bottom ~100-200.
-
-  // Let's use the exact paths from the reference but ensure they stretch to width
-  // The reference paths are relative to 854.
-  // We will wrap the wave group in a transform scale.
 
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
@@ -454,7 +471,6 @@ function generateBannerSVG(p: any): string {
 
   <rect x="0" y="0" width="${p.width}" height="${p.height}" rx="${p.borderRadius}" fill="${bgFill}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="2"` : ''}/>
 
-  <!-- Waves Container: Scaled to fit width and positioned at bottom -->
   <g transform="translate(0, ${p.height - 200}) scale(${p.width / 854}, 1)">
     <g transform="translate(427, 100) scale(1, 1) translate(-427, -100)">
         <path d="" fill="url(#${waveGradientId})" opacity="0.4">
@@ -470,6 +486,92 @@ function generateBannerSVG(p: any): string {
 
   <text text-anchor="middle" alignment-baseline="middle" x="50%" y="40%" class="banner-text">${escapeXml(bannerName)}</text>
   <text text-anchor="middle" alignment-baseline="middle" x="50%" y="60%" class="banner-desc">${escapeXml(bannerDescription)}</text>
+</svg>`;
+}
+
+function generateContributionSVG(p: any): string {
+  const { animation = 'fadeIn', speed = 'normal' } = p;
+  const animStyles = getAnimationStyles(animation, p.primaryColor, speed);
+  const gradientDefs = getGradientDefs(p);
+  const bgFill = getBgFill(p);
+
+  // Simulate contribution data
+  // 53 weeks, 7 days
+  const cols = 53;
+  const rows = 7;
+  const cellS = 10;
+  const gap = 3;
+
+  // Hash username to seed pseudo-randomness
+  let seed = 0;
+  if (p.username) {
+    for (let i = 0; i < p.username.length; i++) {
+      seed = (seed << 5) - seed + p.username.charCodeAt(i);
+      seed |= 0;
+    }
+  }
+
+  const rnd = () => {
+    seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+
+  // Colors for levels (similar to GitHub)
+  // Level 0: transparent/low opacity
+  // Level 1-4: increasing opacity of primary color
+  const getLevelColor = (level: number) => {
+    if (level === 0) return `${p.textColor}10`; // Very faint text color for empty
+    const alpha = [0.2, 0.4, 0.7, 1.0][level - 1];
+    return p.primaryColor; // We will use opacity in rect
+  };
+
+  const getOpacity = (level: number) => {
+    if (level === 0) return 0.1;
+    return [0.3, 0.5, 0.7, 1.0][level - 1];
+  }
+
+  let cells = '';
+  for (let c = 0; c < cols; c++) {
+    for (let r = 0; r < rows; r++) {
+      const val = rnd();
+      let level = 0;
+      if (val > 0.8) level = 4;
+      else if (val > 0.6) level = 3;
+      else if (val > 0.4) level = 2;
+      else if (val > 0.2) level = 1;
+
+      const x = c * (cellS + gap);
+      const y = r * (cellS + gap);
+
+      cells += `<rect x="${x}" y="${y}" width="${cellS}" height="${cellS}" rx="2" fill="${p.primaryColor}" opacity="${getOpacity(level)}" />`;
+    }
+  }
+
+  // Calculate required width/height for graph
+  const graphW = cols * (cellS + gap) - gap;
+  const graphH = rows * (cellS + gap) - gap;
+
+  // Center the graph
+  const paddingX = (p.width - graphW) / 2;
+  const paddingY = (p.height - graphH) / 2 + 10; // offset for title
+
+  return `
+<svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
+  ${gradientDefs}
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap');
+    .title { font: 600 14px 'Inter', sans-serif; fill: ${p.textColor}; }
+    ${animStyles}
+  </style>
+  <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${bgFill}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="2"` : ''}/>
+
+  <text x="${p.width/2}" y="25" text-anchor="middle" class="title">Contribution Graph</text>
+
+  <g transform="translate(${Math.max(10, paddingX)}, ${Math.max(40, paddingY)})" class="animate">
+    ${cells}
+  </g>
 </svg>`;
 }
 
@@ -532,6 +634,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     case 'quote': svg = generateQuoteSVG(params); break;
     case 'custom': svg = generateCustomSVG(params); break;
     case 'banner': svg = generateBannerSVG(params); break;
+    case 'contribution': svg = generateContributionSVG(params); break;
     default: svg = generateStatsSVG(params);
   }
 
@@ -547,5 +650,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
   res.setHeader('Cache-Control', 'public, max-age=3600');
+
+  // Add XML declaration and trim
+  if (!svg.trim().startsWith('<?xml')) {
+    svg = `<?xml version="1.0" encoding="UTF-8"?>\n${svg.trim()}`;
+  }
+
   return res.status(200).send(svg);
 }

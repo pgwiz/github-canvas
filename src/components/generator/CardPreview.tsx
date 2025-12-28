@@ -29,13 +29,13 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
     const hostname = window.location.hostname;
     
     // On Lovable preview or localhost - always use Supabase edge function
-    const isLovable = hostname.includes('lovable.app') || hostname.includes('lovableproject.com') || hostname.includes('localhost') || hostname.includes('127.0.0.1');
+    const isLovable = hostname.includes('lovable.app') || hostname.includes('lovableproject.com');
     
     if (isLovable && supabaseUrl) {
       return `${supabaseUrl}/functions/v1/generate-card`;
     }
     
-    // Self-hosted (Vercel, Netlify, custom domain) - use /api/card route
+    // Self-hosted (Vercel, Netlify, custom domain) or Localhost (if API is running) - use /api/card route
     return `${window.location.origin}/api/card`;
   }, [supabaseUrl, selfHostedApiUrl]);
 
