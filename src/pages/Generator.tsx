@@ -74,8 +74,8 @@ const defaultConfig: CardConfig = {
   gradientEnd: "#764ba2",
   previewFormat: "img",
   quoteTopic: "random",
-  bannerName: "",
-  bannerDescription: "",
+  bannerName: "Your Name",
+  bannerDescription: "Developer | Creator | Builder",
   waveStyle: "wave",
 };
 
