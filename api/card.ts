@@ -91,56 +91,59 @@ async function fetchContributionStats(username: string) {
         const calendar = json.data.user.contributionsCollection.contributionCalendar;
         const days = calendar.weeks.flatMap((w: any) => w.contributionDays);
 
-        // Calculate Streak
+        // Calculate Streak logic
         let currentStreak = 0;
         let longestStreak = 0;
         let tempStreak = 0;
-        // Dates for ranges
-        const today = new Date();
-        const oneYearAgo = new Date();
-        oneYearAgo.setFullYear(today.getFullYear() - 1);
+        let tempStreakStart = '';
+        let longestStreakStart = '';
+        let longestStreakEnd = '';
+        let currentStreakStart = '';
 
-        // Iterate days to find streaks
+        // Iterate days to find longest streak
         // Note: GitHub returns days sorted by date ascending
         for (const day of days) {
             if (day.contributionCount > 0) {
+                if (tempStreak === 0) {
+                    tempStreakStart = day.date;
+                }
                 tempStreak++;
-                if (tempStreak > longestStreak) longestStreak = tempStreak;
+                if (tempStreak > longestStreak) {
+                    longestStreak = tempStreak;
+                    longestStreakStart = tempStreakStart;
+                    longestStreakEnd = day.date;
+                }
             } else {
                 tempStreak = 0;
             }
         }
 
         // Current Streak (checking from end backwards)
-        // Check if today has contribution or if yesterday was the end of streak
+        const today = new Date();
         const todayStr = today.toISOString().split('T')[0];
-        const lastDay = days[days.length - 1];
-
-        // If last day in calendar is today
-        let checkingIndex = days.length - 1;
-
-        // If today has 0 contributions, we might still have a streak from yesterday?
-        // Usually "Current Streak" includes today if contributions > 0, or yesterday if today is 0 but yesterday was > 0 (and today isn't over).
-        // For simplicity: Count consecutive days ending at last available data point with > 0.
-
         let cStreak = 0;
+        let cStreakEnd = '';
+
         for (let i = days.length - 1; i >= 0; i--) {
-            if (days[i].contributionCount > 0) {
+            const day = days[i];
+            if (day.contributionCount > 0) {
+                if (cStreak === 0) {
+                   cStreakEnd = day.date; // Use the actual last contribution day for calculation
+                }
+                currentStreakStart = day.date; // Continuously update start date as we go back
                 cStreak++;
             } else {
-                // If it's today and 0, we don't break yet if we haven't started counting?
-                // Actually GitHub streaks logic is complex.
-                // Simple version:
-                if (days[i].date === todayStr && cStreak === 0) continue; // Skip today if 0
+                // If we encounter a 0, check if it is today.
+                // If it is today, and we haven't found a streak yet (cStreak is 0), ignore it (streak might continue from yesterday).
+                // If it is NOT today, or if we already have a streak, then the streak is broken.
+                if (day.date === todayStr && cStreak === 0) continue;
                 break;
             }
         }
         currentStreak = cStreak;
 
-        // Longest Streak Date Range logic is complex to extract, keeping it simple for now
-        // Assuming we just want the numbers.
-
-        // Total Contributions Date Range
+        // Total Contributions Date Range (Last Year)
+        // Usually GitHub graph is ~365 days + day of week offset
         const startDate = days[0].date;
         const endDate = days[days.length - 1].date;
 
@@ -148,9 +151,13 @@ async function fetchContributionStats(username: string) {
             totalContributions: calendar.totalContributions,
             currentStreak,
             longestStreak,
-            startDate,
-            endDate,
-            days // Return days for heatmap
+            startDate, // Total start
+            endDate,   // Total end
+            currentStreakStart,
+            currentStreakEnd: cStreakEnd, // Not displayed but good for logic
+            longestStreakStart,
+            longestStreakEnd,
+            days
         };
 
     } catch (e) {
@@ -216,7 +223,11 @@ async function fetchGitHubStats(username: string) {
           longest: contributionData.longestStreak,
           total: contributionData.totalContributions,
           startDate: contributionData.startDate,
-          endDate: contributionData.endDate
+          endDate: contributionData.endDate,
+          currentStreakStart: contributionData.currentStreakStart,
+          currentStreakEnd: contributionData.currentStreakEnd,
+          longestStreakStart: contributionData.longestStreakStart,
+          longestStreakEnd: contributionData.longestStreakEnd
       } : { current: 0, longest: 0, total: 0 },
       contributionDays: contributionData?.days || [],
       activity: Array(7).fill(Math.floor(Math.random() * 10)), // Keep legacy random activity for 'activity' card type unless updated
@@ -462,9 +473,27 @@ function generateStreakSVG(p: any): string {
     // Dates
     const currentDate = new Date();
     const currentMonthDay = `${currentDate.toLocaleString('default', { month: 'short' })} ${currentDate.getDate()}`;
-    const rangeText = streak.startDate && streak.endDate
+    const totalRangeText = streak.startDate && streak.endDate
         ? formatDateRange(streak.startDate, streak.endDate)
         : `${currentMonthDay}, ${currentDate.getFullYear()} - Present`;
+
+    // Format Current Streak Range: "MMM DD" or "MMM DD, YYYY"
+    // The requirement says: "Dec 28" (if same year)
+    let currentStreakRangeText = "No Streak";
+    if (streak.current > 0 && streak.currentStreakStart) {
+        const start = new Date(streak.currentStreakStart);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        currentStreakRangeText = `${months[start.getMonth()]} ${start.getDate()}`;
+        if (start.getFullYear() !== currentDate.getFullYear()) {
+             currentStreakRangeText += `, ${start.getFullYear()}`;
+        }
+    }
+
+    // Format Longest Streak Range: "May 7 - Jul 13"
+    let longestStreakRangeText = "No Streak";
+    if (streak.longest > 0 && streak.longestStreakStart && streak.longestStreakEnd) {
+         longestStreakRangeText = formatDateRange(streak.longestStreakStart, streak.longestStreakEnd);
+    }
 
     return `
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="isolation: isolate" viewBox="0 0 ${p.width} ${p.height}" width="${p.width}px" height="${p.height}px" direction="ltr">
@@ -516,7 +545,7 @@ function generateStreakSVG(p: any): string {
                 <!-- Total Contributions range -->
                 <g transform="translate(${p.width / 6}, 114)">
                     <text x="0" y="32" stroke-width="0" text-anchor="middle" fill="${p.textColor}" stroke="none" font-family="'Segoe UI', Ubuntu, sans-serif" font-weight="400" font-size="12px" font-style="normal" style="opacity: 0; animation: fadein 0.5s linear forwards 0.8s">
-                        ${rangeText}
+                        ${totalRangeText}
                     </text>
                 </g>
             </g>
@@ -538,7 +567,7 @@ function generateStreakSVG(p: any): string {
                 <!-- Current Streak range -->
                 <g transform="translate(${p.width / 2}, 145)">
                     <text x="0" y="21" stroke-width="0" text-anchor="middle" fill="${p.textColor}" stroke="none" font-family="'Segoe UI', Ubuntu, sans-serif" font-weight="400" font-size="12px" font-style="normal" style="opacity: 0; animation: fadein 0.5s linear forwards 0.9s">
-                        ${currentMonthDay}
+                        ${currentStreakRangeText}
                     </text>
                 </g>
 
@@ -571,8 +600,7 @@ function generateStreakSVG(p: any): string {
                 <!-- Longest Streak range -->
                 <g transform="translate(${(p.width / 6) * 5}, 114)">
                     <text x="0" y="32" stroke-width="0" text-anchor="middle" fill="${p.textColor}" stroke="none" font-family="'Segoe UI', Ubuntu, sans-serif" font-weight="400" font-size="12px" font-style="normal" style="opacity: 0; animation: fadein 0.5s linear forwards 1.4s">
-                         <!-- Range not fully calculated yet, placeholder -->
-                         May 7 - Jul 13
+                         ${longestStreakRangeText}
                     </text>
                 </g>
             </g>
