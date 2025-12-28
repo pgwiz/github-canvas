@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Generator from "./pages/Generator";
 import Docs from "./pages/Docs";
 import Setup from "./pages/Setup";
+import AiTest from "./pages/AiTest";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/generator" element={<Generator />} />
           <Route path="/docs" element={<Docs />} />
           <Route path="/setup" element={<Setup />} />
+          <Route path="/ai" element={<AiTest />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

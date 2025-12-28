@@ -389,7 +389,7 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
                   <Input
                     value={config.bannerName}
                     onChange={(e) => updateConfig({ bannerName: e.target.value })}
-                    placeholder="e.g., PETER BRIAN GWADENYA"
+                    placeholder="e.g. John Doe"
                     className="bg-background/30 border-border/30"
                   />
                 </div>
@@ -398,7 +398,7 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
                   <Input
                     value={config.bannerDescription}
                     onChange={(e) => updateConfig({ bannerDescription: e.target.value })}
-                    placeholder="e.g., Full-Stack Developer | AI Architect | System Designer"
+                    placeholder="e.g. Full-Stack Developer"
                     className="bg-background/30 border-border/30"
                   />
                 </div>
