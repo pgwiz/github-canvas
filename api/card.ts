@@ -278,7 +278,7 @@ function generateLanguagesSVG(p: any): string {
   const renderItem = (lang: any, y: number) => `
     <g transform="translate(0, ${y})">
       <circle cx="5" cy="5" r="5" fill="${lang.color}"/>
-      <text x="15" y="9" class="lang-label" font-weight="700">${lang.name} <tspan font-weight="400">${lang.percentage}%</tspan></text>
+      <text x="20" y="5" class="lang-label" font-weight="700" dominant-baseline="middle">${lang.name} <tspan font-weight="400">${lang.percentage}%</tspan></text>
     </g>
   `;
 
