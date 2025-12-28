@@ -441,8 +441,20 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
                 />
               </div>
             )}
+
+            {config.type === "contribution" && (
+              <div className="space-y-4">
+                {/* Currently using default values in backend, but could expose:
+                - Square Size
+                - Gap Size
+                */}
+                <p className="text-xs text-muted-foreground">
+                  Standard GitHub Contribution Graph settings.
+                </p>
+              </div>
+            )}
             
-            {config.type !== "custom" && config.type !== "banner" && (
+            {config.type !== "custom" && config.type !== "banner" && config.type !== "contribution" && (
               <div className="text-center py-8 text-muted-foreground">
                 <p>Content settings are available for Banner and Custom cards.</p>
                 <p className="text-sm mt-2 opacity-70">Select "Banner" or "Custom" card type to customize content.</p>
