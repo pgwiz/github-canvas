@@ -31,11 +31,6 @@ export default function AiTest() {
     setGeneratedMarkdown("");
 
     try {
-      // Determine API endpoint
-      const isLovable = window.location.hostname.includes('lovable') || window.location.hostname.includes('localhost');
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ||
-        (import.meta.env.VITE_SUPABASE_PROJECT_ID ? `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co` : null);
-
       // Since this is a Vercel function, we use the local /api route or the deployed URL
       // But for local dev with 'vite', /api/ai isn't automatically proxied to the api/ folder unless configured.
       // However, usually Vercel dev handles this.
