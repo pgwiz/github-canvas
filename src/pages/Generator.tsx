@@ -33,6 +33,10 @@ export interface CardConfig {
   borderColor: string;
   borderRadius: number;
   showBorder: boolean;
+  paddingTop: number;
+  paddingRight: number;
+  paddingBottom: number;
+  paddingLeft: number;
   customText: string;
   width: number;
   height: number;
@@ -62,6 +66,10 @@ const defaultConfig: CardConfig = {
   borderColor: "#0CF709",
   borderRadius: 12,
   showBorder: true,
+  paddingTop: 25,
+  paddingRight: 25,
+  paddingBottom: 25,
+  paddingLeft: 25,
   customText: "",
   width: 495,
   height: 195,

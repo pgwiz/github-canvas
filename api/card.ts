@@ -400,21 +400,27 @@ function generateLanguagesSVG(p: any): string {
   const gradientDefs = getGradientDefs(p);
   const bgFill = getBgFill(p);
 
-  const barWidth = p.width - 50;
+  const paddingTop = p.paddingTop ?? 25;
+  const paddingLeft = p.paddingLeft ?? 25;
+  const paddingRight = p.paddingRight ?? 25;
+
+  const barWidth = p.width - paddingLeft - paddingRight;
   const barHeight = 12;
   const segmentGap = 1;
+  const borderRadius = 5;
 
   // Calculate segments with gaps
-  let offset = 0;
+  let currentX = 0;
   const totalGapWidth = Math.max(0, languages.length - 1) * segmentGap;
   const availableWidth = barWidth - totalGapWidth;
 
   const segments = languages.map((lang: any, i: number) => {
     const width = (lang.percentage / 100) * availableWidth;
-    // ensure minimum visible width if percentage > 0
-    const w = Math.max(width, width > 0 ? 2 : 0);
-    const rect = `<rect x="${offset}" y="0" width="${w}" height="${barHeight}" fill="${lang.color}"/>`;
-    offset += w + segmentGap;
+    // ensure minimum visible width if percentage > 0, but respect total width
+    const w = Math.max(width, width > 0 ? 0 : 0);
+    if (w <= 0) return '';
+    const rect = `<rect x="${currentX}" y="0" width="${w}" height="${barHeight}" fill="${lang.color}"/>`;
+    currentX += w + segmentGap;
     return rect;
   }).join('');
 
@@ -445,14 +451,14 @@ function generateLanguagesSVG(p: any): string {
   </style>
   <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${bgFill}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="2"` : ''}/>
 
-  <g transform="translate(25, 25)" class="animate">
-    <text class="title">Most Used Languages</text>
+  <g transform="translate(${paddingLeft}, ${paddingTop})" class="animate">
+    <text x="0" y="18" class="title">Most Used Languages</text>
 
     <!-- Progress Bar -->
-    <g transform="translate(0, 30)">
+    <g transform="translate(0, 40)">
       <defs>
         <clipPath id="barClip">
-          <rect width="${barWidth}" height="${barHeight}" rx="${barHeight/2}"/>
+          <rect width="${barWidth}" height="${barHeight}" rx="${borderRadius}"/>
         </clipPath>
       </defs>
       <g clip-path="url(#barClip)">
@@ -461,9 +467,9 @@ function generateLanguagesSVG(p: any): string {
     </g>
 
     <!-- Legend -->
-    <g transform="translate(0, 60)">
+    <g transform="translate(0, 70)">
       <g transform="translate(0, 0)">${leftItems}</g>
-      <g transform="translate(235, 0)">${rightItems}</g>
+      <g transform="translate(260, 0)">${rightItems}</g>
     </g>
   </g>
 </svg>`;
@@ -758,25 +764,25 @@ function generateContributionSVG(p: any): string {
   const gradientDefs = getGradientDefs(p);
   const bgFill = getBgFill(p);
 
-  // Use real data if available, otherwise fallback
   const days = contributionDays || [];
 
-  // 52 weeks to fit in 495px width with 7px squares and 2px gaps (9px pitch)
-  // 52 * 9 = 468px width
-  const cols = 52;
+  // Use 53 cols (weeks) to show full year.
+  // 7px square + 2px gap = 9px pitch. 53 * 9 = 477px.
+  // This fits in 495px width with ~9px padding on each side.
+  const cols = 53;
   const rows = 7;
   const cellS = 7;
   const gap = 2;
   const pitch = cellS + gap;
 
-  // Prepare data: last ~364 days
+  // Prepare data: last ~371 days (53 * 7)
   const displayDays = days.slice(- (cols * rows));
 
   const getLevelColor = (count: number) => {
     if (count === 0) return `${p.textColor}10`;
-    if (count <= 1) return `${p.primaryColor}4D`; // 30%
-    if (count <= 3) return `${p.primaryColor}80`; // 50%
-    if (count <= 6) return `${p.primaryColor}B3`; // 70%
+    if (count <= 1) return `${p.primaryColor}4D`;
+    if (count <= 3) return `${p.primaryColor}80`;
+    if (count <= 6) return `${p.primaryColor}B3`;
     return p.primaryColor;
   };
 
@@ -788,7 +794,7 @@ function generateContributionSVG(p: any): string {
       const dayData = displayDays[idx] || { contributionCount: 0 };
 
       const x = c * pitch;
-      const y = r * pitch + 25; // +25 for month labels (y=35 area)
+      const y = r * pitch + 35; // Moved down to accommodate month labels at y=10-20
 
       cells += `<rect x="${x}" y="${y}" width="${cellS}" height="${cellS}" rx="2" fill="${getLevelColor(dayData.contributionCount)}" />`;
     }
@@ -796,32 +802,38 @@ function generateContributionSVG(p: any): string {
 
   // Month Labels
   const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  let currentMonth = -1;
   let monthsSVG = '';
 
-  for (let c = 0; c < cols; c++) {
-      const idx = c * rows; // Start of week (Sunday)
-      const dayData = displayDays[idx];
-      if (dayData) {
-          const date = new Date(dayData.date);
-          const month = date.getMonth();
-          if (month !== currentMonth) {
-              // Only show label if there is enough space (e.g., skip if changed within last 2 weeks)
-              // But standard GitHub behavior just shows it.
-              const x = c * pitch;
-              monthsSVG += `<text x="${x}" y="15" font-size="9" fill="${p.textColor}">${monthLabels[month]}</text>`;
-              currentMonth = month;
-          }
-      }
+  // Logic: Label the column where the month "appears" (starts).
+  // Iterate all days to find "1st" of month.
+
+  for (let i = 0; i < displayDays.length; i++) {
+     const dayData = displayDays[i];
+     if (!dayData) continue;
+     const date = new Date(dayData.date);
+     const dayOfMonth = date.getDate();
+
+     // If it's the 1st of the month
+     if (dayOfMonth === 1) {
+        const month = date.getMonth();
+        // Calculate column index
+        const colIndex = Math.floor(i / rows);
+
+        // Don't label if it's the very last column
+        if (colIndex < cols - 1) {
+             const x = colIndex * pitch;
+             monthsSVG += `<text x="${x}" y="20" font-size="9" fill="${p.textColor}">${monthLabels[month]}</text>`;
+        }
+     }
   }
 
   // Calculate required width/height for graph
   const graphW = cols * pitch - gap;
-  const graphH = rows * pitch - gap + 25;
+  const graphH = rows * pitch - gap + 35; // +35 for labels offset
 
-  // Center the graph (approx 15px padding from left as requested)
-  const paddingX = 15;
-  const paddingY = (p.height - graphH) / 2 + 5; // adjust to vertical center roughly
+  // Center the graph
+  const paddingX = (p.width - graphW) / 2;
+  const paddingY = (p.height - graphH) / 2;
 
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
@@ -859,6 +871,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     textColor: (req.query.text as string) || themeColors.text,
     borderColor: (req.query.border as string) || themeColors.border,
     borderRadius: parseInt(req.query.radius as string) || 12,
+    paddingTop: parseInt(req.query.paddingTop as string) || 25,
+    paddingRight: parseInt(req.query.paddingRight as string) || 25,
+    paddingBottom: parseInt(req.query.paddingBottom as string) || 25,
+    paddingLeft: parseInt(req.query.paddingLeft as string) || 25,
     showBorder: req.query.showBorder !== 'false',
     width: parseInt(req.query.width as string) || 495,
     height: parseInt(req.query.height as string) || 195,
