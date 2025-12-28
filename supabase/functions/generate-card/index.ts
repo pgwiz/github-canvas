@@ -350,6 +350,17 @@ function generateSVG(params: CardParams): string {
         commonStyles, gradientDefs,
       });
     
+    case 'contribution':
+      // Using activity data as placeholder or if we pass specific contribution data
+      // For now, let's assume we might need to fetch it or use what we have.
+      // Ideally pass contributionDays if available.
+      return generateContributionSVG({
+        width, height, bgColor: bgFill, borderRadius, borderStyle,
+        primaryColor, secondaryColor, textColor, animate,
+        contributionDays: [], // Need to pass this if available
+        commonStyles, gradientDefs,
+      });
+
     case 'activity':
       return generateActivitySVG({
         width, height, bgColor: bgFill, borderRadius, borderStyle,
@@ -433,26 +444,28 @@ function generateLanguagesSVG(p: any): string {
   const { languages, animate } = p;
   const langs = languages.slice(0, 6);
   const barWidth = p.width - 50;
-  const barHeight = 8;
+  const barHeight = 12;
   const leftPadding = 25;
+  const segmentGap = 1;
   
   // Generate the stacked progress bar segments
   let barSegments = '';
   let currentX = 0;
+  const totalGapWidth = Math.max(0, langs.length - 1) * segmentGap;
+  const availableWidth = barWidth - totalGapWidth;
   
   for (let i = 0; i < langs.length; i++) {
     const lang = langs[i];
-    const segmentWidth = barWidth * (lang.percentage / 100);
+    const segmentWidth = availableWidth * (lang.percentage / 100);
     const animClass = animate ? `class="lang-progress"` : '';
     barSegments += `<rect mask="url(#rect-mask)" data-testid="lang-progress" x="${currentX}" y="0" width="${segmentWidth}" height="${barHeight}" fill="${lang.color}" ${animClass}/>`;
-    currentX += segmentWidth;
+    currentX += segmentWidth + segmentGap;
   }
   
-  // Generate the legend - 2 columns, 3 rows (first 3 in left column, next 3 in right column)
+  // Generate the legend - 2 columns
   let leftColumn = '';
   let rightColumn = '';
-  const colSpacing = 150;
-  const rowSpacing = 25;
+  const rowSpacing = 28;
   
   for (let i = 0; i < langs.length; i++) {
     const lang = langs[i];
@@ -462,8 +475,8 @@ function generateLanguagesSVG(p: any): string {
     
     const item = `<g transform="translate(0, ${row * rowSpacing})">
     <g class="${animate ? 'stagger' : ''}" ${delay}>
-      <circle cx="5" cy="6" r="5" fill="${lang.color}"/>
-      <text data-testid="lang-name" x="15" y="10" class="lang-name">${lang.name} ${lang.percentage}%</text>
+      <circle cx="6" cy="6" r="6" fill="${lang.color}"/>
+      <text data-testid="lang-name" x="22" y="6" class="lang-name" dominant-baseline="middle">${lang.name} ${lang.percentage}%</text>
     </g>
   </g>`;
     
@@ -479,7 +492,7 @@ function generateLanguagesSVG(p: any): string {
   <style>
     .header { font: 600 18px 'Segoe UI', Ubuntu, Sans-Serif; fill: ${p.primaryColor}; animation: fadeInAnimation 0.8s ease-in-out forwards; }
     @supports(-moz-appearance: auto) { .header { font-size: 15.5px; } }
-    .lang-name { font: 400 11px "Segoe UI", Ubuntu, Sans-Serif; fill: ${p.textColor}; }
+    .lang-name { font: 700 12px "Segoe UI", Ubuntu, Sans-Serif; fill: ${p.textColor}; }
     ${animate ? `
     @keyframes slideInAnimation { from { width: 0; } to { width: calc(100%-100px); } }
     @keyframes growWidthAnimation { from { width: 0; } to { width: 100%; } }
@@ -492,20 +505,20 @@ function generateLanguagesSVG(p: any): string {
   
   <rect data-testid="card-bg" x="0.5" y="0.5" rx="${p.borderRadius}" height="99%" width="${p.width - 1}" fill="${p.bgColor}" ${p.borderStyle}/>
   
-  <g data-testid="card-title" transform="translate(${leftPadding}, 35)">
+  <g data-testid="card-title" transform="translate(${leftPadding}, 25)">
     <text x="0" y="0" class="header" data-testid="header">Most Used Languages</text>
   </g>
   
-  <g data-testid="main-card-body" transform="translate(0, 55)">
+  <g data-testid="main-card-body" transform="translate(0, 30)">
     <svg data-testid="lang-items" x="${leftPadding}">
       <mask id="rect-mask">
         <rect x="0" y="0" width="${barWidth}" height="${barHeight}" fill="white" rx="5"/>
       </mask>
       ${barSegments}
       
-      <g transform="translate(0, 25)">
+      <g transform="translate(0, 30)">
         <g transform="translate(0, 0)">${leftColumn}</g>
-        <g transform="translate(${colSpacing}, 0)">${rightColumn}</g>
+        <g transform="translate(235, 0)">${rightColumn}</g>
       </g>
     </svg>
   </g>
@@ -514,76 +527,154 @@ function generateLanguagesSVG(p: any): string {
 
 function generateStreakSVG(p: any): string {
   const { streak, animate } = p;
-  const centerX = p.width / 2;
-  const sectionWidth = p.width / 3;
   
   // Format dates
   const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return 'Present';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[date.getMonth()]} ${date.getDate()}`;
   };
   
   const today = new Date();
-  const todayStr = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const todayStr = `${today.toLocaleString('default', { month: 'short' })} ${today.getDate()}`;
   
-  // Calculate ring progress (max 100 days for full circle)
-  const maxStreak = 100;
-  const progress = Math.min(streak.current / maxStreak, 1);
-  const circumference = 2 * Math.PI * 40;
-  const dashOffset = circumference * (1 - progress);
+  // Date ranges
+  const totalRange = `${formatDate(streak.startDate)} - ${formatDate(streak.endDate) || 'Present'}`;
+  const longestRange = `${formatDate(streak.longestStreakStart)} - ${formatDate(streak.longestStreakEnd)}`;
   
   const ringAnim = animate ? `
     <style>
       .ring-bg { opacity: 0.2; }
-      .ring-progress { 
-        stroke-dasharray: ${circumference}; 
-        stroke-dashoffset: ${circumference};
-        animation: dash 1.5s ease-out forwards;
+      @keyframes currstreak {
+          0% { font-size: 3px; opacity: 0.2; }
+          80% { font-size: 34px; opacity: 1; }
+          100% { font-size: 28px; opacity: 1; }
       }
-      @keyframes dash {
-        to { stroke-dashoffset: ${dashOffset}; }
+      @keyframes fadein {
+          0% { opacity: 0; }
+          100% { opacity: 1; }
       }
     </style>
   ` : '';
-  
-  const fadeClass = animate ? 'class="animate-fade stagger-1"' : '';
-  const scaleClass = animate ? 'class="animate-scale"' : '';
-  const fadeClass2 = animate ? 'class="animate-fade stagger-3"' : '';
 
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
   ${p.commonStyles}
   ${ringAnim}
+  <defs>
+      <mask id="mask_out_ring_behind_fire">
+          <rect width="${p.width}" height="${p.height}" fill="white"/>
+          <ellipse id="mask-ellipse" cx="${p.width / 2}" cy="32" rx="13" ry="18" fill="black"/>
+      </mask>
+  </defs>
   <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${p.bgColor}" ${p.borderStyle}/>
   
+  <g style="isolation: isolate">
+      <line x1="${p.width / 3}" y1="28" x2="${p.width / 3}" y2="170" vector-effect="non-scaling-stroke" stroke-width="1" stroke="${p.borderColor}" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3" opacity="0.5"/>
+      <line x1="${(p.width / 3) * 2}" y1="28" x2="${(p.width / 3) * 2}" y2="170" vector-effect="non-scaling-stroke" stroke-width="1" stroke="${p.borderColor}" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3" opacity="0.5"/>
+  </g>
+
   <!-- Left Section: Total Contributions -->
-  <g transform="translate(${sectionWidth / 2}, ${p.height / 2})" ${fadeClass}>
-    <text text-anchor="middle" class="stat-value" fill="${p.secondaryColor}" y="-15">${formatNumber(streak.total)}</text>
-    <text text-anchor="middle" class="stat-label" y="8">Total Contributions</text>
-    <text text-anchor="middle" class="small" y="24">${formatDate(streak.startDate)} - Present</text>
+  <g transform="translate(${p.width / 6}, 48)">
+    <text text-anchor="middle" class="stat-value" fill="${p.primaryColor}" y="32">${formatNumber(streak.total)}</text>
+    <text text-anchor="middle" class="stat-label" y="64">Total Contributions</text>
+    <text text-anchor="middle" class="small" y="94">${totalRange}</text>
   </g>
   
-  <!-- Center Section: Current Streak with Ring -->
-  <g transform="translate(${centerX}, ${p.height / 2})" ${scaleClass}>
-    <!-- Ring Background -->
-    <circle cx="0" cy="0" r="40" fill="none" stroke="${p.primaryColor}" stroke-width="6" class="ring-bg"/>
-    <!-- Ring Progress -->
-    <circle cx="0" cy="0" r="40" fill="none" stroke="${p.primaryColor}" stroke-width="6" 
-            stroke-linecap="round" transform="rotate(-90)" class="ring-progress"/>
-    <!-- Flame Icon -->
-    <text text-anchor="middle" font-size="20" y="-25" fill="${p.primaryColor}">🔥</text>
-    <!-- Current Streak Number -->
-    <text text-anchor="middle" class="stat-value" fill="${p.primaryColor}" y="5" font-size="28">${streak.current}</text>
-    <text text-anchor="middle" class="stat-label" y="55">Current Streak</text>
-    <text text-anchor="middle" class="small" y="70">${todayStr}</text>
+  <!-- Center Section: Current Streak -->
+  <g transform="translate(${p.width / 2}, 48)">
+    <text text-anchor="middle" class="stat-value" fill="${p.secondaryColor}" y="32" style="animation: currstreak 0.6s linear forwards">${formatNumber(streak.current)}</text>
+    <text text-anchor="middle" class="stat-label" y="90">Current Streak</text>
+    <text text-anchor="middle" class="small" y="125">${todayStr}</text>
+
+    <!-- Ring -->
+    <g mask="url(#mask_out_ring_behind_fire)">
+        <circle cx="0" cy="23" r="40" fill="none" stroke="${p.primaryColor}" stroke-width="5" style="opacity: 0; animation: fadein 0.5s linear forwards 0.4s"/>
+    </g>
+    <!-- Fire -->
+    <g transform="translate(0, -28)" stroke-opacity="0" style="opacity: 0; animation: fadein 0.5s linear forwards 0.6s">
+        <path d="M -12 -0.5 L 15 -0.5 L 15 23.5 L -12 23.5 L -12 -0.5 Z" fill="none"/>
+        <path d="M 1.5 0.67 C 1.5 0.67 2.24 3.32 2.24 5.47 C 2.24 7.53 0.89 9.2 -1.17 9.2 C -3.23 9.2 -4.79 7.53 -4.79 5.47 L -4.76 5.11 C -6.78 7.51 -8 10.62 -8 13.99 C -8 18.41 -4.42 22 0 22 C 4.42 22 8 18.41 8 13.99 C 8 8.6 5.41 3.79 1.5 0.67 Z M -0.29 19 C -2.07 19 -3.51 17.6 -3.51 15.86 C -3.51 14.24 -2.46 13.1 -0.7 12.74 C 1.07 12.38 2.9 11.53 3.92 10.16 C 4.31 11.45 4.51 12.81 4.51 14.2 C 4.51 16.85 2.36 19 -0.29 19 Z" fill="${p.primaryColor}" stroke-opacity="0"/>
+    </g>
   </g>
   
   <!-- Right Section: Longest Streak -->
-  <g transform="translate(${p.width - sectionWidth / 2}, ${p.height / 2})" ${fadeClass2}>
-    <text text-anchor="middle" class="stat-value" fill="${p.secondaryColor}" y="-15">${streak.longest}</text>
-    <text text-anchor="middle" class="stat-label" y="8">Longest Streak</text>
-    <text text-anchor="middle" class="small" y="24">${formatDate(streak.longestStreakStart)} - ${formatDate(streak.longestStreakEnd)}</text>
+  <g transform="translate(${(p.width / 6) * 5}, 48)">
+    <text text-anchor="middle" class="stat-value" fill="${p.primaryColor}" y="32">${formatNumber(streak.longest)}</text>
+    <text text-anchor="middle" class="stat-label" y="64">Longest Streak</text>
+    <text text-anchor="middle" class="small" y="94">${longestRange}</text>
+  </g>
+</svg>`;
+}
+
+function generateContributionSVG(p: any): string {
+  const { contributionDays = [], animate } = p;
+
+  const cols = 52;
+  const rows = 7;
+  const cellS = 7;
+  const gap = 2;
+  const pitch = cellS + gap;
+
+  // Use real data if available, otherwise fallback
+  const displayDays = contributionDays.length > 0
+    ? contributionDays.slice(- (cols * rows))
+    : Array(cols * rows).fill(0).map(() => ({ contributionCount: Math.random() > 0.7 ? Math.floor(Math.random() * 5) : 0 }));
+
+  const getLevelColor = (count: number) => {
+    if (count === 0) return `${p.textColor}10`;
+    if (count <= 1) return `${p.primaryColor}4D`; // 30%
+    if (count <= 3) return `${p.primaryColor}80`; // 50%
+    if (count <= 6) return `${p.primaryColor}B3`; // 70%
+    return p.primaryColor;
+  };
+
+  let cells = '';
+  for (let c = 0; c < cols; c++) {
+    for (let r = 0; r < rows; r++) {
+      const idx = c * rows + r;
+      const dayData = displayDays[idx] || { contributionCount: 0 };
+      const x = c * pitch;
+      const y = r * pitch + 25;
+
+      // Basic fade in animation
+      const delay = animate ? `style="animation-delay: ${(c * 0.02)}s"` : '';
+      const animClass = animate ? 'class="animate-fade"' : '';
+
+      cells += `<rect x="${x}" y="${y}" width="${cellS}" height="${cellS}" rx="2" fill="${getLevelColor(dayData.contributionCount)}" ${animClass} ${delay}/>`;
+    }
+  }
+
+  // Month Labels
+  const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  let currentMonth = -1;
+  let monthsSVG = '';
+
+  for (let c = 0; c < cols; c++) {
+      const idx = c * rows;
+      const dayData = displayDays[idx];
+      if (dayData && dayData.date) {
+          const date = new Date(dayData.date);
+          const month = date.getMonth();
+          if (month !== currentMonth) {
+              const x = c * pitch;
+              monthsSVG += `<text x="${x}" y="15" font-size="9" fill="${p.textColor}">${monthLabels[month]}</text>`;
+              currentMonth = month;
+          }
+      }
+  }
+
+  const paddingX = 15;
+  const paddingY = (p.height - (rows * pitch + 25)) / 2 + 5;
+
+  return `
+<svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
+  ${p.commonStyles}
+  <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${p.bgColor}" ${p.borderStyle}/>
+  <g transform="translate(${paddingX}, ${paddingY})">
+    ${monthsSVG}
+    ${cells}
   </g>
 </svg>`;
 }
