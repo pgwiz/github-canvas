@@ -52,6 +52,12 @@ function formatDateRange(start: string, end: string): string {
     return `${months[s.getMonth()]} ${s.getDate()}, ${s.getFullYear()} - ${months[e.getMonth()]} ${e.getDate()}, ${e.getFullYear()}`;
 }
 
+const parseIntOr = (value: string | string[] | undefined, def: number): number => {
+    if (!value) return def;
+    const num = parseInt(value as string);
+    return isNaN(num) ? def : num;
+};
+
 async function fetchContributionStats(username: string) {
     if (!process.env.GITHUB_TOKEN) return null;
 
@@ -101,7 +107,6 @@ async function fetchContributionStats(username: string) {
         let currentStreakStart = '';
 
         // Iterate days to find longest streak
-        // Note: GitHub returns days sorted by date ascending
         for (const day of days) {
             if (day.contributionCount > 0) {
                 if (tempStreak === 0) {
@@ -118,7 +123,7 @@ async function fetchContributionStats(username: string) {
             }
         }
 
-        // Current Streak (checking from end backwards)
+        // Current Streak
         const today = new Date();
         const todayStr = today.toISOString().split('T')[0];
         let cStreak = 0;
@@ -128,33 +133,28 @@ async function fetchContributionStats(username: string) {
             const day = days[i];
             if (day.contributionCount > 0) {
                 if (cStreak === 0) {
-                   cStreakEnd = day.date; // Use the actual last contribution day for calculation
+                   cStreakEnd = day.date;
                 }
-                currentStreakStart = day.date; // Continuously update start date as we go back
+                currentStreakStart = day.date;
                 cStreak++;
             } else {
-                // If we encounter a 0, check if it is today.
-                // If it is today, and we haven't found a streak yet (cStreak is 0), ignore it (streak might continue from yesterday).
-                // If it is NOT today, or if we already have a streak, then the streak is broken.
                 if (day.date === todayStr && cStreak === 0) continue;
                 break;
             }
         }
         currentStreak = cStreak;
 
-        // Total Contributions Date Range (Last Year)
-        // Usually GitHub graph is ~365 days + day of week offset
-        const startDate = days[0].date;
-        const endDate = days[days.length - 1].date;
+        const startDate = days.length > 0 ? days[0].date : new Date().toISOString().split('T')[0];
+        const endDate = days.length > 0 ? days[days.length - 1].date : new Date().toISOString().split('T')[0];
 
         return {
             totalContributions: calendar.totalContributions,
             currentStreak,
             longestStreak,
-            startDate, // Total start
-            endDate,   // Total end
+            startDate,
+            endDate,
             currentStreakStart,
-            currentStreakEnd: cStreakEnd, // Not displayed but good for logic
+            currentStreakEnd: cStreakEnd,
             longestStreakStart,
             longestStreakEnd,
             days
@@ -202,17 +202,13 @@ async function fetchGitHubStats(username: string) {
     const languages = Object.entries(languageBytes)
       .map(([name, bytes]) => ({
         name,
-        percentage: totalBytes > 0 ? (bytes / totalBytes) * 100 : 0, // Keep precision for now
+        percentage: totalBytes > 0 ? (bytes / totalBytes) * 100 : 0,
         color: getLanguageColor(name),
       }))
       .sort((a, b) => b.percentage - a.percentage)
-      .slice(0, 6); // Take top 6
+      .slice(0, 6);
 
-    // Fetch Contribution Data
     const contributionData = await fetchContributionStats(username);
-
-    // Use fallback activity if no real data (though we want real data now)
-    // Note: 'activity' in previous version was random bars.
 
     return {
       user: { login: user.login, name: user.name, avatar_url: user.avatar_url, created_at: user.created_at },
@@ -230,7 +226,7 @@ async function fetchGitHubStats(username: string) {
           longestStreakEnd: contributionData.longestStreakEnd
       } : { current: 0, longest: 0, total: 0 },
       contributionDays: contributionData?.days || [],
-      activity: Array(7).fill(Math.floor(Math.random() * 10)), // Keep legacy random activity for 'activity' card type unless updated
+      activity: Array(7).fill(Math.floor(Math.random() * 10)),
     };
   } catch {
     return null;
@@ -247,7 +243,6 @@ function getLanguageColor(lang: string): string {
   return colors[lang] || '#8b949e';
 }
 
-// Speed multipliers for animations
 function getSpeedMultiplier(speed: string): number {
   const multipliers: Record<string, number> = {
     slow: 2,
@@ -257,7 +252,6 @@ function getSpeedMultiplier(speed: string): number {
   return multipliers[speed] || 1;
 }
 
-// Animation styles generator
 function getAnimationStyles(animation: string, primaryColor: string, speed: string = 'normal'): string {
   const m = getSpeedMultiplier(speed);
   const animations: Record<string, string> = {
@@ -315,7 +309,6 @@ function getAnimationStyles(animation: string, primaryColor: string, speed: stri
   return animations[animation] || animations.fadeIn;
 }
 
-// Generate gradient defs for SVG
 function getGradientDefs(p: any): string {
   if (!p.gradient) return '';
   
@@ -330,7 +323,6 @@ function getGradientDefs(p: any): string {
       </defs>`;
   }
   
-  // Convert angle to SVG gradient coordinates
   const angle = p.gradientAngle || 135;
   const angleRad = (angle - 90) * Math.PI / 180;
   const x1 = 50 - Math.cos(angleRad) * 50;
@@ -352,10 +344,19 @@ function getBgFill(p: any): string {
 }
 
 function generateStatsSVG(p: any): string {
-  const { stats, animation = 'fadeIn', speed = 'normal' } = p;
+  const { animation = 'fadeIn', speed = 'normal' } = p;
+  const stats = p.stats || { totalStars: 0, publicRepos: 0, followers: 0, totalForks: 0 };
   const animStyles = getAnimationStyles(animation, p.primaryColor, speed);
   const gradientDefs = getGradientDefs(p);
   const bgFill = getBgFill(p);
+
+  const paddingLeft = p.paddingLeft ?? 25;
+  const paddingRight = p.paddingRight ?? 25;
+  const paddingTop = p.paddingTop ?? 25;
+
+  const contentWidth = p.width - paddingLeft - paddingRight;
+  const colWidth = contentWidth / 4;
+
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
   ${gradientDefs}
@@ -368,7 +369,7 @@ function generateStatsSVG(p: any): string {
   </style>
   <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${bgFill}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="2"` : ''}/>
   
-  <g transform="translate(25, 25)">
+  <g transform="translate(${paddingLeft}, ${paddingTop})">
     <text class="title">${escapeXml(p.username)}'s GitHub Stats</text>
     
     <g transform="translate(0, 45)">
@@ -376,17 +377,17 @@ function generateStatsSVG(p: any): string {
       <text class="stat-label" y="22">Total Stars</text>
     </g>
     
-    <g transform="translate(115, 45)">
+    <g transform="translate(${colWidth}, 45)">
       <text class="stat-value" fill="${p.secondaryColor}">📦 ${stats.publicRepos}</text>
       <text class="stat-label" y="22">Repositories</text>
     </g>
     
-    <g transform="translate(230, 45)">
+    <g transform="translate(${colWidth * 2}, 45)">
       <text class="stat-value" fill="${p.primaryColor}">👥 ${formatNumber(stats.followers)}</text>
       <text class="stat-label" y="22">Followers</text>
     </g>
     
-    <g transform="translate(345, 45)">
+    <g transform="translate(${colWidth * 3}, 45)">
       <text class="stat-value" fill="${p.secondaryColor}">🔀 ${formatNumber(stats.totalForks)}</text>
       <text class="stat-label" y="22">Total Forks</text>
     </g>
@@ -400,24 +401,21 @@ function generateLanguagesSVG(p: any): string {
   const gradientDefs = getGradientDefs(p);
   const bgFill = getBgFill(p);
 
-  // Enforce minimum padding to prevent content from touching edges
-  const paddingTop = Math.max(p.paddingTop ?? 25, 20);
-  const paddingLeft = Math.max(p.paddingLeft ?? 25, 20);
-  const paddingRight = Math.max(p.paddingRight ?? 25, 20);
+  const paddingTop = p.paddingTop ?? 25;
+  const paddingLeft = p.paddingLeft ?? 25;
+  const paddingRight = p.paddingRight ?? 25;
 
   const barWidth = p.width - paddingLeft - paddingRight;
   const barHeight = 12;
   const segmentGap = 1;
   const borderRadius = 5;
 
-  // Calculate segments with gaps
   let currentX = 0;
   const totalGapWidth = Math.max(0, languages.length - 1) * segmentGap;
   const availableWidth = barWidth - totalGapWidth;
 
   const segments = languages.map((lang: any, i: number) => {
     const width = (lang.percentage / 100) * availableWidth;
-    // ensure minimum visible width if percentage > 0, but respect total width
     const w = Math.max(width, width > 0 ? 0 : 0);
     if (w <= 0) return '';
     const rect = `<rect x="${currentX}" y="0" width="${w}" height="${barHeight}" fill="${lang.color}"/>`;
@@ -425,7 +423,6 @@ function generateLanguagesSVG(p: any): string {
     return rect;
   }).join('');
 
-  // Prepare legend items
   const mid = Math.ceil(languages.length / 2);
   const leftCol = languages.slice(0, mid);
   const rightCol = languages.slice(mid);
@@ -482,6 +479,11 @@ function generateStreakSVG(p: any): string {
     const bgFill = getBgFill(p);
     const streak = p.streak || { current: 0, longest: 0, total: 0 };
 
+    const paddingLeft = p.paddingLeft ?? 25;
+    const paddingRight = p.paddingRight ?? 25;
+    const paddingTop = p.paddingTop ?? 25;
+    const contentWidth = p.width - paddingLeft - paddingRight;
+
     // Dates
     const currentDate = new Date();
     const currentMonthDay = `${currentDate.toLocaleString('default', { month: 'short' })} ${currentDate.getDate()}`;
@@ -489,8 +491,6 @@ function generateStreakSVG(p: any): string {
         ? formatDateRange(streak.startDate, streak.endDate)
         : `${currentMonthDay}, ${currentDate.getFullYear()} - Present`;
 
-    // Format Current Streak Range: "MMM DD" or "MMM DD, YYYY"
-    // The requirement says: "Dec 28" (if same year)
     let currentStreakRangeText = "No Streak";
     if (streak.current > 0 && streak.currentStreakStart) {
         const start = new Date(streak.currentStreakStart);
@@ -501,7 +501,6 @@ function generateStreakSVG(p: any): string {
         }
     }
 
-    // Format Longest Streak Range: "May 7 - Jul 13"
     let longestStreakRangeText = "No Streak";
     if (streak.longest > 0 && streak.longestStreakStart && streak.longestStreakEnd) {
          longestStreakRangeText = formatDateRange(streak.longestStreakStart, streak.longestStreakEnd);
@@ -528,56 +527,46 @@ function generateStreakSVG(p: any): string {
             </clipPath>
             <mask id="mask_out_ring_behind_fire">
                 <rect width="${p.width}" height="${p.height}" fill="white"/>
-                <ellipse id="mask-ellipse" cx="${p.width / 2}" cy="32" rx="13" ry="18" fill="black"/>
+                <ellipse id="mask-ellipse" cx="${contentWidth / 2}" cy="32" rx="13" ry="18" fill="black"/>
             </mask>
         </defs>
         <g clip-path="url(#outer_rectangle)">
             <g style="isolation: isolate">
                 <rect stroke="${p.showBorder ? p.borderColor : 'none'}" fill="${bgFill}" rx="${p.borderRadius}" x="0.5" y="0.5" width="${p.width - 1}" height="${p.height - 1}" stroke-width="${p.showBorder ? 1 : 0}"/>
             </g>
-            <g style="isolation: isolate">
-                <line x1="${p.width / 3}" y1="28" x2="${p.width / 3}" y2="170" vector-effect="non-scaling-stroke" stroke-width="1" stroke="${p.borderColor}" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3" opacity="0.5"/>
-                <line x1="${(p.width / 3) * 2}" y1="28" x2="${(p.width / 3) * 2}" y2="170" vector-effect="non-scaling-stroke" stroke-width="1" stroke="${p.borderColor}" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3" opacity="0.5"/>
-            </g>
-            <g style="isolation: isolate">
-                <!-- Total Contributions big number -->
-                <g transform="translate(${p.width / 6}, 48)">
+            <g transform="translate(${paddingLeft}, ${paddingTop})" style="isolation: isolate">
+                <line x1="${contentWidth / 3}" y1="28" x2="${contentWidth / 3}" y2="170" vector-effect="non-scaling-stroke" stroke-width="1" stroke="${p.borderColor}" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3" opacity="0.5"/>
+                <line x1="${(contentWidth / 3) * 2}" y1="28" x2="${(contentWidth / 3) * 2}" y2="170" vector-effect="non-scaling-stroke" stroke-width="1" stroke="${p.borderColor}" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3" opacity="0.5"/>
+
+                <!-- Total Contributions -->
+                <g transform="translate(${contentWidth / 6}, 48)">
                     <text x="0" y="32" stroke-width="0" text-anchor="middle" fill="${p.primaryColor}" stroke="none" font-family="'Segoe UI', Ubuntu, sans-serif" font-weight="700" font-size="28px" font-style="normal" style="opacity: 0; animation: fadein 0.5s linear forwards 0.6s">
                         ${formatNumber(streak.total)}
                     </text>
                 </g>
-
-                <!-- Total Contributions label -->
-                <g transform="translate(${p.width / 6}, 84)">
+                <g transform="translate(${contentWidth / 6}, 84)">
                     <text x="0" y="32" stroke-width="0" text-anchor="middle" fill="${p.primaryColor}" stroke="none" font-family="'Segoe UI', Ubuntu, sans-serif" font-weight="400" font-size="14px" font-style="normal" style="opacity: 0; animation: fadein 0.5s linear forwards 0.7s">
                         Total Contributions
                     </text>
                 </g>
-
-                <!-- Total Contributions range -->
-                <g transform="translate(${p.width / 6}, 114)">
+                <g transform="translate(${contentWidth / 6}, 114)">
                     <text x="0" y="32" stroke-width="0" text-anchor="middle" fill="${p.textColor}" stroke="none" font-family="'Segoe UI', Ubuntu, sans-serif" font-weight="400" font-size="12px" font-style="normal" style="opacity: 0; animation: fadein 0.5s linear forwards 0.8s">
                         ${totalRangeText}
                     </text>
                 </g>
-            </g>
-            <g style="isolation: isolate">
-                <!-- Current Streak big number -->
-                <g transform="translate(${p.width / 2}, 48)">
+
+                <!-- Current Streak -->
+                <g transform="translate(${contentWidth / 2}, 48)">
                     <text x="0" y="32" stroke-width="0" text-anchor="middle" fill="${p.secondaryColor}" stroke="none" font-family="'Segoe UI', Ubuntu, sans-serif" font-weight="700" font-size="28px" font-style="normal" style="animation: currstreak 0.6s linear forwards">
                         ${formatNumber(streak.current)}
                     </text>
                 </g>
-
-                <!-- Current Streak label -->
-                <g transform="translate(${p.width / 2}, 108)">
+                <g transform="translate(${contentWidth / 2}, 108)">
                     <text x="0" y="32" stroke-width="0" text-anchor="middle" fill="${p.secondaryColor}" stroke="none" font-family="'Segoe UI', Ubuntu, sans-serif" font-weight="700" font-size="14px" font-style="normal" style="opacity: 0; animation: fadein 0.5s linear forwards 0.9s">
                         Current Streak
                     </text>
                 </g>
-
-                <!-- Current Streak range -->
-                <g transform="translate(${p.width / 2}, 145)">
+                <g transform="translate(${contentWidth / 2}, 145)">
                     <text x="0" y="21" stroke-width="0" text-anchor="middle" fill="${p.textColor}" stroke="none" font-family="'Segoe UI', Ubuntu, sans-serif" font-weight="400" font-size="12px" font-style="normal" style="opacity: 0; animation: fadein 0.5s linear forwards 0.9s">
                         ${currentStreakRangeText}
                     </text>
@@ -585,32 +574,26 @@ function generateStreakSVG(p: any): string {
 
                 <!-- Ring around number -->
                 <g mask="url(#mask_out_ring_behind_fire)">
-                    <circle cx="${p.width / 2}" cy="71" r="40" fill="none" stroke="${p.primaryColor}" stroke-width="5" style="opacity: 0; animation: fadein 0.5s linear forwards 0.4s"/>
+                    <circle cx="${contentWidth / 2}" cy="71" r="40" fill="none" stroke="${p.primaryColor}" stroke-width="5" style="opacity: 0; animation: fadein 0.5s linear forwards 0.4s"/>
                 </g>
                 <!-- Fire icon -->
-                <g transform="translate(${p.width / 2}, 19.5)" stroke-opacity="0" style="opacity: 0; animation: fadein 0.5s linear forwards 0.6s">
+                <g transform="translate(${contentWidth / 2}, 19.5)" stroke-opacity="0" style="opacity: 0; animation: fadein 0.5s linear forwards 0.6s">
                     <path d="M -12 -0.5 L 15 -0.5 L 15 23.5 L -12 23.5 L -12 -0.5 Z" fill="none"/>
                     <path d="M 1.5 0.67 C 1.5 0.67 2.24 3.32 2.24 5.47 C 2.24 7.53 0.89 9.2 -1.17 9.2 C -3.23 9.2 -4.79 7.53 -4.79 5.47 L -4.76 5.11 C -6.78 7.51 -8 10.62 -8 13.99 C -8 18.41 -4.42 22 0 22 C 4.42 22 8 18.41 8 13.99 C 8 8.6 5.41 3.79 1.5 0.67 Z M -0.29 19 C -2.07 19 -3.51 17.6 -3.51 15.86 C -3.51 14.24 -2.46 13.1 -0.7 12.74 C 1.07 12.38 2.9 11.53 3.92 10.16 C 4.31 11.45 4.51 12.81 4.51 14.2 C 4.51 16.85 2.36 19 -0.29 19 Z" fill="${p.primaryColor}" stroke-opacity="0"/>
                 </g>
 
-            </g>
-            <g style="isolation: isolate">
-                <!-- Longest Streak big number -->
-                <g transform="translate(${(p.width / 6) * 5}, 48)">
+                <!-- Longest Streak -->
+                <g transform="translate(${(contentWidth / 6) * 5}, 48)">
                     <text x="0" y="32" stroke-width="0" text-anchor="middle" fill="${p.primaryColor}" stroke="none" font-family="'Segoe UI', Ubuntu, sans-serif" font-weight="700" font-size="28px" font-style="normal" style="opacity: 0; animation: fadein 0.5s linear forwards 1.2s">
                         ${formatNumber(streak.longest)}
                     </text>
                 </g>
-
-                <!-- Longest Streak label -->
-                <g transform="translate(${(p.width / 6) * 5}, 84)">
+                <g transform="translate(${(contentWidth / 6) * 5}, 84)">
                     <text x="0" y="32" stroke-width="0" text-anchor="middle" fill="${p.primaryColor}" stroke="none" font-family="'Segoe UI', Ubuntu, sans-serif" font-weight="400" font-size="14px" font-style="normal" style="opacity: 0; animation: fadein 0.5s linear forwards 1.3s">
                         Longest Streak
                     </text>
                 </g>
-
-                <!-- Longest Streak range -->
-                <g transform="translate(${(p.width / 6) * 5}, 114)">
+                <g transform="translate(${(contentWidth / 6) * 5}, 114)">
                     <text x="0" y="32" stroke-width="0" text-anchor="middle" fill="${p.textColor}" stroke="none" font-family="'Segoe UI', Ubuntu, sans-serif" font-weight="400" font-size="12px" font-style="normal" style="opacity: 0; animation: fadein 0.5s linear forwards 1.4s">
                          ${longestStreakRangeText}
                     </text>
@@ -625,6 +608,12 @@ function generateQuoteSVG(p: any): string {
   const animStyles = getAnimationStyles(animation, p.primaryColor, speed);
   const gradientDefs = getGradientDefs(p);
   const bgFill = getBgFill(p);
+
+  const paddingTop = p.paddingTop ?? 25;
+  const paddingLeft = p.paddingLeft ?? 25;
+  const paddingRight = p.paddingRight ?? 25;
+  // Quote wrapping not implemented but we respect position
+
   const quotes = [
     { text: "First, solve the problem. Then, write the code.", author: "John Johnson" },
     { text: "Code is like humor. When you have to explain it, it's bad.", author: "Cory House" },
@@ -644,9 +633,11 @@ function generateQuoteSVG(p: any): string {
     ${animStyles}
   </style>
   <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${bgFill}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="2"` : ''}/>
-  <text x="25" y="35" fill="${p.secondaryColor}" font-size="24">"</text>
-  <text x="45" y="50" class="quote">${escapeXml(quote.text)}</text>
-  <text x="${p.width - 25}" y="${p.height - 25}" class="author" text-anchor="end">- ${escapeXml(quote.author)}</text>
+  <g transform="translate(${paddingLeft}, ${paddingTop})">
+    <text x="0" y="10" fill="${p.secondaryColor}" font-size="24">"</text>
+    <text x="20" y="25" class="quote">${escapeXml(quote.text)}</text>
+    <text x="${p.width - paddingLeft - paddingRight}" y="${p.height - paddingTop - 25}" class="author" text-anchor="end">- ${escapeXml(quote.author)}</text>
+  </g>
 </svg>`;
 }
 
@@ -655,17 +646,29 @@ function generateActivitySVG(p: any): string {
   const animStyles = getAnimationStyles(animation, p.primaryColor, speed);
   const gradientDefs = getGradientDefs(p);
   const bgFill = getBgFill(p);
+
+  const paddingLeft = p.paddingLeft ?? 25;
+  const paddingRight = p.paddingRight ?? 25;
+  const paddingTop = p.paddingTop ?? 25;
+  const contentWidth = p.width - paddingLeft - paddingRight;
+
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const activity = p.activity || Array(7).fill(0).map(() => Math.floor(Math.random() * 10));
   const maxVal = Math.max(...activity, 1);
   const barHeight = 60;
   
+  // Calculate dynamic bar spacing
+  const step = contentWidth / 7;
+  const barWidth = 25; // Keep fixed bar width or scale it? contentWidth is likely > 300.
+  // Center bar in step
+  const barOffset = (step - barWidth) / 2;
+
   const bars = activity.map((val: number, i: number) => {
     const height = (val / maxVal) * barHeight;
-    const x = 30 + i * 35;
+    const x = i * step + barOffset;
     return `
-      <rect x="${x}" y="${80 - height}" width="25" height="${height}" fill="${p.primaryColor}" rx="3" opacity="0.8" class="animate delay-${Math.min(i + 1, 4)}"/>
-      <text x="${x + 12}" y="95" text-anchor="middle" class="day-label">${days[i]}</text>`;
+      <rect x="${x}" y="${80 - height}" width="${barWidth}" height="${height}" fill="${p.primaryColor}" rx="3" opacity="0.8" class="animate delay-${Math.min(i + 1, 4)}"/>
+      <text x="${x + barWidth/2}" y="95" text-anchor="middle" class="day-label">${days[i]}</text>`;
   }).join('');
 
   return `
@@ -678,8 +681,10 @@ function generateActivitySVG(p: any): string {
     ${animStyles}
   </style>
   <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${bgFill}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="2"` : ''}/>
-  <text x="25" y="20" class="title">📊 Weekly Activity</text>
-  ${bars}
+  <g transform="translate(${paddingLeft}, ${paddingTop})">
+    <text x="0" y="-5" class="title">📊 Weekly Activity</text>
+    ${bars}
+  </g>
 </svg>`;
 }
 
@@ -688,6 +693,10 @@ function generateCustomSVG(p: any): string {
   const animStyles = getAnimationStyles(animation, p.primaryColor, speed);
   const gradientDefs = getGradientDefs(p);
   const bgFill = getBgFill(p);
+
+  const paddingLeft = p.paddingLeft ?? 25;
+  const paddingTop = p.paddingTop ?? 25;
+
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
   ${gradientDefs}
@@ -697,7 +706,9 @@ function generateCustomSVG(p: any): string {
     ${animStyles}
   </style>
   <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${bgFill}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="2"` : ''}/>
-  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" class="custom-text">${escapeXml(p.customText || 'Custom Card')}</text>
+  <g transform="translate(${paddingLeft}, ${paddingTop})">
+     <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" class="custom-text">${escapeXml(p.customText || 'Custom Card')}</text>
+  </g>
 </svg>`;
 }
 
@@ -767,16 +778,12 @@ function generateContributionSVG(p: any): string {
 
   const days = contributionDays || [];
 
-  // Use 53 cols (weeks) to show full year.
-  // 7px square + 2px gap = 9px pitch. 53 * 9 = 477px.
-  // This fits in 495px width with ~9px padding on each side.
   const cols = 53;
   const rows = 7;
   const cellS = 7;
   const gap = 2;
   const pitch = cellS + gap;
 
-  // Prepare data: last ~371 days (53 * 7)
   const displayDays = days.slice(- (cols * rows));
 
   const getLevelColor = (count: number) => {
@@ -788,25 +795,20 @@ function generateContributionSVG(p: any): string {
   };
 
   let cells = '';
-  // Render grid column by column
   for (let c = 0; c < cols; c++) {
     for (let r = 0; r < rows; r++) {
       const idx = c * rows + r;
       const dayData = displayDays[idx] || { contributionCount: 0 };
 
       const x = c * pitch;
-      const y = r * pitch + 35; // Moved down to accommodate month labels at y=10-20
+      const y = r * pitch + 35;
 
       cells += `<rect x="${x}" y="${y}" width="${cellS}" height="${cellS}" rx="2" fill="${getLevelColor(dayData.contributionCount)}" />`;
     }
   }
 
-  // Month Labels
   const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   let monthsSVG = '';
-
-  // Logic: Label the column where the month "appears" (starts).
-  // Iterate all days to find "1st" of month.
 
   for (let i = 0; i < displayDays.length; i++) {
      const dayData = displayDays[i];
@@ -814,13 +816,10 @@ function generateContributionSVG(p: any): string {
      const date = new Date(dayData.date);
      const dayOfMonth = date.getDate();
 
-     // If it's the 1st of the month
      if (dayOfMonth === 1) {
         const month = date.getMonth();
-        // Calculate column index
         const colIndex = Math.floor(i / rows);
 
-        // Don't label if it's the very last column
         if (colIndex < cols - 1) {
              const x = colIndex * pitch;
              monthsSVG += `<text x="${x}" y="20" font-size="9" fill="${p.textColor}">${monthLabels[month]}</text>`;
@@ -828,13 +827,8 @@ function generateContributionSVG(p: any): string {
      }
   }
 
-  // Calculate required width/height for graph
-  const graphW = cols * pitch - gap;
-  const graphH = rows * pitch - gap + 35; // +35 for labels offset
-
-  // Center the graph
-  const paddingX = (p.width - graphW) / 2;
-  const paddingY = (p.height - graphH) / 2;
+  const paddingLeft = p.paddingLeft ?? 15;
+  const paddingTop = p.paddingTop ?? 10;
 
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
@@ -846,7 +840,7 @@ function generateContributionSVG(p: any): string {
   </style>
   <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${bgFill}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="2"` : ''}/>
 
-  <g transform="translate(${paddingX}, ${paddingY})" class="animate">
+  <g transform="translate(${paddingLeft}, ${paddingTop})" class="animate">
     ${monthsSVG}
     ${cells}
   </g>
@@ -854,7 +848,6 @@ function generateContributionSVG(p: any): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Handle CORS
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -871,20 +864,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     secondaryColor: (req.query.secondary as string) || themeColors.secondary,
     textColor: (req.query.text as string) || themeColors.text,
     borderColor: (req.query.border as string) || themeColors.border,
-    borderRadius: parseInt(req.query.radius as string) || 12,
-    paddingTop: !isNaN(parseInt(req.query.paddingTop as string)) ? parseInt(req.query.paddingTop as string) : 25,
-    paddingRight: !isNaN(parseInt(req.query.paddingRight as string)) ? parseInt(req.query.paddingRight as string) : 25,
-    paddingBottom: !isNaN(parseInt(req.query.paddingBottom as string)) ? parseInt(req.query.paddingBottom as string) : 25,
-    paddingLeft: !isNaN(parseInt(req.query.paddingLeft as string)) ? parseInt(req.query.paddingLeft as string) : 25,
+    borderRadius: parseIntOr(req.query.radius as string, 12),
+    paddingTop: parseIntOr(req.query.paddingTop as string, 25),
+    paddingRight: parseIntOr(req.query.paddingRight as string, 25),
+    paddingBottom: parseIntOr(req.query.paddingBottom as string, 25),
+    paddingLeft: parseIntOr(req.query.paddingLeft as string, 25),
     showBorder: req.query.showBorder !== 'false',
-    width: parseInt(req.query.width as string) || 495,
-    height: parseInt(req.query.height as string) || 195,
+    width: parseIntOr(req.query.width as string, 495),
+    height: parseIntOr(req.query.height as string, 195),
     customText: req.query.customText as string,
     animation: (req.query.animation as string) || 'fadeIn',
     speed: (req.query.speed as string) || 'normal',
     gradient: req.query.gradient === 'true',
     gradientType: (req.query.gradientType as string) || 'linear',
-    gradientAngle: parseInt(req.query.gradientAngle as string) || 135,
+    gradientAngle: parseIntOr(req.query.gradientAngle as string, 135),
     gradientStart: decodeURIComponent((req.query.gradientStart as string) || '#667eea'),
     gradientEnd: decodeURIComponent((req.query.gradientEnd as string) || '#764ba2'),
     bannerName: (req.query.bannerName as string) || 'Your Name',
@@ -897,7 +890,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     activity: [] as number[],
   };
 
-  // Fetch GitHub data if needed
   if (username && ['stats', 'languages', 'streak', 'activity', 'contribution'].includes(type as string)) {
     const data = await fetchGitHubStats(username as string);
     if (data) {
@@ -922,9 +914,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     default: svg = generateStatsSVG(params);
   }
 
-  // Return based on format
   if (format === 'base64') {
-    // Return base64 data URL for img src usage
     const base64 = Buffer.from(svg, 'utf-8').toString('base64');
     const dataUrl = `data:image/svg+xml;base64,${base64}`;
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -935,7 +925,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
   res.setHeader('Cache-Control', 'public, max-age=3600');
 
-  // Add XML declaration and trim
   if (!svg.trim().startsWith('<?xml')) {
     svg = `<?xml version="1.0" encoding="UTF-8"?>\n${svg.trim()}`;
   }
