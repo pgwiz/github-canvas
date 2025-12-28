@@ -400,9 +400,10 @@ function generateLanguagesSVG(p: any): string {
   const gradientDefs = getGradientDefs(p);
   const bgFill = getBgFill(p);
 
-  const paddingTop = p.paddingTop ?? 25;
-  const paddingLeft = p.paddingLeft ?? 25;
-  const paddingRight = p.paddingRight ?? 25;
+  // Enforce minimum padding to prevent content from touching edges
+  const paddingTop = Math.max(p.paddingTop ?? 25, 20);
+  const paddingLeft = Math.max(p.paddingLeft ?? 25, 20);
+  const paddingRight = Math.max(p.paddingRight ?? 25, 20);
 
   const barWidth = p.width - paddingLeft - paddingRight;
   const barHeight = 12;
@@ -871,10 +872,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     textColor: (req.query.text as string) || themeColors.text,
     borderColor: (req.query.border as string) || themeColors.border,
     borderRadius: parseInt(req.query.radius as string) || 12,
-    paddingTop: parseInt(req.query.paddingTop as string) || 25,
-    paddingRight: parseInt(req.query.paddingRight as string) || 25,
-    paddingBottom: parseInt(req.query.paddingBottom as string) || 25,
-    paddingLeft: parseInt(req.query.paddingLeft as string) || 25,
+    paddingTop: !isNaN(parseInt(req.query.paddingTop as string)) ? parseInt(req.query.paddingTop as string) : 25,
+    paddingRight: !isNaN(parseInt(req.query.paddingRight as string)) ? parseInt(req.query.paddingRight as string) : 25,
+    paddingBottom: !isNaN(parseInt(req.query.paddingBottom as string)) ? parseInt(req.query.paddingBottom as string) : 25,
+    paddingLeft: !isNaN(parseInt(req.query.paddingLeft as string)) ? parseInt(req.query.paddingLeft as string) : 25,
     showBorder: req.query.showBorder !== 'false',
     width: parseInt(req.query.width as string) || 495,
     height: parseInt(req.query.height as string) || 195,

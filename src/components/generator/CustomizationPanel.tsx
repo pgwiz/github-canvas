@@ -296,7 +296,7 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
                   <Slider
                     value={[config.paddingTop || 25]}
                     onValueChange={([v]) => updateConfig({ paddingTop: v })}
-                    min={0}
+                    min={20}
                     max={100}
                     step={1}
                     className="[&_[role=slider]]:bg-primary"
@@ -307,7 +307,7 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
                   <Slider
                     value={[config.paddingRight || 25]}
                     onValueChange={([v]) => updateConfig({ paddingRight: v })}
-                    min={0}
+                    min={20}
                     max={100}
                     step={1}
                     className="[&_[role=slider]]:bg-primary"
@@ -318,7 +318,7 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
                   <Slider
                     value={[config.paddingBottom || 25]}
                     onValueChange={([v]) => updateConfig({ paddingBottom: v })}
-                    min={0}
+                    min={20}
                     max={100}
                     step={1}
                     className="[&_[role=slider]]:bg-primary"
@@ -329,7 +329,7 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
                   <Slider
                     value={[config.paddingLeft || 25]}
                     onValueChange={([v]) => updateConfig({ paddingLeft: v })}
-                    min={0}
+                    min={20}
                     max={100}
                     step={1}
                     className="[&_[role=slider]]:bg-primary"
