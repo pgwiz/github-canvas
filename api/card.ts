@@ -401,16 +401,20 @@ function generateLanguagesSVG(p: any): string {
   const bgFill = getBgFill(p);
 
   const barWidth = p.width - 50;
-  const barHeight = 10;
+  const barHeight = 12;
+  const segmentGap = 1;
 
-  // Calculate segments
+  // Calculate segments with gaps
   let offset = 0;
+  const totalGapWidth = Math.max(0, languages.length - 1) * segmentGap;
+  const availableWidth = barWidth - totalGapWidth;
+
   const segments = languages.map((lang: any, i: number) => {
-    const width = (lang.percentage / 100) * barWidth;
+    const width = (lang.percentage / 100) * availableWidth;
     // ensure minimum visible width if percentage > 0
     const w = Math.max(width, width > 0 ? 2 : 0);
     const rect = `<rect x="${offset}" y="0" width="${w}" height="${barHeight}" fill="${lang.color}"/>`;
-    offset += w;
+    offset += w + segmentGap;
     return rect;
   }).join('');
 
@@ -419,15 +423,16 @@ function generateLanguagesSVG(p: any): string {
   const leftCol = languages.slice(0, mid);
   const rightCol = languages.slice(mid);
 
+  const rowSpacing = 28;
   const renderItem = (lang: any, y: number) => `
     <g transform="translate(0, ${y})">
-      <circle cx="5" cy="5" r="5" fill="${lang.color}"/>
-      <text x="20" y="5" class="lang-label" font-weight="700" dominant-baseline="middle">${lang.name} <tspan font-weight="400">${lang.percentage}%</tspan></text>
+      <circle cx="6" cy="6" r="6" fill="${lang.color}"/>
+      <text x="22" y="6" class="lang-label" font-weight="700" dominant-baseline="middle">${lang.name} <tspan font-weight="400">${lang.percentage}%</tspan></text>
     </g>
   `;
 
-  const leftItems = leftCol.map((l: any, i: number) => renderItem(l, i * 25)).join('');
-  const rightItems = rightCol.map((l: any, i: number) => renderItem(l, i * 25)).join('');
+  const leftItems = leftCol.map((l: any, i: number) => renderItem(l, i * rowSpacing)).join('');
+  const rightItems = rightCol.map((l: any, i: number) => renderItem(l, i * rowSpacing)).join('');
 
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
@@ -457,8 +462,8 @@ function generateLanguagesSVG(p: any): string {
 
     <!-- Legend -->
     <g transform="translate(0, 60)">
-      <g>${leftItems}</g>
-      <g transform="translate(${barWidth / 2}, 0)">${rightItems}</g>
+      <g transform="translate(0, 0)">${leftItems}</g>
+      <g transform="translate(235, 0)">${rightItems}</g>
     </g>
   </g>
 </svg>`;
@@ -756,13 +761,15 @@ function generateContributionSVG(p: any): string {
   // Use real data if available, otherwise fallback
   const days = contributionDays || [];
 
-  const cols = 53;
+  // 52 weeks to fit in 495px width with 7px squares and 2px gaps (9px pitch)
+  // 52 * 9 = 468px width
+  const cols = 52;
   const rows = 7;
-  const cellS = 10;
-  const gap = 3;
+  const cellS = 7;
+  const gap = 2;
+  const pitch = cellS + gap;
 
-  // Prepare data: last 365 days approximately
-  // If we have less data, pad it.
+  // Prepare data: last ~364 days
   const displayDays = days.slice(- (cols * rows));
 
   const getLevelColor = (count: number) => {
@@ -778,15 +785,10 @@ function generateContributionSVG(p: any): string {
   for (let c = 0; c < cols; c++) {
     for (let r = 0; r < rows; r++) {
       const idx = c * rows + r;
-      // We need to map linear index to the day in the past?
-      // Actually standard GitHub graph goes Column 0 (Week 1), Row 0 (Sun)...
-      // If we have a flat array of days sorted by date...
-      // The array usually starts from ~1 year ago.
-      // We should map days to grid.
       const dayData = displayDays[idx] || { contributionCount: 0 };
 
-      const x = c * (cellS + gap);
-      const y = r * (cellS + gap) + 20; // +20 for month labels
+      const x = c * pitch;
+      const y = r * pitch + 25; // +25 for month labels (y=35 area)
 
       cells += `<rect x="${x}" y="${y}" width="${cellS}" height="${cellS}" rx="2" fill="${getLevelColor(dayData.contributionCount)}" />`;
     }
@@ -798,26 +800,28 @@ function generateContributionSVG(p: any): string {
   let monthsSVG = '';
 
   for (let c = 0; c < cols; c++) {
-      const idx = c * rows; // Start of week
+      const idx = c * rows; // Start of week (Sunday)
       const dayData = displayDays[idx];
       if (dayData) {
           const date = new Date(dayData.date);
           const month = date.getMonth();
           if (month !== currentMonth) {
-              const x = c * (cellS + gap);
-              monthsSVG += `<text x="${x}" y="10" font-size="10" fill="${p.textColor}">${monthLabels[month]}</text>`;
+              // Only show label if there is enough space (e.g., skip if changed within last 2 weeks)
+              // But standard GitHub behavior just shows it.
+              const x = c * pitch;
+              monthsSVG += `<text x="${x}" y="15" font-size="9" fill="${p.textColor}">${monthLabels[month]}</text>`;
               currentMonth = month;
           }
       }
   }
 
   // Calculate required width/height for graph
-  const graphW = cols * (cellS + gap) - gap;
-  const graphH = rows * (cellS + gap) - gap + 20;
+  const graphW = cols * pitch - gap;
+  const graphH = rows * pitch - gap + 25;
 
-  // Center the graph
-  const paddingX = (p.width - graphW) / 2;
-  const paddingY = (p.height - graphH) / 2;
+  // Center the graph (approx 15px padding from left as requested)
+  const paddingX = 15;
+  const paddingY = (p.height - graphH) / 2 + 5; // adjust to vertical center roughly
 
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
@@ -829,7 +833,7 @@ function generateContributionSVG(p: any): string {
   </style>
   <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${bgFill}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="2"` : ''}/>
 
-  <g transform="translate(${Math.max(10, paddingX)}, ${Math.max(20, paddingY)})" class="animate">
+  <g transform="translate(${paddingX}, ${paddingY})" class="animate">
     ${monthsSVG}
     ${cells}
   </g>
