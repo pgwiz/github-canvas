@@ -397,47 +397,79 @@ function generateCustomSVG(p: any): string {
 }
 
 function generateBannerSVG(p: any): string {
-  const { bannerName, bannerDescription, waveStyle, animation = 'fadeIn', speed = 'normal' } = p;
-  const animStyles = getAnimationStyles(animation, p.primaryColor, speed);
+  const { bannerName, bannerDescription, animation = 'fadeIn', speed = 'normal' } = p;
   const gradientDefs = getGradientDefs(p);
   const bgFill = getBgFill(p);
 
-  const w = p.width;
-  const h = p.height;
+  // Use user provided colors or gradient for the waves
+  // We'll create a special gradient for the waves based on primary/secondary or user's gradient settings
+  const waveGradientId = 'waveGradient';
+  let waveGradientDef = '';
 
-  let wavePath = '';
-  // Simple wave path generation logic
-  if (waveStyle === 'wave') {
-      wavePath = `M0 ${h} L0 ${h-60} C${w*0.3} ${h-100} ${w*0.7} ${h-20} ${w} ${h-60} L${w} ${h} Z`;
-  } else if (waveStyle === 'pulse') {
-      wavePath = `M0 ${h} L0 ${h-50} L${w*0.25} ${h-50} L${w*0.35} ${h-80} L${w*0.45} ${h-50} L${w} ${h-50} L${w} ${h} Z`;
-  } else if (waveStyle === 'flow') {
-       wavePath = `M0 ${h} L0 ${h-40} Q${w*0.5} ${h-90} ${w} ${h-40} L${w} ${h} Z`;
-  } else { // glitch or default
-      wavePath = `M0 ${h} L0 ${h-50} L${w*0.2} ${h-50} L${w*0.2} ${h-20} L${w*0.4} ${h-20} L${w*0.4} ${h-50} L${w} ${h-50} L${w} ${h} Z`;
+  if (p.gradient) {
+     // If user enabled gradient, reuse it or create a variation
+     waveGradientDef = `
+      <linearGradient id="${waveGradientId}" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="${p.gradientStart}"/>
+        <stop offset="100%" stop-color="${p.gradientEnd}"/>
+      </linearGradient>`;
+  } else {
+    // If not, use primary to secondary
+     waveGradientDef = `
+      <linearGradient id="${waveGradientId}" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="${p.primaryColor}"/>
+        <stop offset="100%" stop-color="${p.secondaryColor}"/>
+      </linearGradient>`;
   }
 
-  // Second wave for depth
-  const wavePath2 = `M0 ${h} L0 ${h-40} C${w*0.4} ${h-10} ${w*0.8} ${h-80} ${w} ${h-40} L${w} ${h} Z`;
+  // Animation durations adjusted by speed
+  const m = getSpeedMultiplier(speed);
+  const dur = 20 * m;
+
+  const w = p.width;
+  // Scaling factor for width if width is not 854 (from reference)
+  const scaleX = w / 854;
+
+  // We can just use viewBox to scale everything instead of calculating paths manually
+  // But we need to keep the aspect ratio or stretch? The reference is 854x200.
+  // We should render the content in a group scaled to fit p.width and p.height
+  // The waves are at bottom ~100-200.
+
+  // Let's use the exact paths from the reference but ensure they stretch to width
+  // The reference paths are relative to 854.
+  // We will wrap the wave group in a transform scale.
 
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
   ${gradientDefs}
+  <defs>
+    ${waveGradientDef}
+  </defs>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap');
-    .banner-name { font: 700 48px 'Inter', sans-serif; fill: ${p.primaryColor}; text-anchor: middle; }
-    .banner-desc { font: 600 18px 'Inter', sans-serif; fill: ${p.secondaryColor}; text-anchor: middle; }
-    ${animStyles}
+    .banner-text { font-size: 50px; font-weight: 700; font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji; fill: ${p.primaryColor}; }
+    .banner-desc { font-size: 20px; font-weight: 500; font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji; fill: ${p.secondaryColor}; }
+    .banner-text, .banner-desc { animation: fadeIn ${1.2 * m}s ease-in-out forwards; opacity: 0; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   </style>
-  <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${bgFill}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="2"` : ''}/>
 
-  <path d="${wavePath}" fill="${p.primaryColor}" opacity="0.2" class="animate delay-1" />
-  <path d="${wavePath2}" fill="${p.secondaryColor}" opacity="0.2" class="animate delay-2" />
+  <rect x="0" y="0" width="${p.width}" height="${p.height}" rx="${p.borderRadius}" fill="${bgFill}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="2"` : ''}/>
 
-  <g transform="translate(${p.width/2}, ${p.height/2 - 10})">
-    <text y="0" class="banner-name animate">${escapeXml(bannerName)}</text>
-    <text y="40" class="banner-desc animate delay-1">${escapeXml(bannerDescription)}</text>
+  <!-- Waves Container: Scaled to fit width and positioned at bottom -->
+  <g transform="translate(0, ${p.height - 200}) scale(${p.width / 854}, 1)">
+    <g transform="translate(427, 100) scale(1, 1) translate(-427, -100)">
+        <path d="" fill="url(#${waveGradientId})" opacity="0.4">
+          <animate attributeName="d" dur="${dur}s" repeatCount="indefinite" keyTimes="0;0.333;0.667;1" calcmod="spline" keySplines="0.2 0 0.2 1;0.2 0 0.2 1;0.2 0 0.2 1" begin="0s" values="M0 0L 0 120Q 213.5 160 427 130T 854 155L 854 0 Z;M0 0L 0 145Q 213.5 160 427 140T 854 130L 854 0 Z;M0 0L 0 165Q 213.5 135 427 165T 854 130L 854 0 Z;M0 0L 0 120Q 213.5 160 427 130T 854 155L 854 0 Z">
+          </animate>
+        </path>
+        <path d="" fill="url(#${waveGradientId})" opacity="0.4">
+          <animate attributeName="d" dur="${dur}s" repeatCount="indefinite" keyTimes="0;0.333;0.667;1" calcmod="spline" keySplines="0.2 0 0.2 1;0.2 0 0.2 1;0.2 0 0.2 1" begin="${-10 * m}s" values="M0 0L 0 135Q 213.5 180 427 150T 854 160L 854 0 Z;M0 0L 0 150Q 213.5 120 427 120T 854 140L 854 0 Z;M0 0L 0 145Q 213.5 125 427 150T 854 165L 854 0 Z;M0 0L 0 135Q 213.5 180 427 150T 854 160L 854 0 Z">
+          </animate>
+        </path>
+      </g>
   </g>
+
+  <text text-anchor="middle" alignment-baseline="middle" x="50%" y="40%" class="banner-text">${escapeXml(bannerName)}</text>
+  <text text-anchor="middle" alignment-baseline="middle" x="50%" y="60%" class="banner-desc">${escapeXml(bannerDescription)}</text>
 </svg>`;
 }
 
