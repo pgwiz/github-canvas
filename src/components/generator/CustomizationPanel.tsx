@@ -288,6 +288,56 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
           </TabsContent>
 
           <TabsContent value="layout" className="space-y-4">
+            <div className="space-y-4 border rounded-lg p-3 bg-background/20 border-border/20">
+              <Label className="text-sm font-semibold">Padding</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs mb-1 block">Top: {config.paddingTop}px</Label>
+                  <Slider
+                    value={[config.paddingTop || 25]}
+                    onValueChange={([v]) => updateConfig({ paddingTop: v })}
+                    min={0}
+                    max={100}
+                    step={1}
+                    className="[&_[role=slider]]:bg-primary"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs mb-1 block">Right: {config.paddingRight}px</Label>
+                  <Slider
+                    value={[config.paddingRight || 25]}
+                    onValueChange={([v]) => updateConfig({ paddingRight: v })}
+                    min={0}
+                    max={100}
+                    step={1}
+                    className="[&_[role=slider]]:bg-primary"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs mb-1 block">Bottom: {config.paddingBottom}px</Label>
+                  <Slider
+                    value={[config.paddingBottom || 25]}
+                    onValueChange={([v]) => updateConfig({ paddingBottom: v })}
+                    min={0}
+                    max={100}
+                    step={1}
+                    className="[&_[role=slider]]:bg-primary"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs mb-1 block">Left: {config.paddingLeft}px</Label>
+                  <Slider
+                    value={[config.paddingLeft || 25]}
+                    onValueChange={([v]) => updateConfig({ paddingLeft: v })}
+                    min={0}
+                    max={100}
+                    step={1}
+                    className="[&_[role=slider]]:bg-primary"
+                  />
+                </div>
+              </div>
+            </div>
+
             <div>
               <Label className="text-sm mb-2 block">
                 Border Radius: {config.borderRadius}px
