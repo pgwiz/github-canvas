@@ -63,6 +63,12 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
       gradientEnd: config.gradientEnd,
     });
 
+    if (config.type === "banner") {
+      if (config.bannerName) params.set("bannerName", config.bannerName);
+      if (config.bannerDescription) params.set("bannerDescription", config.bannerDescription);
+      if (config.waveStyle) params.set("waveStyle", config.waveStyle);
+    }
+
     if (config.customText) {
       params.set("customText", config.customText);
     }
