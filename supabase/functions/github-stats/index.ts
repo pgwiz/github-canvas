@@ -117,7 +117,7 @@ async function fetchContributions(username: string): Promise<{
           const days = calendar.weeks.flatMap((w: any) => w.contributionDays);
 
           // Calculate Streak logic
-          let currentStreak = 0;
+          const currentStreak = 0;
           let longestStreak = 0;
           let tempStreak = 0;
           let tempStreakStart = '';
@@ -211,7 +211,7 @@ async function fetchContributions(username: string): Promise<{
           // Sort ascending for consistency with GraphQL logic
           contributions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
           
-          let totalContributions = data.total?.lastYear || contributions.reduce((sum, d) => sum + d.count, 0);
+          const totalContributions = data.total?.lastYear || contributions.reduce((sum, d) => sum + d.count, 0);
           
           // Re-implement streak logic for this data source if needed, or simplify
           // For now, simple fallback

@@ -214,19 +214,22 @@ export default function Generator() {
                   <Button 
                     onClick={handleGenerate} 
                     disabled={isGenerating}
-                    className="h-12 px-6"
+                    className="group relative h-12 px-6 overflow-hidden bg-primary hover:bg-primary/90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(12,247,9,0.3)] hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    {isGenerating ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
-                        {config.type === "quote" ? "Generating..." : "Fetching..."}
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        {config.type === "quote" ? "Generate Quote" : "Fetch Stats"}
-                      </>
-                    )}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out" />
+                    <span className="relative flex items-center">
+                      {isGenerating ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
+                          {config.type === "quote" ? "Generating..." : "Fetching..."}
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
+                          {config.type === "quote" ? "Generate Quote" : "Fetch Stats"}
+                        </>
+                      )}
+                    </span>
                   </Button>
                 </div>
                 {config.type !== "quote" && config.type !== "custom" && config.type !== "banner" && (
