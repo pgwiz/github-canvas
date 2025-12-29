@@ -2,6 +2,7 @@ import { CardConfig } from "@/pages/Generator";
 import { GitHubStats } from "@/hooks/useGitHubStats";
 import { DevQuote } from "@/hooks/useDevQuote";
 import { useMemo, useState, useEffect } from "react";
+import { TiltCard } from "@/components/ui/TiltCard";
 
 interface CardPreviewProps {
   config: CardConfig;
@@ -154,12 +155,19 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
           <span className="text-sm">Loading preview...</span>
         </div>
       ) : imageSrc ? (
-        <img 
-          src={imageSrc}
-          alt={`${config.type} card preview`}
-          style={{ maxWidth: `${config.width}px` }}
-          className="max-w-full h-auto rounded-lg"
-        />
+        <TiltCard
+          maxTilt={5}
+          scale={1.02}
+          glareMaxOpacity={0.15}
+          className="rounded-lg shadow-2xl"
+        >
+          <img
+            src={imageSrc}
+            alt={`${config.type} card preview`}
+            style={{ maxWidth: `${config.width}px` }}
+            className="max-w-full h-auto rounded-lg"
+          />
+        </TiltCard>
       ) : (
         <div className="flex flex-col items-center gap-2 text-muted-foreground">
           <span className="text-4xl">🖼️</span>
