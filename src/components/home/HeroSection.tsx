@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { GlassPanel, GlassInnerPanel } from "@/components/ui/GlassPanel";
+import { TiltCard } from "@/components/ui/TiltCard";
 
 export function HeroSection() {
   return (
@@ -55,52 +56,58 @@ export function HeroSection() {
           {/* Stats preview cards with glassmorphism */}
           <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* User Stats Card - Green accent */}
-            <GlassPanel hover accent="green" className="text-left">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center backdrop-blur-sm">
-                  <span className="text-2xl">📊</span>
+            <TiltCard>
+              <GlassPanel hover accent="green" className="text-left h-full">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center backdrop-blur-sm">
+                    <span className="text-2xl">📊</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white">User Stats</h3>
+                    <p className="text-sm text-white/60">Stars, commits, repos</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-white">User Stats</h3>
-                  <p className="text-sm text-white/60">Stars, commits, repos</p>
-                </div>
-              </div>
-              <GlassInnerPanel accent="green" className="h-24 flex items-center justify-center">
-                <span className="text-white/40 font-mono text-sm">Preview Card</span>
-              </GlassInnerPanel>
-            </GlassPanel>
+                <GlassInnerPanel accent="green" className="h-24 flex items-center justify-center">
+                  <span className="text-white/40 font-mono text-sm">Preview Card</span>
+                </GlassInnerPanel>
+              </GlassPanel>
+            </TiltCard>
             
             {/* Streak Tracker Card - Teal accent (active/highlighted) */}
-            <GlassPanel hover accent="teal" active className="text-left animate-float">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-lg bg-secondary/20 flex items-center justify-center backdrop-blur-sm">
-                  <span className="text-2xl">🔥</span>
+            <TiltCard>
+              <GlassPanel hover accent="teal" active className="text-left h-full">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-lg bg-secondary/20 flex items-center justify-center backdrop-blur-sm">
+                    <span className="text-2xl">🔥</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white">Streak Tracker</h3>
+                    <p className="text-sm text-white/60">Current & longest streak</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-white">Streak Tracker</h3>
-                  <p className="text-sm text-white/60">Current & longest streak</p>
-                </div>
-              </div>
-              <GlassInnerPanel accent="teal" className="h-24 flex items-center justify-center">
-                <span className="text-white/40 font-mono text-sm">Preview Card</span>
-              </GlassInnerPanel>
-            </GlassPanel>
+                <GlassInnerPanel accent="teal" className="h-24 flex items-center justify-center">
+                  <span className="text-white/40 font-mono text-sm">Preview Card</span>
+                </GlassInnerPanel>
+              </GlassPanel>
+            </TiltCard>
             
             {/* Languages Card - Purple accent */}
-            <GlassPanel hover accent="purple" className="text-left">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-lg bg-chart-3/20 flex items-center justify-center backdrop-blur-sm">
-                  <span className="text-2xl">💻</span>
+            <TiltCard>
+              <GlassPanel hover accent="purple" className="text-left h-full">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-lg bg-chart-3/20 flex items-center justify-center backdrop-blur-sm">
+                    <span className="text-2xl">💻</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white">Languages</h3>
+                    <p className="text-sm text-white/60">Top programming languages</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-white">Languages</h3>
-                  <p className="text-sm text-white/60">Top programming languages</p>
-                </div>
-              </div>
-              <GlassInnerPanel accent="purple" className="h-24 flex items-center justify-center">
-                <span className="text-white/40 font-mono text-sm">Preview Card</span>
-              </GlassInnerPanel>
-            </GlassPanel>
+                <GlassInnerPanel accent="purple" className="h-24 flex items-center justify-center">
+                  <span className="text-white/40 font-mono text-sm">Preview Card</span>
+                </GlassInnerPanel>
+              </GlassPanel>
+            </TiltCard>
           </div>
         </div>
       </div>

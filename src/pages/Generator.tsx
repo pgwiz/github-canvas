@@ -9,12 +9,13 @@ import { CardPreview } from "@/components/generator/CardPreview";
 import { TemplateGallery } from "@/components/generator/TemplateGallery";
 import { CustomizationPanel } from "@/components/generator/CustomizationPanel";
 import { LinkGenerator } from "@/components/generator/LinkGenerator";
-import { Search, Sparkles, RefreshCw } from "lucide-react";
+import { Search, Sparkles, RefreshCw, Eye, Code } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGitHubStats, GitHubStats } from "@/hooks/useGitHubStats";
 import { useDevQuote, DevQuote } from "@/hooks/useDevQuote";
 import { useQuoteOfTheDay } from "@/hooks/useQuoteOfTheDay";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 export type CardType = "stats" | "languages" | "streak" | "activity" | "quote" | "custom" | "banner" | "contribution";
 
@@ -107,6 +108,10 @@ export default function Generator() {
   const { qotd } = useQuoteOfTheDay();
 
   const isGenerating = statsLoading || quoteLoading;
+
+  // Tab state for Right Panel (Preview vs Code)
+  // Default to 'preview', but using string state to handle more potential tabs
+  const [rightPanelTab, setRightPanelTab] = useState<"preview" | "code">("preview");
 
   const handleGenerate = async () => {
     if (!config.username && config.type !== "quote" && config.type !== "custom") {
@@ -327,36 +332,83 @@ export default function Generator() {
 
             {/* Right Panel - Preview & Links */}
             <div className="space-y-6">
-              {/* Preview */}
-              <GlassPanel accent="teal" active>
-                <Label className="text-lg font-semibold mb-4 block">
-                  Live Preview
-                </Label>
-                {/* Nested frosted glass inner panel */}
-                <div className="relative rounded-lg overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 to-transparent backdrop-blur-md" />
-                  <div className="relative p-4 rounded-lg border border-secondary/10 bg-background/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
-                    <CardPreview 
-                      config={config} 
-                      githubData={githubData}
-                      quote={currentQuote}
-                    />
-                  </div>
-                </div>
-                {githubData && config.type !== "quote" && config.type !== "custom" && (
-                  <p className="text-xs text-muted-foreground mt-4 text-center">
-                    ✓ Showing real data for @{githubData.user.login}
-                  </p>
-                )}
-              </GlassPanel>
 
-              {/* Link Generator */}
-              <GlassPanel accent="green">
-                <Label className="text-lg font-semibold mb-4 block">
-                  Share Your Card
-                </Label>
-                <LinkGenerator config={config} />
-              </GlassPanel>
+              {/* Premium Segmented Control for Tab Selection */}
+              <div className="flex items-center p-1 bg-muted/40 rounded-lg w-full max-w-[320px] border border-white/5 backdrop-blur-sm mx-auto lg:mx-0">
+                <div className="relative grid grid-cols-2 w-full">
+                  <button
+                    onClick={() => setRightPanelTab("preview")}
+                    className={cn(
+                      "relative z-10 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors duration-300",
+                      rightPanelTab === "preview"
+                        ? "text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Eye className="w-4 h-4" />
+                    Preview
+                  </button>
+                  <button
+                    onClick={() => setRightPanelTab("code")}
+                    className={cn(
+                      "relative z-10 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors duration-300",
+                      rightPanelTab === "code"
+                        ? "text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Code className="w-4 h-4" />
+                    Get Code
+                  </button>
+
+                  {/* Sliding Background */}
+                  <div
+                    className={cn(
+                      "absolute top-0 bottom-0 rounded-md bg-primary shadow-lg transition-all duration-300 ease-in-out",
+                    )}
+                    style={{
+                      left: rightPanelTab === "preview" ? "0" : "50%",
+                      width: "50%",
+                      opacity: 1
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Content Panel */}
+              <div className="relative">
+                {rightPanelTab === "preview" ? (
+                  /* Preview Panel */
+                  <GlassPanel accent="teal" active className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    <Label className="text-lg font-semibold mb-4 block">
+                      Live Preview
+                    </Label>
+                    <div className="relative rounded-lg overflow-hidden min-h-[250px] flex items-center justify-center">
+                      <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 to-transparent backdrop-blur-md" />
+                      <div className="relative p-4 rounded-lg border border-secondary/10 bg-background/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+                        <CardPreview
+                          config={config}
+                          githubData={githubData}
+                          quote={currentQuote}
+                        />
+                      </div>
+                    </div>
+                    {githubData && config.type !== "quote" && config.type !== "custom" && (
+                      <p className="text-xs text-muted-foreground mt-4 text-center">
+                        ✓ Showing real data for @{githubData.user.login}
+                      </p>
+                    )}
+                  </GlassPanel>
+                ) : (
+                  /* Code Panel */
+                  <GlassPanel accent="green" active className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                     <Label className="text-lg font-semibold mb-4 block">
+                      Share Your Card
+                    </Label>
+                    <LinkGenerator config={config} />
+                  </GlassPanel>
+                )}
+              </div>
 
               {/* Quote of the Day */}
               {qotd && (
