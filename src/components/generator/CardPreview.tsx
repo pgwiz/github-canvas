@@ -1,7 +1,7 @@
 import { CardConfig } from "@/pages/Generator";
 import { GitHubStats } from "@/hooks/useGitHubStats";
 import { DevQuote } from "@/hooks/useDevQuote";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 
 interface CardPreviewProps {
   config: CardConfig;
@@ -15,9 +15,10 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
     (import.meta.env.VITE_SUPABASE_PROJECT_ID ? `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co` : null);
   const selfHostedApiUrl = import.meta.env.VITE_API_URL;
   
-  const [imageSrc, setImageSrc] = useState<string>("");
+  const [svgContent, setSvgContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const svgContainerRef = useRef<HTMLDivElement>(null);
 
   // Determine API endpoint - memoized to prevent recreation
   const apiEndpoint = useMemo(() => {
@@ -39,7 +40,18 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
     return `${window.location.origin}/api/card`;
   }, [supabaseUrl, selfHostedApiUrl]);
 
-  // Build the base params URL
+  // Construct a dependency that EXCLUDES padding
+  // This allows us to re-fetch only when necessary (theme, type, etc), but not when dragging sliders
+  const fetchTrigger = useMemo(() => {
+    const {
+      paddingTop, paddingRight, paddingBottom, paddingLeft,
+      width, height, // we might want to refetch on size change, but let's try client update first?
+      ...rest
+    } = config;
+    return JSON.stringify({ ...rest, quote, apiEndpoint });
+  }, [config, quote, apiEndpoint]);
+
+  // But we still need the FULL params for the initial fetch to be correct
   const paramsUrl = useMemo(() => {
     const params = new URLSearchParams({
       type: config.type,
@@ -52,6 +64,10 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
       border: config.borderColor,
       radius: config.borderRadius.toString(),
       showBorder: config.showBorder.toString(),
+      paddingTop: (config.paddingTop || 25).toString(),
+      paddingRight: (config.paddingRight || 25).toString(),
+      paddingBottom: (config.paddingBottom || 25).toString(),
+      paddingLeft: (config.paddingLeft || 25).toString(),
       width: config.width.toString(),
       height: config.height.toString(),
       animation: config.animation || "fadeIn",
@@ -80,27 +96,29 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
     return params.toString();
   }, [config, quote]);
 
-  // Always fetch as base64 for reliable cross-platform rendering
+  // Fetch Logic
   useEffect(() => {
     const fetchImage = async () => {
       setIsLoading(true);
       setError(null);
       
-      const fullUrl = `${apiEndpoint}?${paramsUrl}&format=base64`;
+      // Request raw SVG (no format=base64)
+      const fullUrl = `${apiEndpoint}?${paramsUrl}`;
       
       try {
         const response = await fetch(fullUrl);
         
         if (response.ok) {
-          const dataUrl = await response.text();
-          // Validate it's actually a data URL
-          if (dataUrl && dataUrl.startsWith('data:')) {
-            setImageSrc(dataUrl);
+          const text = await response.text();
+          if (text.trim().startsWith('<svg') || text.trim().startsWith('<?xml')) {
+             setSvgContent(text);
+          } else if (text.startsWith('data:')) {
+             // Handle base64 fallback if needed
+             const base64 = text.split(',')[1];
+             setSvgContent(atob(base64));
           } else {
-            // If response isn't a data URL, it might be raw SVG - convert it
-            const svgContent = dataUrl;
-            const base64 = btoa(unescape(encodeURIComponent(svgContent)));
-            setImageSrc(`data:image/svg+xml;base64,${base64}`);
+             // Fallback
+             setSvgContent(text);
           }
         } else {
           setError(`API error: ${response.status}`);
@@ -114,7 +132,82 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
     };
 
     fetchImage();
-  }, [paramsUrl, apiEndpoint]);
+  }, [fetchTrigger]); // Only refetch when NON-padding props change
+
+  // DOM Manipulation Logic for instant updates
+  useEffect(() => {
+     if (!svgContainerRef.current) return;
+     const svg = svgContainerRef.current.querySelector('svg');
+     if (!svg) return;
+
+     const { paddingTop, paddingRight, paddingBottom, paddingLeft, width } = config;
+
+     // 1. Update Main Group Transform
+     const mainGroup = svg.querySelector('#main-content') || svg.querySelector('g[transform^="translate"]');
+     if (mainGroup) {
+         mainGroup.setAttribute('transform', `translate(${paddingLeft}, ${paddingTop})`);
+     }
+
+     // 2. Languages Card Specifics
+     if (config.type === 'languages' && githubData?.languages) {
+        const barWidth = width - paddingLeft - paddingRight;
+
+        // Update container clipping rect
+        const clipRect = svg.querySelector('#bar-clip-rect');
+        if (clipRect) {
+            clipRect.setAttribute('width', barWidth.toString());
+        }
+
+        // Recalculate segments
+        // We need to re-implement the segment logic here to match backend
+        const gapSize = 1; // hardcoded in backend
+        const totalGapWidth = Math.max(0, githubData.languages.length - 1) * gapSize;
+        const availableWidth = Math.max(0, barWidth - totalGapWidth);
+
+        let currentX = 0;
+        const segments = svg.querySelectorAll('.lang-segment');
+
+        segments.forEach((segment, index) => {
+            const lang = githubData.languages[index];
+            if (lang) {
+                const w = (lang.percentage / 100) * availableWidth;
+                const finalW = Math.max(w, 0);
+
+                segment.setAttribute('x', currentX.toString());
+                segment.setAttribute('width', finalW.toString());
+
+                if (finalW > 0) {
+                    currentX += finalW + gapSize;
+                }
+            }
+        });
+     }
+
+     // 3. Stats Card Specifics
+     if (config.type === 'stats') {
+         const contentWidth = width - paddingLeft - paddingRight;
+         const colWidth = contentWidth / 4;
+
+         // Assuming stats card has groups for each stat.
+         // In backend: main-content -> g (stars), g (repos), g (followers), g (forks)
+         // They have transforms: translate(0, 45), translate(colWidth, 45), etc.
+
+         // Select direct children 'g' of mainGroup
+         // We might need to select them by index or class if we added them.
+         // Since we didn't add classes to stat groups in backend, we rely on child index or transform attribute assumption.
+         // The backend outputs them in order.
+         if (mainGroup) {
+             const groups = Array.from(mainGroup.children).filter(el => el.tagName === 'g');
+             if (groups.length >= 4) {
+                 groups[0].setAttribute('transform', `translate(0, 45)`);
+                 groups[1].setAttribute('transform', `translate(${colWidth}, 45)`);
+                 groups[2].setAttribute('transform', `translate(${colWidth * 2}, 45)`);
+                 groups[3].setAttribute('transform', `translate(${colWidth * 3}, 45)`);
+             }
+         }
+     }
+
+  }, [config.paddingTop, config.paddingLeft, config.paddingRight, config.paddingBottom, config.width, svgContent, githubData]);
 
   // Check if we need a username
   const needsUsername = !config.username && config.type !== "quote" && config.type !== "custom";
@@ -149,12 +242,12 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
           <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
           <span className="text-sm">Loading preview...</span>
         </div>
-      ) : imageSrc ? (
-        <img 
-          src={imageSrc}
-          alt={`${config.type} card preview`}
-          style={{ maxWidth: `${config.width}px` }}
-          className="max-w-full h-auto rounded-lg"
+      ) : svgContent ? (
+        <div
+            ref={svgContainerRef}
+            className="max-w-full h-auto rounded-lg overflow-hidden"
+            dangerouslySetInnerHTML={{ __html: svgContent }}
+            style={{ maxWidth: `${config.width}px` }}
         />
       ) : (
         <div className="flex flex-col items-center gap-2 text-muted-foreground">
