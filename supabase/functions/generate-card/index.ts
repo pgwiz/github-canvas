@@ -340,6 +340,10 @@ function generateSVG(params: CardParams): string {
         primaryColor, secondaryColor, textColor, animate,
         languages: languages || [],
         commonStyles, gradientDefs,
+        paddingTop: params.paddingTop,
+        paddingRight: params.paddingRight,
+        paddingBottom: params.paddingBottom,
+        paddingLeft: params.paddingLeft,
       });
     
     case 'streak':
@@ -443,9 +447,11 @@ function generateStatsSVG(p: any): string {
 function generateLanguagesSVG(p: any): string {
   const { languages, animate } = p;
   const langs = languages.slice(0, 6);
-  const barWidth = p.width - 50;
+  const paddingLeft = p.paddingLeft || 25;
+  const paddingRight = p.paddingRight || 25;
+  const paddingTop = p.paddingTop || 25;
+  const barWidth = p.width - paddingLeft - paddingRight;
   const barHeight = 12;
-  const leftPadding = 25;
   const segmentGap = 1;
   
   // Generate the stacked progress bar segments
@@ -505,12 +511,12 @@ function generateLanguagesSVG(p: any): string {
   
   <rect data-testid="card-bg" x="0.5" y="0.5" rx="${p.borderRadius}" height="99%" width="${p.width - 1}" fill="${p.bgColor}" ${p.borderStyle}/>
   
-  <g data-testid="card-title" transform="translate(${leftPadding}, 25)">
-    <text x="0" y="0" class="header" data-testid="header">Most Used Languages</text>
+  <g data-testid="card-title" transform="translate(${paddingLeft}, ${paddingTop})">
+    <text x="0" y="18" class="header" data-testid="header">Most Used Languages</text>
   </g>
   
   <g data-testid="main-card-body" transform="translate(0, 30)">
-    <svg data-testid="lang-items" x="${leftPadding}">
+    <svg data-testid="lang-items" x="${paddingLeft}">
       <mask id="rect-mask">
         <rect x="0" y="0" width="${barWidth}" height="${barHeight}" fill="white" rx="5"/>
       </mask>

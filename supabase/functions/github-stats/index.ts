@@ -290,27 +290,45 @@ serve(async (req) => {
 
     // Fetch fresh data
     const user = await fetchGitHubUser(username);
-    const repos = await fetchUserRepos(username);
-    
-    const totalStars = repos.reduce((acc, repo) => acc + repo.stargazers_count, 0);
-    const totalForks = repos.reduce((acc, repo) => acc + repo.forks_count, 0);
-    
-    const languageCounts: Record<string, number> = {};
-    for (const repo of repos) {
-      if (repo.language) {
-        languageCounts[repo.language] = (languageCounts[repo.language] || 0) + 1;
-      }
+
+    let totalStars = 0;
+    let totalForks = 0;
+    let languages: any[] = [];
+
+    const token = Deno.env.get('GITHUB_TOKEN');
+    let graphqlData = null;
+
+    if (token) {
+      graphqlData = await fetchRepoStatsGraphQL(username, token);
     }
-    
-    const totalLangRepos = Object.values(languageCounts).reduce((a, b) => a + b, 0);
-    const languages = Object.entries(languageCounts)
-      .map(([name, count]) => ({
-        name,
-        percentage: Math.round((count / totalLangRepos) * 100),
-        color: getLanguageColor(name),
-      }))
-      .sort((a, b) => b.percentage - a.percentage)
-      .slice(0, 5);
+
+    if (graphqlData) {
+      totalStars = graphqlData.totalStars;
+      totalForks = graphqlData.totalForks;
+      languages = graphqlData.languages;
+    } else {
+      const repos = await fetchUserRepos(username);
+
+      totalStars = repos.reduce((acc, repo) => acc + repo.stargazers_count, 0);
+      totalForks = repos.reduce((acc, repo) => acc + repo.forks_count, 0);
+
+      const languageCounts: Record<string, number> = {};
+      for (const repo of repos) {
+        if (repo.language) {
+          languageCounts[repo.language] = (languageCounts[repo.language] || 0) + 1;
+        }
+      }
+
+      const totalLangRepos = Object.values(languageCounts).reduce((a, b) => a + b, 0);
+      languages = Object.entries(languageCounts)
+        .map(([name, count]) => ({
+          name,
+          percentage: Math.round((count / totalLangRepos) * 100),
+          color: getLanguageColor(name),
+        }))
+        .sort((a, b) => b.percentage - a.percentage)
+        .slice(0, 6);
+    }
     
     const contributions = await fetchContributions(username);
     
@@ -386,4 +404,82 @@ function getLanguageColor(language: string): string {
     Scala: '#C22D40',
   };
   return colors[language] || '#8B8B8B';
+}
+
+async function fetchRepoStatsGraphQL(username: string, token: string) {
+  const query = `
+    query($login: String!) {
+      user(login: $login) {
+        repositories(first: 100, orderBy: {field: UPDATED_AT, direction: DESC}, isFork: false) {
+          nodes {
+            stargazers { totalCount }
+            forks { totalCount }
+            languages(first: 10, orderBy: {field: SIZE, direction: DESC}) {
+              edges {
+                size
+                node {
+                  name
+                  color
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  try {
+      const res = await fetch('https://api.github.com/graphql', {
+          method: 'POST',
+          headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query, variables: { login: username } }),
+      });
+
+      if (!res.ok) return null;
+      const json = await res.json();
+      if (json.errors || !json.data?.user?.repositories?.nodes) return null;
+
+      const nodes = json.data.user.repositories.nodes;
+      let totalStars = 0;
+      let totalForks = 0;
+      const languageBytes: Record<string, { size: number; color: string }> = {};
+
+      for (const repo of nodes) {
+          totalStars += repo.stargazers.totalCount;
+          totalForks += repo.forks.totalCount;
+
+          if (repo.languages?.edges) {
+              for (const edge of repo.languages.edges) {
+                  const name = edge.node.name;
+                  const size = edge.size;
+                  const color = edge.node.color;
+
+                  if (!languageBytes[name]) {
+                      languageBytes[name] = { size: 0, color };
+                  }
+                  languageBytes[name].size += size;
+              }
+          }
+      }
+
+      const totalBytes = Object.values(languageBytes).reduce((a, b) => a + b.size, 0);
+      const languages = Object.entries(languageBytes)
+          .map(([name, data]) => ({
+              name,
+              percentage: totalBytes > 0 ? parseFloat(((data.size / totalBytes) * 100).toFixed(2)) : 0,
+              color: data.color
+          }))
+          .sort((a, b) => b.percentage - a.percentage)
+          .slice(0, 6);
+
+      return { totalStars, totalForks, languages };
+
+  } catch (e) {
+      console.error('GraphQL repo stats fetch failed:', e);
+      return null;
+  }
 }

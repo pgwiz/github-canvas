@@ -166,6 +166,84 @@ async function fetchContributionStats(username: string) {
     }
 }
 
+async function fetchRepoStatsGraphQL(username: string, token: string) {
+  const query = `
+    query($login: String!) {
+      user(login: $login) {
+        repositories(first: 100, orderBy: {field: UPDATED_AT, direction: DESC}, isFork: false) {
+          nodes {
+            stargazers { totalCount }
+            forks { totalCount }
+            languages(first: 10, orderBy: {field: SIZE, direction: DESC}) {
+              edges {
+                size
+                node {
+                  name
+                  color
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  try {
+      const res = await fetch('https://api.github.com/graphql', {
+          method: 'POST',
+          headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query, variables: { login: username } }),
+      });
+
+      if (!res.ok) return null;
+      const json = await res.json();
+      if (json.errors || !json.data?.user?.repositories?.nodes) return null;
+
+      const nodes = json.data.user.repositories.nodes;
+      let totalStars = 0;
+      let totalForks = 0;
+      const languageBytes: Record<string, { size: number; color: string }> = {};
+
+      for (const repo of nodes) {
+          totalStars += repo.stargazers.totalCount;
+          totalForks += repo.forks.totalCount;
+
+          if (repo.languages?.edges) {
+              for (const edge of repo.languages.edges) {
+                  const name = edge.node.name;
+                  const size = edge.size;
+                  const color = edge.node.color;
+
+                  if (!languageBytes[name]) {
+                      languageBytes[name] = { size: 0, color };
+                  }
+                  languageBytes[name].size += size;
+              }
+          }
+      }
+
+      const totalBytes = Object.values(languageBytes).reduce((a, b) => a + b.size, 0);
+      const languages = Object.entries(languageBytes)
+          .map(([name, data]) => ({
+              name,
+              percentage: totalBytes > 0 ? parseFloat(((data.size / totalBytes) * 100).toFixed(2)) : 0,
+              color: data.color
+          }))
+          .sort((a, b) => b.percentage - a.percentage)
+          .slice(0, 6);
+
+      return { totalStars, totalForks, languages };
+
+  } catch (e) {
+      console.error('GraphQL repo stats fetch failed:', e);
+      return null;
+  }
+}
+
 async function fetchGitHubStats(username: string) {
   const headers: Record<string, string> = {
     'Accept': 'application/vnd.github.v3+json',
@@ -176,37 +254,51 @@ async function fetchGitHubStats(username: string) {
     headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`;
   }
 
+  // Try GraphQL first
+  let graphqlData = null;
+  if (process.env.GITHUB_TOKEN) {
+      graphqlData = await fetchRepoStatsGraphQL(username, process.env.GITHUB_TOKEN);
+  }
+
   try {
     const userRes = await fetch(`https://api.github.com/users/${username}`, { headers });
     if (!userRes.ok) return null;
     const user = await userRes.json();
 
-    const reposRes = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`, { headers });
-    const repos = reposRes.ok ? await reposRes.json() : [];
-
     let totalStars = 0;
     let totalForks = 0;
-    const languageBytes: Record<string, number> = {};
+    let languages: any[] = [];
 
-    for (const repo of repos) {
-      if (!repo.fork) {
-        totalStars += repo.stargazers_count || 0;
-        totalForks += repo.forks_count || 0;
-        if (repo.language) {
-          languageBytes[repo.language] = (languageBytes[repo.language] || 0) + (repo.size || 0);
+    if (graphqlData) {
+        totalStars = graphqlData.totalStars;
+        totalForks = graphqlData.totalForks;
+        languages = graphqlData.languages;
+    } else {
+        const reposRes = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`, { headers });
+        const repos = reposRes.ok ? await reposRes.json() : [];
+
+        const languageBytes: Record<string, number> = {};
+
+        for (const repo of repos) {
+          if (!repo.fork) {
+            totalStars += repo.stargazers_count || 0;
+            totalForks += repo.forks_count || 0;
+            if (repo.language) {
+              languageBytes[repo.language] = (languageBytes[repo.language] || 0) + (repo.size || 0);
+            }
+          }
         }
-      }
-    }
 
-    const totalBytes = Object.values(languageBytes).reduce((a, b) => a + b, 0);
-    const languages = Object.entries(languageBytes)
-      .map(([name, bytes]) => ({
-        name,
-        percentage: totalBytes > 0 ? (bytes / totalBytes) * 100 : 0,
-        color: getLanguageColor(name),
-      }))
-      .sort((a, b) => b.percentage - a.percentage)
-      .slice(0, 6);
+        const totalBytes = Object.values(languageBytes).reduce((a, b) => a + b, 0);
+        languages = Object.entries(languageBytes)
+          .map(([name, bytes]) => ({
+            name,
+            percentage: totalBytes > 0 ? (bytes / totalBytes) * 100 : 0,
+            color: getLanguageColor(name),
+          }))
+          .sort((a, b) => b.percentage - a.percentage)
+          .slice(0, 6);
+    }
 
     const contributionData = await fetchContributionStats(username);
 
