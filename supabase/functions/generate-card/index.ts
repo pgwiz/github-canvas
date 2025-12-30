@@ -852,15 +852,16 @@ function generateActivitySVG(p: any): string {
 
 function generateQuoteSVG(p: any): string {
   const { quote, animate } = p;
-  const centerX = p.width / 2;
+  const cardWidth = p.width || 495;
+  const cardHeight = p.height || 180;
 
-  // Word wrap the quote text - max ~38 chars per line for better display with margins
+  // Word wrap the quote text - max ~45 chars per line
   const words = quote.quote.split(' ');
   let lines: string[] = [];
   let currentLine = '';
 
   for (const word of words) {
-    if ((currentLine + ' ' + word).length > 38) {
+    if ((currentLine + ' ' + word).length > 45) {
       lines.push(currentLine.trim());
       currentLine = word;
     } else {
@@ -869,57 +870,76 @@ function generateQuoteSVG(p: any): string {
   }
   if (currentLine) lines.push(currentLine.trim());
 
-  // Limit to max 4 lines to prevent overflow
-  if (lines.length > 4) {
-    lines = lines.slice(0, 4);
-    lines[3] = lines[3].substring(0, lines[3].length - 3) + '...';
+  // Limit to max 3 lines
+  if (lines.length > 3) {
+    lines = lines.slice(0, 3);
+    lines[2] = lines[2].substring(0, lines[2].length - 3) + '...';
   }
 
-  // Calculate vertical positioning
-  const headerHeight = 55; // Icon + title
-  const authorHeight = 30; // Author at bottom
-  const quoteMarkSize = 30; // Space for quote marks
   const lineHeight = 22;
   const totalTextHeight = lines.length * lineHeight;
-
-  // Center the quote vertically in the available space
-  const availableSpace = p.height - headerHeight - authorHeight - quoteMarkSize;
-  const startY = headerHeight + (availableSpace - totalTextHeight) / 2 + 20;
+  const startY = 70 + (60 - totalTextHeight) / 2;
 
   const quoteLines = lines.map((line, i) =>
-    `<tspan x="${centerX}" dy="${i === 0 ? 0 : lineHeight}">${line}</tspan>`
+    `<tspan x="${cardWidth / 2}" dy="${i === 0 ? 0 : lineHeight}">${line}</tspan>`
   ).join('');
 
-  const animClass1 = animate ? 'class="anim d1"' : '';
+  const animStyles = animate ? `
+    @keyframes fadeInUp { 
+      0% { opacity: 0; transform: translateY(10px); } 
+      100% { opacity: 1; transform: translateY(0); } 
+    }
+    .anim { animation: fadeInUp 0.5s ease-out forwards; opacity: 0; }
+    .d1 { animation-delay: 0.1s; }
+    .d2 { animation-delay: 0.2s; }
+    .d3 { animation-delay: 0.3s; }
+  ` : '';
+
+  // GitHub Octocat SVG path (simplified)
+  const octocatPath = `M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z`;
 
   return `
-<svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
-  ${p.gradientDefs || ''}
-  ${p.commonStyles}
+<svg width="${cardWidth}" height="${cardHeight}" viewBox="0 0 ${cardWidth} ${cardHeight}" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="quoteBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d1117"/>
+      <stop offset="1" stop-color="#161b22"/>
+    </linearGradient>
+  </defs>
   <style>
-    .quote-mark { font: 700 36px 'Inter', sans-serif; fill: ${p.secondaryColor}; opacity: 0.6; }
-    .quote-text { font: italic 400 15px 'Inter', sans-serif; fill: ${p.textColor}; }
-    .quote-author { font: 400 13px 'Inter', sans-serif; fill: ${p.secondaryColor}; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap');
+    .title { font: 600 14px 'Inter', sans-serif; fill: ${p.primaryColor || '#0CF709'}; }
+    .quote-mark { font: 700 48px Georgia, serif; fill: ${p.secondaryColor || '#00e1ff'}; opacity: 0.7; }
+    .quote-text { font: italic 400 14px 'Inter', sans-serif; fill: ${p.textColor || '#c9d1d9'}; }
+    .quote-author { font: 600 12px 'Inter', sans-serif; fill: ${p.textColor || '#c9d1d9'}; }
+    ${animStyles}
   </style>
-  <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${p.bgColor}" ${p.borderStyle}/>
   
-  <!-- Header with icon -->
-  <g transform="translate(${centerX}, 28)" ${animClass1}>
-    <text text-anchor="middle" font-size="18" y="0">🤙</text>
-    <text text-anchor="middle" class="title" y="22">Random Dev Quote</text>
-  </g>
+  <!-- Card background with border -->
+  <rect x="1" y="1" width="${cardWidth - 2}" height="${cardHeight - 2}" rx="${p.borderRadius || 12}" fill="url(#quoteBg)" stroke="${p.borderColor || '#0CF709'}" stroke-width="2"/>
+  
+  <!-- Title: Dev Quote -->
+  <text x="25" y="30" class="title${animate ? ' anim d1' : ''}">Dev Quote</text>
   
   <!-- Opening quote mark -->
-  <text class="quote-mark${animate ? ' anim d2' : ''}" x="50" y="${startY}">"</text>
+  <text x="25" y="70" class="quote-mark${animate ? ' anim d1' : ''}">"</text>
   
-  <!-- Quote text - centered with padding -->
-  <text class="quote-text${animate ? ' anim d2' : ''}" x="${centerX}" y="${startY + 10}" text-anchor="middle">${quoteLines}</text>
+  <!-- GitHub Octocat logo -->
+  <g transform="translate(${cardWidth - 55}, 15)" class="${animate ? 'anim d1' : ''}">
+    <circle cx="12" cy="12" r="18" fill="#1f2937"/>
+    <g transform="scale(1)" fill="${p.textColor || '#c9d1d9'}">
+      <path d="${octocatPath}"/>
+    </g>
+  </g>
+  
+  <!-- Quote text - centered -->
+  <text class="quote-text${animate ? ' anim d2' : ''}" x="${cardWidth / 2}" y="${startY}" text-anchor="middle">${quoteLines}</text>
   
   <!-- Closing quote mark -->
-  <text class="quote-mark${animate ? ' anim d2' : ''}" x="${p.width - 70}" y="${startY + totalTextHeight}">"</text>
+  <text x="${cardWidth - 55}" y="${startY + totalTextHeight + 10}" class="quote-mark${animate ? ' anim d2' : ''}">"</text>
   
-  <!-- Author - fixed at bottom with proper spacing -->
-  <text class="quote-author${animate ? ' anim d3' : ''}" x="${centerX}" y="${p.height - 18}" text-anchor="middle">— ${quote.author}</text>
+  <!-- Author attribution -->
+  <text class="quote-author${animate ? ' anim d3' : ''}" x="${cardWidth / 2}" y="${cardHeight - 18}" text-anchor="middle">— ${quote.author}</text>
 </svg>`;
 }
 
