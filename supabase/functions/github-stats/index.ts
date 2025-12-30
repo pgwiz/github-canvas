@@ -29,11 +29,11 @@ async function fetchGitHubUser(username: string): Promise<GitHubUser> {
       'User-Agent': 'GitHub-Stats-Visualizer',
     },
   });
-  
+
   if (!response.ok) {
     throw new Error(`User not found: ${username}`);
   }
-  
+
   return response.json();
 }
 
@@ -41,7 +41,7 @@ async function fetchUserRepos(username: string): Promise<GitHubRepo[]> {
   const repos: GitHubRepo[] = [];
   let page = 1;
   const perPage = 100;
-  
+
   while (page <= 3) {
     const response = await fetch(
       `https://api.github.com/users/${username}/repos?per_page=${perPage}&page=${page}&sort=updated`,
@@ -52,17 +52,17 @@ async function fetchUserRepos(username: string): Promise<GitHubRepo[]> {
         },
       }
     );
-    
+
     if (!response.ok) break;
-    
+
     const data = await response.json();
     if (data.length === 0) break;
-    
+
     repos.push(...data);
     if (data.length < perPage) break;
     page++;
   }
-  
+
   return repos;
 }
 
@@ -127,19 +127,19 @@ async function fetchContributions(username: string): Promise<{
           // Iterate days to find longest streak
           // Note: GitHub returns days sorted by date ascending
           for (const day of days) {
-              if (day.contributionCount > 0) {
-                  if (tempStreak === 0) {
-                      tempStreakStart = day.date;
-                  }
-                  tempStreak++;
-                  if (tempStreak > longestStreak) {
-                      longestStreak = tempStreak;
-                      longestStreakStart = tempStreakStart;
-                      longestStreakEnd = day.date;
-                  }
-              } else {
-                  tempStreak = 0;
+            if (day.contributionCount > 0) {
+              if (tempStreak === 0) {
+                tempStreakStart = day.date;
               }
+              tempStreak++;
+              if (tempStreak > longestStreak) {
+                longestStreak = tempStreak;
+                longestStreakStart = tempStreakStart;
+                longestStreakEnd = day.date;
+              }
+            } else {
+              tempStreak = 0;
+            }
           }
 
           // Current Streak (checking from end backwards)
@@ -150,17 +150,17 @@ async function fetchContributions(username: string): Promise<{
           let currentStreakStart = '';
 
           for (let i = days.length - 1; i >= 0; i--) {
-              const day = days[i];
-              if (day.contributionCount > 0) {
-                  if (cStreak === 0) {
-                     cStreakEnd = day.date;
-                  }
-                  currentStreakStart = day.date;
-                  cStreak++;
-              } else {
-                  if (day.date === todayStr && cStreak === 0) continue;
-                  break;
+            const day = days[i];
+            if (day.contributionCount > 0) {
+              if (cStreak === 0) {
+                cStreakEnd = day.date;
               }
+              currentStreakStart = day.date;
+              cStreak++;
+            } else {
+              if (day.date === todayStr && cStreak === 0) continue;
+              break;
+            }
           }
 
           return {
@@ -193,12 +193,12 @@ async function fetchContributions(username: string): Promise<{
       try {
         const response = await fetch(apiUrl);
         if (!response.ok) continue;
-        
+
         const data = await response.json();
-        
+
         if (data.contributions) {
           let contributions: { date: string; count: number }[] = [];
-          
+
           if (Array.isArray(data.contributions)) {
             contributions = data.contributions;
           } else if (typeof data.contributions === 'object') {
@@ -210,18 +210,18 @@ async function fetchContributions(username: string): Promise<{
 
           // Sort ascending for consistency with GraphQL logic
           contributions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-          
+
           const totalContributions = data.total?.lastYear || contributions.reduce((sum, d) => sum + d.count, 0);
-          
+
           // Re-implement streak logic for this data source if needed, or simplify
           // For now, simple fallback
-          
-          return { 
-            totalContributions, 
+
+          return {
+            totalContributions,
             currentStreak: 0, // Simplified fallback
             longestStreak: 0,
             startDate: contributions[0]?.date || '',
-            endDate: contributions[contributions.length-1]?.date || '',
+            endDate: contributions[contributions.length - 1]?.date || '',
             currentStreakStart: '',
             currentStreakEnd: '',
             longestStreakStart: '',
@@ -237,11 +237,11 @@ async function fetchContributions(username: string): Promise<{
   } catch (e) {
     console.log('Could not fetch contributions:', e);
   }
-  
+
   const today = new Date().toISOString().split('T')[0];
-  return { 
-    totalContributions: 0, 
-    currentStreak: 0, 
+  return {
+    totalContributions: 0,
+    currentStreak: 0,
     longestStreak: 0,
     startDate: today,
     endDate: today,
@@ -260,7 +260,7 @@ serve(async (req) => {
 
   try {
     const { username } = await req.json();
-    
+
     if (!username) {
       return new Response(
         JSON.stringify({ error: 'Username is required' }),
@@ -272,7 +272,7 @@ serve(async (req) => {
 
     // Check cache first
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseKey = Deno.env.get('SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { data: cached } = await supabase
@@ -291,17 +291,17 @@ serve(async (req) => {
     // Fetch fresh data
     const user = await fetchGitHubUser(username);
     const repos = await fetchUserRepos(username);
-    
+
     const totalStars = repos.reduce((acc, repo) => acc + repo.stargazers_count, 0);
     const totalForks = repos.reduce((acc, repo) => acc + repo.forks_count, 0);
-    
+
     const languageCounts: Record<string, number> = {};
     for (const repo of repos) {
       if (repo.language) {
         languageCounts[repo.language] = (languageCounts[repo.language] || 0) + 1;
       }
     }
-    
+
     const totalLangRepos = Object.values(languageCounts).reduce((a, b) => a + b, 0);
     const languages = Object.entries(languageCounts)
       .map(([name, count]) => ({
@@ -311,9 +311,9 @@ serve(async (req) => {
       }))
       .sort((a, b) => b.percentage - a.percentage)
       .slice(0, 5);
-    
+
     const contributions = await fetchContributions(username);
-    
+
     const result = {
       user: {
         login: user.login,
@@ -350,7 +350,7 @@ serve(async (req) => {
       }, { onConflict: 'username' });
 
     console.log(`Successfully fetched and cached stats for ${username}`);
-    
+
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

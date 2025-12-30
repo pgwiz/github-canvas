@@ -27,17 +27,17 @@ serve(async (req) => {
 
   try {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY');
+
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
-    
+
     // Get count of cached quotes
     const { count: cacheCount } = await supabase
       .from('quotes_cache')
       .select('*', { count: 'exact', head: true });
-    
+
     console.log('Quotes in cache:', cacheCount);
-    
+
     // If we have enough cached quotes (aim for 250+), just serve from cache
     if (cacheCount && cacheCount >= 3) {
       // Get a random quote from cache
@@ -46,7 +46,7 @@ serve(async (req) => {
         .from('quotes_cache')
         .select('quote, author')
         .range(randomOffset, randomOffset);
-      
+
       if (randomQuotes && randomQuotes.length > 0) {
         console.log('Serving random quote from cache');
         return new Response(JSON.stringify(randomQuotes[0]), {
@@ -54,13 +54,13 @@ serve(async (req) => {
         });
       }
     }
-    
+
     // If cache is low, try to generate a new quote with AI
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-    
+
     if (GEMINI_API_KEY) {
       const { topic } = await req.json().catch(() => ({}));
-      
+
       console.log('Cache low, generating new quote with topic:', topic || 'general programming');
 
       try {
@@ -92,16 +92,16 @@ Return as JSON: {"quote": "...", "author": "..."}`
         if (response.ok) {
           const data = await response.json();
           const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          
+
           console.log('Gemini response:', content);
-          
+
           const jsonMatch = content.match(/\{[\s\S]*"quote"[\s\S]*"author"[\s\S]*\}/);
           if (jsonMatch) {
             const quote = JSON.parse(jsonMatch[0]);
-            
+
             // Cache the new quote
             await supabase.from('quotes_cache').insert({ quote: quote.quote, author: quote.author });
-            
+
             return new Response(JSON.stringify(quote), {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
@@ -111,29 +111,29 @@ Return as JSON: {"quote": "...", "author": "..."}`
         console.error('AI generation failed:', aiError);
       }
     }
-    
+
     // Fallback: try to get any cached quote
     const { data: anyQuote } = await supabase
       .from('quotes_cache')
       .select('quote, author')
       .limit(1)
       .single();
-    
+
     if (anyQuote) {
       return new Response(JSON.stringify(anyQuote), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    
+
     // Last resort: use hardcoded fallback
     const randomFallback = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
     return new Response(JSON.stringify(randomFallback), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-    
+
   } catch (error) {
     console.error('Error getting quote:', error);
-    
+
     const randomFallback = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
     return new Response(JSON.stringify(randomFallback), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

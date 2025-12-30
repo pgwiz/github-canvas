@@ -16,6 +16,10 @@ interface CardParams {
   borderColor?: string;
   borderRadius?: number;
   showBorder?: boolean;
+  paddingTop?: number;
+  paddingRight?: number;
+  paddingBottom?: number;
+  paddingLeft?: number;
   width?: number;
   height?: number;
   customText?: string;
@@ -38,9 +42,9 @@ interface CardParams {
     totalForks: number;
   };
   languages?: Array<{ name: string; percentage: number; color: string }>;
-  streak?: { 
-    current: number; 
-    longest: number; 
+  streak?: {
+    current: number;
+    longest: number;
     total: number;
     startDate?: string;
     longestStreakStart?: string;
@@ -57,9 +61,9 @@ serve(async (req) => {
 
   try {
     let params: CardParams;
-    
+
     let format = 'svg';
-    
+
     if (req.method === 'GET') {
       const url = new URL(req.url);
       format = url.searchParams.get('format') || 'svg';
@@ -74,6 +78,10 @@ serve(async (req) => {
         borderColor: decodeURIComponent(url.searchParams.get('border') || '#0CF709'),
         borderRadius: parseInt(url.searchParams.get('radius') || '12'),
         showBorder: url.searchParams.get('showBorder') !== 'false',
+        paddingTop: parseInt(url.searchParams.get('paddingTop') || '25'),
+        paddingRight: parseInt(url.searchParams.get('paddingRight') || '25'),
+        paddingBottom: parseInt(url.searchParams.get('paddingBottom') || '25'),
+        paddingLeft: parseInt(url.searchParams.get('paddingLeft') || '25'),
         width: parseInt(url.searchParams.get('width') || '495'),
         height: parseInt(url.searchParams.get('height') || '195'),
         customText: url.searchParams.get('customText') || '',
@@ -89,7 +97,7 @@ serve(async (req) => {
         bannerDescription: decodeURIComponent(url.searchParams.get('bannerDescription') || ''),
         waveStyle: url.searchParams.get('waveStyle') || 'wave',
       };
-      
+
       if (params.username && params.type !== 'quote' && params.type !== 'custom') {
         try {
           const statsResponse = await fetch(
@@ -100,7 +108,7 @@ serve(async (req) => {
               body: JSON.stringify({ username: params.username }),
             }
           );
-          
+
           if (statsResponse.ok) {
             const data = await statsResponse.json();
             params.stats = data.stats;
@@ -112,7 +120,7 @@ serve(async (req) => {
           console.log('Could not fetch GitHub stats for SVG:', e);
         }
       }
-      
+
       if (params.type === 'quote') {
         try {
           const quoteResponse = await fetch(
@@ -123,7 +131,7 @@ serve(async (req) => {
               body: JSON.stringify({}),
             }
           );
-          
+
           if (quoteResponse.ok) {
             params.quote = await quoteResponse.json();
           }
@@ -184,6 +192,10 @@ function generateSVG(params: CardParams): string {
     borderColor = '#0CF709',
     borderRadius = 12,
     showBorder = true,
+    paddingTop = 25,
+    paddingRight = 25,
+    paddingBottom = 25,
+    paddingLeft = 25,
     width = 495,
     height = 195,
     customText = '',
@@ -205,14 +217,14 @@ function generateSVG(params: CardParams): string {
     quote,
   } = params;
 
-  const borderStyle = showBorder 
-    ? `stroke="${borderColor}" stroke-width="2"` 
+  const borderStyle = showBorder
+    ? `stroke="${borderColor}" stroke-width="2"`
     : '';
 
   // Gradient helper functions
   const getGradientDefs = (): string => {
     if (!gradient) return '';
-    
+
     const id = 'bgGradient';
     if (gradientType === 'radial') {
       return `
@@ -223,13 +235,13 @@ function generateSVG(params: CardParams): string {
           </radialGradient>
         </defs>`;
     }
-    
+
     const angleRad = (gradientAngle - 90) * Math.PI / 180;
     const x1 = 50 - Math.cos(angleRad) * 50;
     const y1 = 50 - Math.sin(angleRad) * 50;
     const x2 = 50 + Math.cos(angleRad) * 50;
     const y2 = 50 + Math.sin(angleRad) * 50;
-    
+
     return `
       <defs>
         <linearGradient id="${id}" x1="${x1}%" y1="${y1}%" x2="${x2}%" y2="${y2}%">
@@ -333,23 +345,25 @@ function generateSVG(params: CardParams): string {
         stats: stats || { totalStars: 0, publicRepos: 0, followers: 0, totalForks: 0 },
         commonStyles, gradientDefs,
       });
-    
+
     case 'languages':
       return generateLanguagesSVG({
         width, height, bgColor: bgFill, borderRadius, borderStyle,
+        paddingTop, paddingRight, paddingBottom, paddingLeft,
         primaryColor, secondaryColor, textColor, animate,
         languages: languages || [],
         commonStyles, gradientDefs,
       });
-    
+
     case 'streak':
       return generateStreakSVG({
         width, height, bgColor: bgFill, borderRadius, borderStyle,
+        paddingTop, paddingRight, paddingBottom, paddingLeft,
         primaryColor, secondaryColor, textColor, animate,
         streak: streak || { current: 0, longest: 0, total: 0 },
         commonStyles, gradientDefs,
       });
-    
+
     case 'contribution':
       // Using activity data as placeholder or if we pass specific contribution data
       // For now, let's assume we might need to fetch it or use what we have.
@@ -364,29 +378,33 @@ function generateSVG(params: CardParams): string {
     case 'activity':
       return generateActivitySVG({
         width, height, bgColor: bgFill, borderRadius, borderStyle,
+        paddingTop, paddingRight, paddingBottom, paddingLeft,
         primaryColor, secondaryColor, textColor, animate,
         activity: activity || Array(30).fill(0),
         commonStyles, gradientDefs,
       });
-    
+
     case 'quote':
       return generateQuoteSVG({
         width, height, bgColor: bgFill, borderRadius, borderStyle,
+        paddingTop, paddingRight, paddingBottom, paddingLeft,
         primaryColor, secondaryColor, textColor, animate,
         quote: quote || { quote: "Code is poetry.", author: "Anonymous" },
         commonStyles, gradientDefs,
       });
-    
+
     case 'custom':
       return generateCustomSVG({
         width, height, bgColor: bgFill, borderRadius, borderStyle,
+        paddingTop, paddingRight, paddingBottom, paddingLeft,
         primaryColor, textColor, customText, animate,
         commonStyles, gradientDefs,
       });
-    
+
     case 'banner':
       return generateBannerSVG({
         width, height, bgColor: bgFill, borderRadius, borderStyle,
+        paddingTop, paddingRight, paddingBottom, paddingLeft,
         primaryColor, secondaryColor, textColor, animate, speed,
         bannerName: bannerName || 'Your Name',
         bannerDescription: bannerDescription || 'Developer | Creator | Builder',
@@ -394,10 +412,11 @@ function generateSVG(params: CardParams): string {
         gradientStart, gradientEnd,
         commonStyles, gradientDefs,
       });
-    
+
     default:
       return generateStatsSVG({
         width, height, bgColor: bgFill, borderRadius, borderStyle,
+        paddingTop, paddingRight, paddingBottom, paddingLeft,
         primaryColor, secondaryColor, textColor, username, animate,
         stats: stats || { totalStars: 0, publicRepos: 0, followers: 0, totalForks: 0 },
         commonStyles, gradientDefs,
@@ -407,7 +426,7 @@ function generateSVG(params: CardParams): string {
 
 function generateStatsSVG(p: any): string {
   const { stats } = p;
-  
+
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
   ${p.gradientDefs || ''}
@@ -447,13 +466,13 @@ function generateLanguagesSVG(p: any): string {
   const barHeight = 12;
   const leftPadding = 25;
   const segmentGap = 1;
-  
+
   // Generate the stacked progress bar segments
   let barSegments = '';
   let currentX = 0;
   const totalGapWidth = Math.max(0, langs.length - 1) * segmentGap;
   const availableWidth = barWidth - totalGapWidth;
-  
+
   for (let i = 0; i < langs.length; i++) {
     const lang = langs[i];
     const segmentWidth = availableWidth * (lang.percentage / 100);
@@ -461,32 +480,32 @@ function generateLanguagesSVG(p: any): string {
     barSegments += `<rect mask="url(#rect-mask)" data-testid="lang-progress" x="${currentX}" y="0" width="${segmentWidth}" height="${barHeight}" fill="${lang.color}" ${animClass}/>`;
     currentX += segmentWidth + segmentGap;
   }
-  
+
   // Generate the legend - 2 columns
   let leftColumn = '';
   let rightColumn = '';
   const rowSpacing = 28;
-  
+
   for (let i = 0; i < langs.length; i++) {
     const lang = langs[i];
     const col = i < 3 ? 0 : 1;
     const row = i < 3 ? i : i - 3;
     const delay = animate ? `style="animation-delay: ${450 + (i * 150)}ms"` : '';
-    
+
     const item = `<g transform="translate(0, ${row * rowSpacing})">
     <g class="${animate ? 'stagger' : ''}" ${delay}>
       <circle cx="6" cy="6" r="6" fill="${lang.color}"/>
       <text data-testid="lang-name" x="22" y="6" class="lang-name" dominant-baseline="middle">${lang.name} ${lang.percentage}%</text>
     </g>
   </g>`;
-    
+
     if (col === 0) {
       leftColumn += item;
     } else {
       rightColumn += item;
     }
   }
-  
+
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" fill="none" role="img">
   ${p.gradientDefs || ''}
   <style>
@@ -527,7 +546,7 @@ function generateLanguagesSVG(p: any): string {
 
 function generateStreakSVG(p: any): string {
   const { streak, animate } = p;
-  
+
   // Format dates
   const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return 'Present';
@@ -535,14 +554,14 @@ function generateStreakSVG(p: any): string {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${months[date.getMonth()]} ${date.getDate()}`;
   };
-  
+
   const today = new Date();
   const todayStr = `${today.toLocaleString('default', { month: 'short' })} ${today.getDate()}`;
-  
+
   // Date ranges
   const totalRange = `${formatDate(streak.startDate)} - ${formatDate(streak.endDate) || 'Present'}`;
   const longestRange = `${formatDate(streak.longestStreakStart)} - ${formatDate(streak.longestStreakEnd)}`;
-  
+
   const ringAnim = animate ? `
     <style>
       .ring-bg { opacity: 0.2; }
@@ -652,17 +671,17 @@ function generateContributionSVG(p: any): string {
   let monthsSVG = '';
 
   for (let c = 0; c < cols; c++) {
-      const idx = c * rows;
-      const dayData = displayDays[idx];
-      if (dayData && dayData.date) {
-          const date = new Date(dayData.date);
-          const month = date.getMonth();
-          if (month !== currentMonth) {
-              const x = c * pitch;
-              monthsSVG += `<text x="${x}" y="15" font-size="9" fill="${p.textColor}">${monthLabels[month]}</text>`;
-              currentMonth = month;
-          }
+    const idx = c * rows;
+    const dayData = displayDays[idx];
+    if (dayData && dayData.date) {
+      const date = new Date(dayData.date);
+      const month = date.getMonth();
+      if (month !== currentMonth) {
+        const x = c * pitch;
+        monthsSVG += `<text x="${x}" y="15" font-size="9" fill="${p.textColor}">${monthLabels[month]}</text>`;
+        currentMonth = month;
       }
+    }
   }
 
   const paddingX = 15;
@@ -683,21 +702,21 @@ function generateActivitySVG(p: any): string {
   const { activity, animate } = p;
   const barWidth = (p.width - 80) / 30;
   const maxActivity = Math.max(...activity, 1);
-  
+
   let bars = '';
   for (let i = 0; i < activity.length; i++) {
     const height = (activity[i] / maxActivity) * 80;
-    const color = activity[i] > maxActivity * 0.6 
-      ? p.primaryColor 
-      : activity[i] > maxActivity * 0.3 
-        ? p.secondaryColor 
+    const color = activity[i] > maxActivity * 0.6
+      ? p.primaryColor
+      : activity[i] > maxActivity * 0.3
+        ? p.secondaryColor
         : `${p.primaryColor}66`;
-    
+
     const delay = animate ? `style="animation-delay: ${i * 0.03}s"` : '';
     const animClass = animate ? 'class="animate-fade"' : '';
     bars += `<rect x="${40 + i * barWidth}" y="${130 - height}" width="${barWidth - 2}" height="${height}" rx="2" fill="${color}" ${animClass} ${delay}/>`;
   }
-  
+
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
   ${p.commonStyles}
@@ -712,12 +731,12 @@ function generateActivitySVG(p: any): string {
 function generateQuoteSVG(p: any): string {
   const { quote, animate } = p;
   const centerX = p.width / 2;
-  
+
   // Word wrap the quote text - max ~38 chars per line for better display with margins
   const words = quote.quote.split(' ');
   let lines: string[] = [];
   let currentLine = '';
-  
+
   for (const word of words) {
     if ((currentLine + ' ' + word).length > 38) {
       lines.push(currentLine.trim());
@@ -727,30 +746,30 @@ function generateQuoteSVG(p: any): string {
     }
   }
   if (currentLine) lines.push(currentLine.trim());
-  
+
   // Limit to max 4 lines to prevent overflow
   if (lines.length > 4) {
     lines = lines.slice(0, 4);
     lines[3] = lines[3].substring(0, lines[3].length - 3) + '...';
   }
-  
+
   // Calculate vertical positioning
   const headerHeight = 55; // Icon + title
   const authorHeight = 30; // Author at bottom
   const quoteMarkSize = 30; // Space for quote marks
   const lineHeight = 22;
   const totalTextHeight = lines.length * lineHeight;
-  
+
   // Center the quote vertically in the available space
   const availableSpace = p.height - headerHeight - authorHeight - quoteMarkSize;
   const startY = headerHeight + (availableSpace - totalTextHeight) / 2 + 20;
-  
-  const quoteLines = lines.map((line, i) => 
+
+  const quoteLines = lines.map((line, i) =>
     `<tspan x="${centerX}" dy="${i === 0 ? 0 : lineHeight}">${line}</tspan>`
   ).join('');
-  
+
   const animClass1 = animate ? 'class="anim d1"' : '';
-  
+
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
   ${p.gradientDefs || ''}
@@ -786,7 +805,7 @@ function generateCustomSVG(p: any): string {
   const centerX = p.width / 2;
   const centerY = p.height / 2;
   const scaleClass = p.animate ? 'class="animate-scale"' : '';
-  
+
   return `
 <svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
   ${p.commonStyles}
@@ -798,7 +817,7 @@ function generateCustomSVG(p: any): string {
 function generateBannerSVG(p: any): string {
   const { bannerName, bannerDescription, waveStyle, animate, speed, gradientStart, gradientEnd } = p;
   const centerX = p.width / 2;
-  
+
   // Get speed multiplier for animations
   const getSpeedMultiplier = (s: string): number => {
     const multipliers: Record<string, number> = { slow: 2, normal: 1, fast: 0.5 };
@@ -806,12 +825,12 @@ function generateBannerSVG(p: any): string {
   };
   const m = getSpeedMultiplier(speed);
   const waveDuration = 20 * m;
-  
+
   // Generate wave paths based on style
   const getWavePaths = (style: string): string => {
     const h = p.height;
     const w = p.width;
-    
+
     const waveStyles: Record<string, { path1: string; path2: string }> = {
       wave: {
         path1: `M0 0L 0 ${h * 0.6}Q ${w * 0.25} ${h * 0.8} ${w * 0.5} ${h * 0.65}T ${w} ${h * 0.78}L ${w} 0 Z;M0 0L 0 ${h * 0.73}Q ${w * 0.25} ${h * 0.8} ${w * 0.5} ${h * 0.7}T ${w} ${h * 0.65}L ${w} 0 Z;M0 0L 0 ${h * 0.83}Q ${w * 0.25} ${h * 0.68} ${w * 0.5} ${h * 0.83}T ${w} ${h * 0.65}L ${w} 0 Z;M0 0L 0 ${h * 0.6}Q ${w * 0.25} ${h * 0.8} ${w * 0.5} ${h * 0.65}T ${w} ${h * 0.78}L ${w} 0 Z`,
@@ -830,16 +849,16 @@ function generateBannerSVG(p: any): string {
         path2: `M0 0L 0 ${h * 0.5}L ${w * 0.3} ${h * 0.65}L ${w * 0.5} ${h * 0.45}L ${w * 0.7} ${h * 0.6}L ${w} ${h * 0.5}L ${w} 0 Z;M0 0L 0 ${h * 0.65}L ${w * 0.3} ${h * 0.45}L ${w * 0.5} ${h * 0.6}L ${w * 0.7} ${h * 0.5}L ${w} ${h * 0.65}L ${w} 0 Z;M0 0L 0 ${h * 0.45}L ${w * 0.3} ${h * 0.6}L ${w * 0.5} ${h * 0.5}L ${w * 0.7} ${h * 0.65}L ${w} ${h * 0.45}L ${w} 0 Z;M0 0L 0 ${h * 0.5}L ${w * 0.3} ${h * 0.65}L ${w * 0.5} ${h * 0.45}L ${w * 0.7} ${h * 0.6}L ${w} ${h * 0.5}L ${w} 0 Z`,
       },
     };
-    
+
     return waveStyles[style] ? JSON.stringify(waveStyles[style]) : JSON.stringify(waveStyles.wave);
   };
-  
+
   const wavePaths = JSON.parse(getWavePaths(waveStyle));
   const keyTimes = waveStyle === 'pulse' || waveStyle === 'flow' ? '0;0.5;1' : '0;0.333;0.667;1';
-  const keySplines = waveStyle === 'pulse' || waveStyle === 'flow' 
-    ? '0.4 0 0.6 1;0.4 0 0.6 1' 
+  const keySplines = waveStyle === 'pulse' || waveStyle === 'flow'
+    ? '0.4 0 0.6 1;0.4 0 0.6 1'
     : '0.2 0 0.2 1;0.2 0 0.2 1;0.2 0 0.2 1';
-  
+
   const waveAnimation = animate ? `
     <animate 
       attributeName="d" 
@@ -850,7 +869,7 @@ function generateBannerSVG(p: any): string {
       keySplines="${keySplines}"
       values="${wavePaths.path1}"/>
   ` : '';
-  
+
   const waveAnimation2 = animate ? `
     <animate 
       attributeName="d" 
@@ -862,11 +881,11 @@ function generateBannerSVG(p: any): string {
       begin="-${waveDuration / 2}s"
       values="${wavePaths.path2}"/>
   ` : '';
-  
+
   // Calculate font sizes based on width
   const nameFontSize = Math.min(50, p.width / 12);
   const descFontSize = Math.min(20, p.width / 30);
-  
+
   return `
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}">
   <style>

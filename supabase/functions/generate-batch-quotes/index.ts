@@ -33,22 +33,22 @@ serve(async (req) => {
   try {
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY');
+
     if (!GEMINI_API_KEY) {
       return new Response(
         JSON.stringify({ error: 'GEMINI_API_KEY not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    
+
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
-    
+
     // Parse request body for count (default 250)
     const { count = 250, clearOld = false } = await req.json().catch(() => ({}));
-    
+
     console.log(`Starting batch quote generation: ${count} quotes`);
-    
+
     // Optionally clear old quotes (keep last 50 as buffer)
     if (clearOld) {
       const { data: existingQuotes } = await supabase
@@ -56,26 +56,26 @@ serve(async (req) => {
         .select('id')
         .order('created_at', { ascending: false })
         .range(50, 10000);
-      
+
       if (existingQuotes && existingQuotes.length > 0) {
         const idsToDelete = existingQuotes.map(q => q.id);
         await supabase.from('quotes_cache').delete().in('id', idsToDelete);
         console.log(`Cleared ${idsToDelete.length} old quotes`);
       }
     }
-    
+
     // Generate quotes in batches of 10 for efficiency
     const batchSize = 10;
     const totalBatches = Math.ceil(count / batchSize);
     let successCount = 0;
     let failCount = 0;
-    
+
     for (let batch = 0; batch < totalBatches; batch++) {
       const currentBatchSize = Math.min(batchSize, count - (batch * batchSize));
       const topic = topics[batch % topics.length];
-      
+
       console.log(`Generating batch ${batch + 1}/${totalBatches} (${currentBatchSize} quotes about ${topic})`);
-      
+
       try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemma-3-27b-it:generateContent?key=${GEMINI_API_KEY}`, {
           method: 'POST',
@@ -101,7 +101,7 @@ serve(async (req) => {
 
         const data = await response.json();
         const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        
+
         // Parse quotes array from response
         let quotes = [];
         try {
@@ -114,14 +114,14 @@ serve(async (req) => {
           failCount += currentBatchSize;
           continue;
         }
-        
+
         // Insert valid quotes
         for (const quote of quotes) {
           if (quote.quote && quote.author && quote.quote.length < 200) {
             const { error } = await supabase
               .from('quotes_cache')
               .insert({ quote: quote.quote, author: quote.author });
-            
+
             if (!error) {
               successCount++;
             } else {
@@ -129,27 +129,27 @@ serve(async (req) => {
             }
           }
         }
-        
+
         // Small delay between batches to avoid rate limiting
         if (batch < totalBatches - 1) {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
-        
+
       } catch (batchError) {
         console.error(`Batch ${batch + 1} error:`, batchError);
         failCount += currentBatchSize;
       }
     }
-    
+
     // Get final count
     const { count: totalQuotes } = await supabase
       .from('quotes_cache')
       .select('*', { count: 'exact', head: true });
-    
+
     console.log(`Batch generation complete: ${successCount} success, ${failCount} failed, ${totalQuotes} total in cache`);
-    
+
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: true,
         generated: successCount,
         failed: failCount,
@@ -157,7 +157,7 @@ serve(async (req) => {
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-    
+
   } catch (error) {
     console.error('Batch generation error:', error);
     return new Response(
