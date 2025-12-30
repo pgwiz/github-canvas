@@ -14,16 +14,16 @@ const RATE_LIMIT_WINDOW = 60000; // 1 minute in ms
 function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetIn: number } {
   const now = Date.now();
   const entry = rateLimitMap.get(ip);
-  
+
   if (!entry || now > entry.resetTime) {
     rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
     return { allowed: true, remaining: RATE_LIMIT_MAX - 1, resetIn: RATE_LIMIT_WINDOW };
   }
-  
+
   if (entry.count >= RATE_LIMIT_MAX) {
     return { allowed: false, remaining: 0, resetIn: entry.resetTime - now };
   }
-  
+
   entry.count++;
   return { allowed: true, remaining: RATE_LIMIT_MAX - entry.count, resetIn: entry.resetTime - now };
 }
@@ -46,10 +46,10 @@ serve(async (req) => {
 
   try {
     // Get client IP for rate limiting
-    const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0] || 
-                     req.headers.get('cf-connecting-ip') || 
-                     'unknown';
-    
+    const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0] ||
+      req.headers.get('cf-connecting-ip') ||
+      'unknown';
+
     // Check rate limit
     const rateLimit = checkRateLimit(clientIP);
     const rateLimitHeaders = {
@@ -57,35 +57,35 @@ serve(async (req) => {
       'X-RateLimit-Remaining': rateLimit.remaining.toString(),
       'X-RateLimit-Reset': Math.ceil(rateLimit.resetIn / 1000).toString(),
     };
-    
+
     if (!rateLimit.allowed) {
       console.log(`Rate limit exceeded for IP: ${clientIP}`);
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: 'Too Many Requests',
           message: `Rate limit exceeded. Try again in ${Math.ceil(rateLimit.resetIn / 1000)} seconds`,
           retry_after: Math.ceil(rateLimit.resetIn / 1000)
         }),
-        { 
-          status: 429, 
-          headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 429,
+          headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
     // Check if setpp mode is enabled
     const setppEnabled = Deno.env.get('SETPP') === 'true';
-    
+
     if (!setppEnabled) {
       console.log('SETPP mode is not enabled');
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: 'Setup endpoint is not enabled',
           message: 'Set SETPP=true in environment to enable this endpoint'
         }),
-        { 
-          status: 403, 
-          headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 403,
+          headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -97,13 +97,13 @@ serve(async (req) => {
     if (!setppKey || providedKey !== setppKey) {
       console.log('Invalid or missing SETPP_KEY');
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: 'Unauthorized',
           message: 'Invalid or missing setup key'
         }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 401,
+          headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -130,9 +130,9 @@ serve(async (req) => {
       console.log('Returning configuration status');
       return new Response(
         JSON.stringify(config, null, 2),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 200,
+          headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -140,7 +140,7 @@ serve(async (req) => {
     // POST request - handle actions
     if (req.method === 'POST') {
       const body = await req.json().catch(() => ({}));
-      
+
       if (action === 'validate') {
         const validation = {
           supabase_url: body.supabase_url ? 'valid' : 'missing',
@@ -179,9 +179,9 @@ serve(async (req) => {
         console.log('Configuration validation:', validation);
         return new Response(
           JSON.stringify({ validation }),
-          { 
-            status: 200, 
-            headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
+          {
+            status: 200,
+            headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' }
           }
         );
       }
@@ -214,7 +214,7 @@ serve(async (req) => {
             }
           });
           healthStatus.services.github_api.latency_ms = Date.now() - ghStart;
-          
+
           if (ghResponse.ok) {
             const rateData = await ghResponse.json();
             healthStatus.services.github_api.status = 'healthy';
@@ -238,17 +238,17 @@ serve(async (req) => {
           const dbStart = Date.now();
           const supabaseUrl = Deno.env.get('CUSTOM_SUPABASE_URL') || Deno.env.get('SUPABASE_URL');
           const supabaseKey = Deno.env.get('CUSTOM_SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_ANON_KEY');
-          
+
           if (supabaseUrl && supabaseKey) {
             const supabase = createClient(supabaseUrl, supabaseKey);
-            
+
             // Check cache table and get entry count
             const { count, error } = await supabase
-              .from('github_stats_cache')
+              .schema('gitstats').from('github_stats_cache')
               .select('*', { count: 'exact', head: true });
-            
+
             healthStatus.services.cloud.latency_ms = Date.now() - dbStart;
-            
+
             if (!error) {
               healthStatus.services.cloud.status = 'healthy';
               healthStatus.services.cache.status = 'healthy';
@@ -271,9 +271,9 @@ serve(async (req) => {
         console.log('Health check:', healthStatus);
         return new Response(
           JSON.stringify(healthStatus, null, 2),
-          { 
-            status: healthStatus.status === 'healthy' ? 200 : healthStatus.status === 'degraded' ? 200 : 503, 
-            headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
+          {
+            status: healthStatus.status === 'healthy' ? 200 : healthStatus.status === 'degraded' ? 200 : 503,
+            headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' }
           }
         );
       }
@@ -297,7 +297,7 @@ serve(async (req) => {
         try {
           const supabaseUrl = Deno.env.get('CUSTOM_SUPABASE_URL') || Deno.env.get('SUPABASE_URL');
           const supabaseKey = Deno.env.get('CUSTOM_SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_ANON_KEY');
-          
+
           if (supabaseUrl && supabaseKey) {
             const dbResponse = await fetch(`${supabaseUrl}/rest/v1/`, {
               headers: {
@@ -316,9 +316,9 @@ serve(async (req) => {
         console.log('Test results:', testResults);
         return new Response(
           JSON.stringify(testResults),
-          { 
-            status: 200, 
-            headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
+          {
+            status: 200,
+            headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' }
           }
         );
       }
@@ -327,16 +327,16 @@ serve(async (req) => {
         // Initialize database tables using service role key
         const supabaseUrl = body.supabase_url || Deno.env.get('CUSTOM_SUPABASE_URL') || Deno.env.get('SUPABASE_URL');
         const serviceRoleKey = body.supabase_service_role || Deno.env.get('CUSTOM_SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-        
+
         if (!supabaseUrl || !serviceRoleKey) {
           return new Response(
-            JSON.stringify({ 
+            JSON.stringify({
               error: 'Missing credentials',
               message: 'supabase_url and supabase_service_role are required for database setup'
             }),
-            { 
-              status: 400, 
-              headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
+            {
+              status: 400,
+              headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' }
             }
           );
         }
@@ -357,7 +357,7 @@ serve(async (req) => {
               );
             `
           });
-          
+
           if (error) {
             // Try direct creation via REST API
             const directResult = await fetch(`${supabaseUrl}/rest/v1/rpc/exec_sql`, {
@@ -369,9 +369,9 @@ serve(async (req) => {
               },
               body: JSON.stringify({ sql: 'SELECT 1' })
             });
-            
-            results.push({ 
-              step: 'github_stats_cache table', 
+
+            results.push({
+              step: 'github_stats_cache table',
               status: 'manual_required',
               error: 'RPC not available. Please run SQL manually in Supabase dashboard.'
             });
@@ -379,8 +379,8 @@ serve(async (req) => {
             results.push({ step: 'github_stats_cache table', status: 'created' });
           }
         } catch (e: unknown) {
-          results.push({ 
-            step: 'github_stats_cache table', 
+          results.push({
+            step: 'github_stats_cache table',
             status: 'manual_required',
             error: 'Database direct access not available. Please run SQL manually.'
           });
@@ -388,14 +388,14 @@ serve(async (req) => {
 
         // Check if tables exist
         try {
-          const { data: cacheCheck } = await supabase.from('github_stats_cache').select('id').limit(1);
+          const { data: cacheCheck } = await supabase.schema('gitstats').from('github_stats_cache').select('id').limit(1);
           results.push({ step: 'github_stats_cache verification', status: cacheCheck !== null ? 'exists' : 'not_found' });
         } catch {
           results.push({ step: 'github_stats_cache verification', status: 'not_found' });
         }
 
         try {
-          const { data: quotesCheck } = await supabase.from('quotes_cache').select('id').limit(1);
+          const { data: quotesCheck } = await supabase.schema('gitstats').from('quotes_cache').select('id').limit(1);
           results.push({ step: 'quotes_cache verification', status: quotesCheck !== null ? 'exists' : 'not_found' });
         } catch {
           results.push({ step: 'quotes_cache verification', status: 'not_found' });
@@ -403,32 +403,32 @@ serve(async (req) => {
 
         console.log('Database setup results:', results);
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             message: 'Database setup attempted',
             results,
             note: 'If tables show as manual_required, please run the SQL from the setup page in your Supabase SQL Editor'
           }),
-          { 
-            status: 200, 
-            headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
+          {
+            status: 200,
+            headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' }
           }
         );
       }
 
       return new Response(
         JSON.stringify({ error: 'Unknown action', available: ['validate', 'test', 'setup-db'] }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 400,
+          headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
     return new Response(
       JSON.stringify({ error: 'Method not allowed' }),
-      { 
-        status: 405, 
-        headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } 
+      {
+        status: 405,
+        headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' }
       }
     );
 
@@ -436,9 +436,9 @@ serve(async (req) => {
     console.error('Setup endpoint error:', error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

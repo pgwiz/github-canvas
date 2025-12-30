@@ -213,19 +213,61 @@ async function fetchContributions(username: string): Promise<{
 
           const totalContributions = data.total?.lastYear || contributions.reduce((sum, d) => sum + d.count, 0);
 
-          // Re-implement streak logic for this data source if needed, or simplify
-          // For now, simple fallback
+          // Calculate streaks properly for this data source
+          let longestStreak = 0;
+          let tempStreak = 0;
+          let tempStreakStart = '';
+          let longestStreakStart = '';
+          let longestStreakEnd = '';
+
+          // Find longest streak
+          for (const day of contributions) {
+            if (day.count > 0) {
+              if (tempStreak === 0) {
+                tempStreakStart = day.date;
+              }
+              tempStreak++;
+              if (tempStreak > longestStreak) {
+                longestStreak = tempStreak;
+                longestStreakStart = tempStreakStart;
+                longestStreakEnd = day.date;
+              }
+            } else {
+              tempStreak = 0;
+            }
+          }
+
+          // Calculate current streak (from end backwards)
+          const todayStr = new Date().toISOString().split('T')[0];
+          let currentStreak = 0;
+          let currentStreakStart = '';
+          let currentStreakEnd = '';
+
+          for (let i = contributions.length - 1; i >= 0; i--) {
+            const day = contributions[i];
+            if (day.count > 0) {
+              if (currentStreak === 0) {
+                currentStreakEnd = day.date;
+              }
+              currentStreakStart = day.date;
+              currentStreak++;
+            } else {
+              // Allow today to have 0 contributions if no contributions yet
+              if (day.date === todayStr && currentStreak === 0) continue;
+              break;
+            }
+          }
 
           return {
             totalContributions,
-            currentStreak: 0, // Simplified fallback
-            longestStreak: 0,
+            currentStreak,
+            longestStreak,
             startDate: contributions[0]?.date || '',
             endDate: contributions[contributions.length - 1]?.date || '',
-            currentStreakStart: '',
-            currentStreakEnd: '',
-            longestStreakStart: '',
-            longestStreakEnd: '',
+            currentStreakStart,
+            currentStreakEnd,
+            longestStreakStart,
+            longestStreakEnd,
             days: contributions.map(c => ({ date: c.date, contributionCount: c.count }))
           };
         }
@@ -276,7 +318,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { data: cached } = await supabase
-      .from('github_stats_cache')
+      .schema('gitstats').from('github_stats_cache')
       .select('stats_data, expires_at')
       .eq('username', username.toLowerCase())
       .maybeSingle();
@@ -342,7 +384,7 @@ serve(async (req) => {
 
     // Cache the result (upsert)
     await supabase
-      .from('github_stats_cache')
+      .schema('gitstats').from('github_stats_cache')
       .upsert({
         username: username.toLowerCase(),
         stats_data: result,

@@ -33,7 +33,7 @@ serve(async (req) => {
 
     // Get count of cached quotes
     const { count: cacheCount } = await supabase
-      .from('quotes_cache')
+      .schema('gitstats').from('quotes_cache')
       .select('*', { count: 'exact', head: true });
 
     console.log('Quotes in cache:', cacheCount);
@@ -43,7 +43,7 @@ serve(async (req) => {
       // Get a random quote from cache
       const randomOffset = Math.floor(Math.random() * cacheCount);
       const { data: randomQuotes, error } = await supabase
-        .from('quotes_cache')
+        .schema('gitstats').from('quotes_cache')
         .select('quote, author')
         .range(randomOffset, randomOffset);
 
@@ -100,7 +100,7 @@ Return as JSON: {"quote": "...", "author": "..."}`
             const quote = JSON.parse(jsonMatch[0]);
 
             // Cache the new quote
-            await supabase.from('quotes_cache').insert({ quote: quote.quote, author: quote.author });
+            await supabase.schema('gitstats').from('quotes_cache').insert({ quote: quote.quote, author: quote.author });
 
             return new Response(JSON.stringify(quote), {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -114,7 +114,7 @@ Return as JSON: {"quote": "...", "author": "..."}`
 
     // Fallback: try to get any cached quote
     const { data: anyQuote } = await supabase
-      .from('quotes_cache')
+      .schema('gitstats').from('quotes_cache')
       .select('quote, author')
       .limit(1)
       .single();

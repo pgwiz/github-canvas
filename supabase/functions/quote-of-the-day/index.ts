@@ -36,7 +36,7 @@ serve(async (req) => {
 
     // No quote for today, select a random one from cache
     const { count } = await supabase
-      .from('quotes_cache')
+      .schema('gitstats').from('quotes_cache')
       .select('*', { count: 'exact', head: true });
 
     if (!count || count === 0) {
@@ -50,7 +50,7 @@ serve(async (req) => {
     // Get a random quote
     const randomOffset = Math.floor(Math.random() * count);
     const { data: randomQuote } = await supabase
-      .from('quotes_cache')
+      .schema('gitstats').from('quotes_cache')
       .select('id, quote, author')
       .range(randomOffset, randomOffset)
       .single();

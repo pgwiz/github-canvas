@@ -52,14 +52,14 @@ serve(async (req) => {
     // Optionally clear old quotes (keep last 50 as buffer)
     if (clearOld) {
       const { data: existingQuotes } = await supabase
-        .from('quotes_cache')
+        .schema('gitstats').from('quotes_cache')
         .select('id')
         .order('created_at', { ascending: false })
         .range(50, 10000);
 
       if (existingQuotes && existingQuotes.length > 0) {
         const idsToDelete = existingQuotes.map(q => q.id);
-        await supabase.from('quotes_cache').delete().in('id', idsToDelete);
+        await supabase.schema('gitstats').from('quotes_cache').delete().in('id', idsToDelete);
         console.log(`Cleared ${idsToDelete.length} old quotes`);
       }
     }
@@ -119,7 +119,7 @@ serve(async (req) => {
         for (const quote of quotes) {
           if (quote.quote && quote.author && quote.quote.length < 200) {
             const { error } = await supabase
-              .from('quotes_cache')
+              .schema('gitstats').from('quotes_cache')
               .insert({ quote: quote.quote, author: quote.author });
 
             if (!error) {
@@ -143,7 +143,7 @@ serve(async (req) => {
 
     // Get final count
     const { count: totalQuotes } = await supabase
-      .from('quotes_cache')
+      .schema('gitstats').from('quotes_cache')
       .select('*', { count: 'exact', head: true });
 
     console.log(`Batch generation complete: ${successCount} success, ${failCount} failed, ${totalQuotes} total in cache`);

@@ -462,26 +462,26 @@ function generateStatsSVG(p: any): string {
 function generateLanguagesSVG(p: any): string {
   const { languages, animate } = p;
   const langs = languages.slice(0, 6);
-  const barWidth = p.width - 50;
+  // Use padding from parameters with sensible defaults
+  const leftPadding = p.paddingLeft ?? 44;
+  const topPadding = p.paddingTop ?? 25;
+  const rightPadding = p.paddingRight ?? 44;
+  const bottomPadding = p.paddingBottom ?? 25;
+  const barWidth = p.width - leftPadding - rightPadding; // Full width minus padding
   const barHeight = 12;
-  const leftPadding = 25;
-  const segmentGap = 1;
 
   // Generate the stacked progress bar segments
   let barSegments = '';
   let currentX = 0;
-  const totalGapWidth = Math.max(0, langs.length - 1) * segmentGap;
-  const availableWidth = barWidth - totalGapWidth;
 
   for (let i = 0; i < langs.length; i++) {
     const lang = langs[i];
-    const segmentWidth = availableWidth * (lang.percentage / 100);
-    const animClass = animate ? `class="lang-progress"` : '';
-    barSegments += `<rect mask="url(#rect-mask)" data-testid="lang-progress" x="${currentX}" y="0" width="${segmentWidth}" height="${barHeight}" fill="${lang.color}" ${animClass}/>`;
-    currentX += segmentWidth + segmentGap;
+    const segmentWidth = barWidth * (lang.percentage / 100);
+    barSegments += `<rect x="${currentX}" y="0" width="${segmentWidth}" height="${barHeight}" fill="${lang.color}"/>`;
+    currentX += segmentWidth + 1; // 1px gap between segments
   }
 
-  // Generate the legend - 2 columns
+  // Generate the legend - 2 columns, 3 rows each
   let leftColumn = '';
   let rightColumn = '';
   const rowSpacing = 28;
@@ -490,14 +490,12 @@ function generateLanguagesSVG(p: any): string {
     const lang = langs[i];
     const col = i < 3 ? 0 : 1;
     const row = i < 3 ? i : i - 3;
-    const delay = animate ? `style="animation-delay: ${450 + (i * 150)}ms"` : '';
+    const delayClass = animate ? `class="animate delay-${i + 1}"` : '';
 
     const item = `<g transform="translate(0, ${row * rowSpacing})">
-    <g class="${animate ? 'stagger' : ''}" ${delay}>
       <circle cx="6" cy="6" r="6" fill="${lang.color}"/>
-      <text data-testid="lang-name" x="22" y="6" class="lang-name" dominant-baseline="middle">${lang.name} ${lang.percentage}%</text>
-    </g>
-  </g>`;
+      <text x="22" y="6" class="lang-label" font-weight="700" dominant-baseline="middle">${lang.name} <tspan font-weight="400">${lang.percentage.toFixed(2)}%</tspan></text>
+    </g>`;
 
     if (col === 0) {
       leftColumn += item;
@@ -506,40 +504,55 @@ function generateLanguagesSVG(p: any): string {
     }
   }
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" fill="none" role="img">
+  const columnOffset = Math.floor((p.width - leftPadding) / 2);
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}">
   ${p.gradientDefs || ''}
   <style>
-    .header { font: 600 18px 'Segoe UI', Ubuntu, Sans-Serif; fill: ${p.primaryColor}; animation: fadeInAnimation 0.8s ease-in-out forwards; }
-    @supports(-moz-appearance: auto) { .header { font-size: 15.5px; } }
-    .lang-name { font: 700 12px "Segoe UI", Ubuntu, Sans-Serif; fill: ${p.textColor}; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap');
+    .title { font: 600 18px 'Inter', sans-serif; fill: ${p.primaryColor}; }
+    .lang-label { font: 400 12px 'Inter', sans-serif; fill: ${p.textColor}; }
     ${animate ? `
-    @keyframes slideInAnimation { from { width: 0; } to { width: calc(100%-100px); } }
-    @keyframes growWidthAnimation { from { width: 0; } to { width: 100%; } }
-    @keyframes fadeInAnimation { from { opacity: 0; } to { opacity: 1; } }
-    .stagger { opacity: 0; animation: fadeInAnimation 0.3s ease-in-out forwards; }
-    #rect-mask rect { animation: slideInAnimation 1s ease-in-out forwards; }
-    .lang-progress { animation: growWidthAnimation 0.6s ease-in-out forwards; }
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(-10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate { animation: fadeIn 0.8s ease-out forwards; opacity: 0; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+    .delay-5 { animation-delay: 0.5s; }
+    .delay-6 { animation-delay: 0.6s; }
     ` : ''}
   </style>
   
-  <rect data-testid="card-bg" x="0.5" y="0.5" rx="${p.borderRadius}" height="99%" width="${p.width - 1}" fill="${p.bgColor}" ${p.borderStyle}/>
+  <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${p.bgColor}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="2"` : ''}/>
   
-  <g data-testid="card-title" transform="translate(${leftPadding}, 25)">
-    <text x="0" y="0" class="header" data-testid="header">Most Used Languages</text>
-  </g>
-  
-  <g data-testid="main-card-body" transform="translate(0, 30)">
-    <svg data-testid="lang-items" x="${leftPadding}">
-      <mask id="rect-mask">
-        <rect x="0" y="0" width="${barWidth}" height="${barHeight}" fill="white" rx="5"/>
-      </mask>
-      ${barSegments}
-      
-      <g transform="translate(0, 30)">
-        <g transform="translate(0, 0)">${leftColumn}</g>
-        <g transform="translate(235, 0)">${rightColumn}</g>
+  <g transform="translate(${leftPadding}, ${topPadding})" ${animate ? 'class="animate"' : ''}>
+    <text x="0" y="18" class="title">Most Used Languages</text>
+    
+    <!-- Progress Bar -->
+    <g transform="translate(0, 40)">
+      <defs>
+        <clipPath id="barClip">
+          <rect width="${barWidth}" height="${barHeight}" rx="5"/>
+        </clipPath>
+      </defs>
+      <g clip-path="url(#barClip)">
+        ${barSegments}
       </g>
-    </svg>
+    </g>
+    
+    <!-- Legend -->
+    <g transform="translate(0, 70)">
+      <g transform="translate(0, 0)">
+        ${leftColumn}
+      </g>
+      <g transform="translate(${columnOffset}, 0)">
+        ${rightColumn}
+      </g>
+    </g>
   </g>
 </svg>`;
 }

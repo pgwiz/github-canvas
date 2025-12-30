@@ -1,20 +1,13 @@
 {
-  "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "headers": [
+  "rewrites": [
     {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
-      ]
+      "source": "/:path*",
+      "destination": "/index.html"
     }
   ],
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+  "buildCommand": "npm run build && chmod +x ./deploy-functions.sh && ./deploy-functions.sh",
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://edxiyetfcnugrmxhmvpq.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY": "sb_publishable_U2c-dQgP8-e53ePtJn1MsQ_ePZwgly1"
+  }
 }

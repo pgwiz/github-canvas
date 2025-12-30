@@ -1,5 +1,8 @@
+-- Create gitstats schema
+CREATE SCHEMA IF NOT EXISTS gitstats;
+
 -- GitHub Stats Cache Table
-CREATE TABLE IF NOT EXISTS public.github_stats_cache (
+CREATE TABLE IF NOT EXISTS gitstats.github_stats_cache (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   username TEXT NOT NULL UNIQUE,
   stats_data JSONB NOT NULL,
@@ -8,7 +11,7 @@ CREATE TABLE IF NOT EXISTS public.github_stats_cache (
 );
 
 -- Quotes Cache Table  
-CREATE TABLE IF NOT EXISTS public.quotes_cache (
+CREATE TABLE IF NOT EXISTS gitstats.quotes_cache (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   quote TEXT NOT NULL,
   author TEXT NOT NULL,
@@ -16,26 +19,23 @@ CREATE TABLE IF NOT EXISTS public.quotes_cache (
 );
 
 -- Enable RLS
-ALTER TABLE public.github_stats_cache ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.quotes_cache ENABLE ROW LEVEL SECURITY;
+ALTER TABLE gitstats.github_stats_cache ENABLE ROW LEVEL SECURITY;
+ALTER TABLE gitstats.quotes_cache ENABLE ROW LEVEL SECURITY;
 
--- Allow public read/write for caching (Service Role will bypass, but functions might use anon key if not careful, 
--- though functions usually use service role key for DB ops. 
--- However, the user asked for "Allow public access" policies in the prompt)
-
-CREATE POLICY "Allow public access" ON public.github_stats_cache
+-- Allow public access for caching
+CREATE POLICY "Allow public access" ON gitstats.github_stats_cache
   FOR ALL USING (true) WITH CHECK (true);
 
-CREATE POLICY "Allow public access" ON public.quotes_cache
+CREATE POLICY "Allow public access" ON gitstats.quotes_cache
   FOR ALL USING (true) WITH CHECK (true);
 
 -- Cleanup function
-CREATE OR REPLACE FUNCTION public.cleanup_expired_cache()
+CREATE OR REPLACE FUNCTION gitstats.cleanup_expired_cache()
 RETURNS void
 LANGUAGE plpgsql
-SECURITY DEFINER SET search_path = public
+SECURITY DEFINER SET search_path = gitstats
 AS $$
 BEGIN
-  DELETE FROM public.github_stats_cache WHERE expires_at < now();
+  DELETE FROM gitstats.github_stats_cache WHERE expires_at < now();
 END;
 $$;
