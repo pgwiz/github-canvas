@@ -218,6 +218,7 @@ function generateSVG(params: CardParams): string {
   // Type-specific default dimensions
   const defaultDimensions: Record<string, { width: number; height: number }> = {
     languages: { width: 300, height: 300 },
+    contribution: { width: 620, height: 300 },
   };
   const defaults = defaultDimensions[type] || { width: 495, height: 195 };
   const width = params.width || defaults.width;
@@ -371,13 +372,12 @@ function generateSVG(params: CardParams): string {
       });
 
     case 'contribution':
-      // Using activity data as placeholder or if we pass specific contribution data
-      // For now, let's assume we might need to fetch it or use what we have.
-      // Ideally pass contributionDays if available.
       return generateContributionSVG({
         width, height, bgColor: bgFill, borderRadius, borderStyle,
         primaryColor, secondaryColor, textColor, animate,
-        contributionDays: [], // Need to pass this if available
+        contributionDays: streak?.days || [],
+        streak: streak || { current: 0, total: 0 },
+        username,
         commonStyles, gradientDefs,
       });
 
@@ -716,72 +716,106 @@ function generateStreakSVG(p: any): string {
 }
 
 function generateContributionSVG(p: any): string {
-  const { contributionDays = [], animate } = p;
+  const { contributionDays = [], animate, streak = {} } = p;
 
-  const cols = 52;
+  // Card dimensions optimized for this layout
+  const cardWidth = p.width || 620;
+  const cardHeight = p.height || 300;
+
+  // Grid settings
+  const cols = 53;
   const rows = 7;
-  const cellS = 7;
-  const gap = 2;
-  const pitch = cellS + gap;
+  const cellSize = 8;
+  const gap = 3;
+  const pitch = cellSize + gap;
+  const gridWidth = cols * pitch - gap;
+  const gridHeight = rows * pitch - gap;
+  const gridX = (cardWidth - gridWidth) / 2;
+  const gridY = 100;
 
-  // Use real data if available, otherwise fallback
+  // Use real data if available, otherwise fallback to sample
   const displayDays = contributionDays.length > 0
-    ? contributionDays.slice(- (cols * rows))
-    : Array(cols * rows).fill(0).map(() => ({ contributionCount: Math.random() > 0.7 ? Math.floor(Math.random() * 5) : 0 }));
+    ? contributionDays.slice(-(cols * rows))
+    : Array(cols * rows).fill(0).map(() => ({ contributionCount: Math.random() > 0.6 ? Math.floor(Math.random() * 6) : 0 }));
 
+  // Count total contributions
+  const totalContributions = displayDays.reduce((sum: number, d: any) => sum + (d.contributionCount || 0), 0);
+  const currentStreak = streak.current || 0;
+  const username = p.username || 'C';
+  const initial = username.substring(0, 1).toUpperCase();
+
+  // Color levels for contribution intensity
   const getLevelColor = (count: number) => {
-    if (count === 0) return `${p.textColor}10`;
-    if (count <= 1) return `${p.primaryColor}4D`; // 30%
-    if (count <= 3) return `${p.primaryColor}80`; // 50%
-    if (count <= 6) return `${p.primaryColor}B3`; // 70%
-    return p.primaryColor;
+    if (count === 0) return '#1e1e1e';
+    if (count <= 1) return '#0e4429';
+    if (count <= 3) return '#006d32';
+    if (count <= 6) return '#26a641';
+    return '#39d353';
   };
 
+  // Generate grid cells
   let cells = '';
   for (let c = 0; c < cols; c++) {
     for (let r = 0; r < rows; r++) {
       const idx = c * rows + r;
       const dayData = displayDays[idx] || { contributionCount: 0 };
-      const x = c * pitch;
-      const y = r * pitch + 25;
-
-      // Basic fade in animation
-      const delay = animate ? `style="animation-delay: ${(c * 0.02)}s"` : '';
-      const animClass = animate ? 'class="animate-fade"' : '';
-
-      cells += `<rect x="${x}" y="${y}" width="${cellS}" height="${cellS}" rx="2" fill="${getLevelColor(dayData.contributionCount)}" ${animClass} ${delay}/>`;
+      const x = gridX + c * pitch;
+      const y = gridY + r * pitch;
+      const delay = animate ? `style="animation-delay: ${(c * 0.015)}s"` : '';
+      const animClass = animate ? 'class="cell-anim"' : '';
+      cells += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="2" fill="${getLevelColor(dayData.contributionCount)}" ${animClass} ${delay}/>`;
     }
   }
 
-  // Month Labels
-  const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  let currentMonth = -1;
-  let monthsSVG = '';
-
-  for (let c = 0; c < cols; c++) {
-    const idx = c * rows;
-    const dayData = displayDays[idx];
-    if (dayData && dayData.date) {
-      const date = new Date(dayData.date);
-      const month = date.getMonth();
-      if (month !== currentMonth) {
-        const x = c * pitch;
-        monthsSVG += `<text x="${x}" y="15" font-size="9" fill="${p.textColor}">${monthLabels[month]}</text>`;
-        currentMonth = month;
-      }
+  const animStyles = animate ? `
+    @keyframes fadeCell {
+      0% { opacity: 0; transform: scale(0.5); }
+      100% { opacity: 1; transform: scale(1); }
     }
-  }
-
-  const paddingX = 15;
-  const paddingY = (p.height - (rows * pitch + 25)) / 2 + 5;
+    .cell-anim { animation: fadeCell 0.3s ease-out forwards; opacity: 0; }
+  ` : '';
 
   return `
-<svg width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}" xmlns="http://www.w3.org/2000/svg">
-  ${p.commonStyles}
-  <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${p.bgColor}" ${p.borderStyle}/>
-  <g transform="translate(${paddingX}, ${paddingY})">
-    ${monthsSVG}
+<svg width="${cardWidth}" height="${cardHeight}" viewBox="0 0 ${cardWidth} ${cardHeight}" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap');
+    .title { font: 600 20px 'Inter', sans-serif; fill: #ffffff; }
+    .streak { font: 600 16px 'Inter', sans-serif; fill: #9ca3af; }
+    .streak-value { font: 700 16px 'Inter', sans-serif; fill: #22c55e; }
+    .total { font: 400 18px 'Inter', sans-serif; fill: #6b7280; }
+    .total-value { font: 700 24px 'Inter', sans-serif; fill: #ffffff; }
+    ${animStyles}
+  </style>
+  
+  <!-- Card background -->
+  <rect x="1" y="1" width="${cardWidth - 2}" height="${cardHeight - 2}" rx="${p.borderRadius || 16}" fill="${p.bgColor || '#0d1117'}" stroke="${p.primaryColor || '#22c55e'}" stroke-width="2"/>
+  
+  <!-- Header -->
+  <g transform="translate(30, 30)">
+    <!-- Avatar circle -->
+    <circle cx="24" cy="24" r="24" fill="#6366f1"/>
+    <text x="24" y="32" text-anchor="middle" font-size="22" font-weight="bold" fill="#ffffff">${initial}</text>
+    
+    <!-- Title -->
+    <text x="60" y="32" class="title">My contributions</text>
+    
+    <!-- Streak badge on right -->
+    <g transform="translate(${cardWidth - 190}, 0)">
+      <text x="0" y="28" class="streak">Streak</text>
+      <text x="55" y="28" class="streak-value">${currentStreak} days</text>
+      <text x="${currentStreak >= 10 ? 130 : 115}" y="28" font-size="18">🔥</text>
+    </g>
+  </g>
+  
+  <!-- Contribution Grid -->
+  <g>
     ${cells}
+  </g>
+  
+  <!-- Footer: Total contributions -->
+  <g transform="translate(${cardWidth - 200}, ${cardHeight - 40})">
+    <text x="0" y="0" class="total-value">${formatNumber(totalContributions)}</text>
+    <text x="${totalContributions >= 1000 ? 45 : 35}" y="0" class="total"> contributions</text>
   </g>
 </svg>`;
 }

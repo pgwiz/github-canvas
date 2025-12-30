@@ -17,41 +17,41 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
 
   // Determine API endpoint with fallback
   const apiEndpoint = useMemo(() => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ||
       (import.meta.env.VITE_SUPABASE_PROJECT_ID ? `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co` : null);
     const selfHostedApiUrl = import.meta.env.VITE_API_URL;
-    
+
     // If a custom API URL is explicitly set, use it
     if (selfHostedApiUrl) {
       return selfHostedApiUrl;
     }
-    
+
     const hostname = window.location.hostname;
-    
+
     // On Lovable preview or localhost - always use Supabase edge function
     const isLovable = hostname.includes('lovable.app') || hostname.includes('lovableproject.com');
-    
+
     if (isLovable && supabaseUrl) {
       return `${supabaseUrl}/functions/v1/generate-card`;
     }
-    
+
     // Self-hosted (Vercel, Netlify, custom domain) or Localhost (if API is running) - use /api/card route
     return `${window.location.origin}/api/card`;
   }, []);
-  
-  const imageUrl = `${apiEndpoint}?type=${config.type}&username=${config.username}&theme=${config.theme}&bg=${encodeURIComponent(config.bgColor)}&primary=${encodeURIComponent(config.primaryColor)}&secondary=${encodeURIComponent(config.secondaryColor)}&text=${encodeURIComponent(config.textColor)}&border=${encodeURIComponent(config.borderColor)}&radius=${config.borderRadius}&showBorder=${config.showBorder}&width=${config.width}&height=${config.height}&paddingTop=${config.paddingTop || 25}&paddingRight=${config.paddingRight || 25}&paddingBottom=${config.paddingBottom || 25}&paddingLeft=${config.paddingLeft || 25}&animation=${config.animation || 'fadeIn'}&speed=${config.animationSpeed || 'normal'}&gradient=${config.gradientEnabled}&gradientType=${config.gradientType}&gradientAngle=${config.gradientAngle}&gradientStart=${encodeURIComponent(config.gradientStart)}&gradientEnd=${encodeURIComponent(config.gradientEnd)}${config.type === 'banner' ? `&bannerName=${encodeURIComponent(config.bannerName)}&bannerDescription=${encodeURIComponent(config.bannerDescription)}&waveStyle=${encodeURIComponent(config.waveStyle)}` : ''}${config.customText ? `&customText=${encodeURIComponent(config.customText)}` : ''}`;
-  
+
+  const imageUrl = `${apiEndpoint}?type=${config.type}&username=${config.username}&theme=${config.theme}&bg=${encodeURIComponent(config.bgColor)}&primary=${encodeURIComponent(config.primaryColor)}&secondary=${encodeURIComponent(config.secondaryColor)}&text=${encodeURIComponent(config.textColor)}&border=${encodeURIComponent(config.borderColor)}&radius=${config.borderRadius}&showBorder=${config.showBorder}&paddingTop=${config.paddingTop || 25}&paddingRight=${config.paddingRight || 25}&paddingBottom=${config.paddingBottom || 25}&paddingLeft=${config.paddingLeft || 25}&animation=${config.animation || 'fadeIn'}&speed=${config.animationSpeed || 'normal'}&gradient=${config.gradientEnabled}&gradientType=${config.gradientType}&gradientAngle=${config.gradientAngle}&gradientStart=${encodeURIComponent(config.gradientStart)}&gradientEnd=${encodeURIComponent(config.gradientEnd)}${config.type === 'banner' ? `&bannerName=${encodeURIComponent(config.bannerName)}&bannerDescription=${encodeURIComponent(config.bannerDescription)}&waveStyle=${encodeURIComponent(config.waveStyle)}` : ''}${config.customText ? `&customText=${encodeURIComponent(config.customText)}` : ''}`;
+
   const markdownCode = `![${config.username || "GitHub"} Stats](${imageUrl})`;
-  
+
   const htmlCode = `<img src="${imageUrl}" alt="${config.username || "GitHub"} Stats" />`;
 
   // Social sharing URLs
-  const shareText = config.username 
+  const shareText = config.username
     ? `Check out my GitHub stats! 🚀 Generated with GitHub Stats Visualizer`
     : `Create beautiful GitHub stats cards with GitHub Stats Visualizer! 🎨`;
-  
+
   const currentPageUrl = window.location.origin;
-  
+
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(currentPageUrl)}`;
   const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(currentPageUrl)}`;
 
@@ -78,10 +78,10 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
     try {
       const response = await fetch(imageUrl);
       const svgText = await response.text();
-      
+
       const blob = new Blob([svgText], { type: 'image/svg+xml' });
       const url = URL.createObjectURL(blob);
-      
+
       const a = document.createElement('a');
       a.href = url;
       a.download = `${config.username || 'github'}-${config.type}-card.svg`;
@@ -89,7 +89,7 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       toast({
         title: "Downloaded!",
         description: "SVG card saved successfully",
@@ -110,24 +110,24 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
     try {
       const response = await fetch(imageUrl);
       const svgText = await response.text();
-      
+
       // Create an image from SVG
       const img = new window.Image();
       const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
       const svgUrl = URL.createObjectURL(svgBlob);
-      
+
       img.onload = () => {
         // Create canvas with higher resolution for better quality
         const scale = 2;
         const canvas = document.createElement('canvas');
         canvas.width = config.width * scale;
         canvas.height = config.height * scale;
-        
+
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.scale(scale, scale);
           ctx.drawImage(img, 0, 0, config.width, config.height);
-          
+
           canvas.toBlob((blob) => {
             if (blob) {
               const url = URL.createObjectURL(blob);
@@ -138,7 +138,7 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
               a.click();
               document.body.removeChild(a);
               URL.revokeObjectURL(url);
-              
+
               toast({
                 title: "Downloaded!",
                 description: "PNG card saved successfully",
@@ -149,7 +149,7 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
         }
         URL.revokeObjectURL(svgUrl);
       };
-      
+
       img.onerror = () => {
         toast({
           title: "Download failed",
@@ -159,7 +159,7 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
         setIsDownloading(false);
         URL.revokeObjectURL(svgUrl);
       };
-      
+
       img.src = svgUrl;
     } catch (err) {
       toast({

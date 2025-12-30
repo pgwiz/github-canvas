@@ -168,12 +168,12 @@ export default function Generator() {
   useEffect(() => {
     const typeDimensions: Record<string, { width: number; height: number }> = {
       languages: { width: 300, height: 300 },
+      contribution: { width: 620, height: 300 },
       stats: { width: 495, height: 195 },
       streak: { width: 495, height: 195 },
       activity: { width: 495, height: 195 },
       quote: { width: 495, height: 195 },
       banner: { width: 495, height: 195 },
-      contribution: { width: 495, height: 195 },
       custom: { width: 495, height: 195 },
     };
     const dims = typeDimensions[config.type] || { width: 495, height: 195 };
