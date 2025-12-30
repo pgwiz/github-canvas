@@ -101,7 +101,7 @@ export default function Generator() {
   const [githubData, setGithubData] = useState<GitHubStats | null>(null);
   const [currentQuote, setCurrentQuote] = useState<DevQuote | null>(null);
   const { toast } = useToast();
-  
+
   const { loading: statsLoading, error: statsError, fetchStats } = useGitHubStats();
   const { loading: quoteLoading, generateQuote } = useDevQuote();
   const { qotd } = useQuoteOfTheDay();
@@ -140,7 +140,7 @@ export default function Generator() {
     }
 
     const result = await fetchStats(config.username);
-    
+
     if (result) {
       setGithubData(result);
       toast({
@@ -162,6 +162,22 @@ export default function Generator() {
       const topic = config.quoteTopic === "random" ? undefined : config.quoteTopic;
       generateQuote(topic).then(setCurrentQuote);
     }
+  }, [config.type]);
+
+  // Update dimensions when card type changes
+  useEffect(() => {
+    const typeDimensions: Record<string, { width: number; height: number }> = {
+      languages: { width: 300, height: 300 },
+      stats: { width: 495, height: 195 },
+      streak: { width: 495, height: 195 },
+      activity: { width: 495, height: 195 },
+      quote: { width: 495, height: 195 },
+      banner: { width: 495, height: 195 },
+      contribution: { width: 495, height: 195 },
+      custom: { width: 495, height: 195 },
+    };
+    const dims = typeDimensions[config.type] || { width: 495, height: 195 };
+    setConfig((prev) => ({ ...prev, width: dims.width, height: dims.height }));
   }, [config.type]);
 
   const handleRefreshQuote = async () => {
@@ -211,8 +227,8 @@ export default function Generator() {
                       disabled={config.type === "quote" || config.type === "custom" || config.type === "banner"}
                     />
                   </div>
-                  <Button 
-                    onClick={handleGenerate} 
+                  <Button
+                    onClick={handleGenerate}
                     disabled={isGenerating}
                     className="group relative h-12 px-6 overflow-hidden bg-primary hover:bg-primary/90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(12,247,9,0.3)] hover:scale-[1.02] active:scale-[0.98]"
                   >
@@ -244,8 +260,8 @@ export default function Generator() {
                 <Label className="text-lg font-semibold mb-4 block">
                   Card Type
                 </Label>
-                <Tabs 
-                  value={config.type} 
+                <Tabs
+                  value={config.type}
                   onValueChange={(v) => updateConfig({ type: v as CardType })}
                 >
                   <TabsList className="grid grid-cols-4 lg:grid-cols-4 w-full h-auto bg-background/30 backdrop-blur-sm">
@@ -307,7 +323,7 @@ export default function Generator() {
                 <Label className="text-lg font-semibold mb-4 block">
                   Choose a Template
                 </Label>
-                <TemplateGallery 
+                <TemplateGallery
                   selectedTheme={config.theme}
                   onSelectTheme={(theme) => updateConfig({ theme })}
                 />
@@ -318,7 +334,7 @@ export default function Generator() {
                 <Label className="text-lg font-semibold mb-4 block">
                   Customize
                 </Label>
-                <CustomizationPanel 
+                <CustomizationPanel
                   config={config}
                   updateConfig={updateConfig}
                 />
@@ -336,8 +352,8 @@ export default function Generator() {
                 <div className="relative rounded-lg overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 to-transparent backdrop-blur-md" />
                   <div className="relative p-4 rounded-lg border border-secondary/10 bg-background/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
-                    <CardPreview 
-                      config={config} 
+                    <CardPreview
+                      config={config}
                       githubData={githubData}
                       quote={currentQuote}
                     />

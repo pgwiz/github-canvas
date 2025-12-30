@@ -30,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Set appropriate headers
     res.setHeader('Content-Type', 'image/svg+xml');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Access-Control-Allow-Origin', '*');
 
     return res.status(response.status).send(svg);
