@@ -1,0 +1,364 @@
+<!-- Updated: thinner progress (50% height), more left padding, and “rising volume” bar style. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="275" viewBox="0 0 280 275">
+  <defs>
+    <linearGradient id="cardBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#EAF5FF"/>
+      <stop offset="0.55" stop-color="#F2F0FF"/>
+      <stop offset="1" stop-color="#FFF1F7"/>
+    </linearGradient>
+
+    <linearGradient id="rowBg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F6F8FF"/>
+    </linearGradient>
+
+    <linearGradient id="gJS" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FDE047"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+    <linearGradient id="gPy" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="gTS" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#0284C7"/>
+    </linearGradient>
+    <linearGradient id="gGo" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#67E8F9"/>
+      <stop offset="1" stop-color="#0EA5E9"/>
+    </linearGradient>
+    <linearGradient id="gCpp" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#C084FC"/>
+      <stop offset="1" stop-color="#6D28D9"/>
+    </linearGradient>
+    <linearGradient id="gRuby" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FB7185"/>
+      <stop offset="1" stop-color="#E11D48"/>
+    </linearGradient>
+
+    <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#2B3A67" flood-opacity="0.18"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#2B3A67" flood-opacity="0.10"/>
+    </filter>
+
+    <filter id="rowShadow" x="-20%" y="-50%" width="140%" height="200%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#2B3A67" flood-opacity="0.12"/>
+    </filter>
+
+    <filter id="barGlow" x="-40%" y="-200%" width="180%" height="500%">
+      <feGaussianBlur stdDeviation="1.1" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="bokeh" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+
+    <style>
+      .title { font: 700 18px/1.2 Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; fill:#1F3B7A; }
+      .label { font: 700 14px/1.2 Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; fill:#2B3A67; }
+      .pct   { font: 800 14px/1.2 Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+      .mini  { font: 800 10px/1.0 Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    </style>
+  </defs>
+
+  <g filter="url(#cardShadow)">
+    <rect x="10" y="10" width="260" height="255" rx="22" fill="url(#cardBg)"/>
+
+    <g filter="url(#bokeh)" opacity="0.55">
+      <circle cx="225" cy="34" r="12" fill="#FDE68A"/>
+      <circle cx="246" cy="44" r="10" fill="#C7D2FE"/>
+      <circle cx="235" cy="56" r="9" fill="#FDA4AF"/>
+      <circle cx="255" cy="30" r="8" fill="#93C5FD"/>
+    </g>
+
+    <g transform="translate(26 28)">
+      <path d="M10 3 L4 9 L10 15" fill="none" stroke="#7C3AED" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M22 3 L28 9 L22 15" fill="none" stroke="#38BDF8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M16 2 L13 9 L17 9 L14 16" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <text x="58" y="42" class="title">Top Languages</text>
+
+    <!-- Layout tweaks:
+         - left padding increased: iconX=38 (was 32), labelX=66 (was 58)
+         - volume bars start at barX=66 (was 44)
+         - progress “height” halved: maxH=4 (was 8)
+         - barCount=16, barW=6, gap=4  (edit-friendly) -->
+
+    <!-- ========== Row 1: JavaScript (35% => 6/16 bars filled) ========== -->
+    <g>
+      <g filter="url(#rowShadow)">
+        <rect x="24" y="62" width="232" height="28" rx="14" fill="url(#rowBg)"/>
+        <rect x="24" y="62" width="232" height="28" rx="14" fill="none" stroke="#DDE6FF" opacity="0.8"/>
+        <path d="M28 66 H252" stroke="#FFFFFF" stroke-width="2" opacity="0.65" stroke-linecap="round"/>
+      </g>
+
+      <circle cx="46" cy="76" r="14" fill="#FDE047" opacity="0.22" filter="url(#bokeh)"/>
+
+      <rect x="38" y="67" width="18" height="18" rx="6" fill="#FDE047" stroke="#F59E0B" opacity="0.95"/>
+      <text x="47" y="80.5" text-anchor="middle" class="mini" fill="#111827">JS</text>
+
+      <text x="66" y="80" class="label">JavaScript</text>
+      <text x="244" y="80" text-anchor="end" class="pct" fill="#F59E0B">35%</text>
+
+      <!-- Rising volume bars (bottom aligned at y=86) -->
+      <g aria-label="progress-js">
+        <!-- unfilled -->
+        <g fill="#E7ECFF" opacity="0.9">
+          <rect x="66"  y="85" width="6" height="1" rx="2"/>
+          <rect x="76"  y="85" width="6" height="1" rx="2"/>
+          <rect x="86"  y="85" width="6" height="1" rx="2"/>
+          <rect x="96"  y="84" width="6" height="2" rx="2"/>
+          <rect x="106" y="84" width="6" height="2" rx="2"/>
+          <rect x="116" y="84" width="6" height="2" rx="2"/>
+          <rect x="126" y="84" width="6" height="2" rx="2"/>
+          <rect x="136" y="84" width="6" height="2" rx="2"/>
+          <rect x="146" y="83" width="6" height="3" rx="2"/>
+          <rect x="156" y="83" width="6" height="3" rx="2"/>
+          <rect x="166" y="83" width="6" height="3" rx="2"/>
+          <rect x="176" y="83" width="6" height="3" rx="2"/>
+          <rect x="186" y="83" width="6" height="3" rx="2"/>
+          <rect x="196" y="82" width="6" height="4" rx="2"/>
+          <rect x="206" y="82" width="6" height="4" rx="2"/>
+          <rect x="216" y="82" width="6" height="4" rx="2"/>
+        </g>
+
+        <!-- filled (first 6 bars) -->
+        <g fill="url(#gJS)" filter="url(#barGlow)">
+          <rect x="66"  y="85" width="6" height="1" rx="2"/>
+          <rect x="76"  y="85" width="6" height="1" rx="2"/>
+          <rect x="86"  y="85" width="6" height="1" rx="2"/>
+          <rect x="96"  y="84" width="6" height="2" rx="2"/>
+          <rect x="106" y="84" width="6" height="2" rx="2"/>
+          <rect x="116" y="84" width="6" height="2" rx="2"/>
+        </g>
+      </g>
+    </g>
+
+    <!-- ========== Row 2: Python (22% => 4/16 bars filled) ========== -->
+    <g>
+      <g filter="url(#rowShadow)">
+        <rect x="24" y="96" width="232" height="28" rx="14" fill="url(#rowBg)"/>
+        <rect x="24" y="96" width="232" height="28" rx="14" fill="none" stroke="#DDE6FF" opacity="0.8"/>
+        <path d="M28 100 H252" stroke="#FFFFFF" stroke-width="2" opacity="0.65" stroke-linecap="round"/>
+      </g>
+
+      <circle cx="46" cy="110" r="14" fill="#38BDF8" opacity="0.20" filter="url(#bokeh)"/>
+
+      <circle cx="47" cy="110" r="9" fill="#2563EB" opacity="0.95"/>
+      <path d="M47 101 A9 9 0 0 1 56 110 A9 9 0 0 1 47 119 A9 9 0 0 1 38 110 A9 9 0 0 1 47 101Z"
+            fill="#FDE047" opacity="0.85"/>
+
+      <text x="66" y="114" class="label">Python</text>
+      <text x="244" y="114" text-anchor="end" class="pct" fill="#2563EB">22%</text>
+
+      <g aria-label="progress-py">
+        <g fill="#E7ECFF" opacity="0.9">
+          <rect x="66"  y="119" width="6" height="1" rx="2"/>
+          <rect x="76"  y="119" width="6" height="1" rx="2"/>
+          <rect x="86"  y="119" width="6" height="1" rx="2"/>
+          <rect x="96"  y="118" width="6" height="2" rx="2"/>
+          <rect x="106" y="118" width="6" height="2" rx="2"/>
+          <rect x="116" y="118" width="6" height="2" rx="2"/>
+          <rect x="126" y="118" width="6" height="2" rx="2"/>
+          <rect x="136" y="118" width="6" height="2" rx="2"/>
+          <rect x="146" y="117" width="6" height="3" rx="2"/>
+          <rect x="156" y="117" width="6" height="3" rx="2"/>
+          <rect x="166" y="117" width="6" height="3" rx="2"/>
+          <rect x="176" y="117" width="6" height="3" rx="2"/>
+          <rect x="186" y="117" width="6" height="3" rx="2"/>
+          <rect x="196" y="116" width="6" height="4" rx="2"/>
+          <rect x="206" y="116" width="6" height="4" rx="2"/>
+          <rect x="216" y="116" width="6" height="4" rx="2"/>
+        </g>
+
+        <g fill="url(#gPy)" filter="url(#barGlow)">
+          <rect x="66"  y="119" width="6" height="1" rx="2"/>
+          <rect x="76"  y="119" width="6" height="1" rx="2"/>
+          <rect x="86"  y="119" width="6" height="1" rx="2"/>
+          <rect x="96"  y="118" width="6" height="2" rx="2"/>
+        </g>
+      </g>
+    </g>
+
+    <!-- ========== Row 3: TypeScript (18% => 3/16 bars filled) ========== -->
+    <g>
+      <g filter="url(#rowShadow)">
+        <rect x="24" y="130" width="232" height="28" rx="14" fill="url(#rowBg)"/>
+        <rect x="24" y="130" width="232" height="28" rx="14" fill="none" stroke="#DDE6FF" opacity="0.8"/>
+        <path d="M28 134 H252" stroke="#FFFFFF" stroke-width="2" opacity="0.65" stroke-linecap="round"/>
+      </g>
+
+      <circle cx="46" cy="144" r="14" fill="#0EA5E9" opacity="0.18" filter="url(#bokeh)"/>
+
+      <rect x="38" y="135" width="18" height="18" rx="6" fill="#0EA5E9" opacity="0.95"/>
+      <text x="47" y="148.5" text-anchor="middle" class="mini" fill="#EAF2FF">TS</text>
+
+      <text x="66" y="148" class="label">TypeScript</text>
+      <text x="244" y="148" text-anchor="end" class="pct" fill="#0284C7">18%</text>
+
+      <g aria-label="progress-ts">
+        <g fill="#E7ECFF" opacity="0.9">
+          <rect x="66"  y="153" width="6" height="1" rx="2"/>
+          <rect x="76"  y="153" width="6" height="1" rx="2"/>
+          <rect x="86"  y="153" width="6" height="1" rx="2"/>
+          <rect x="96"  y="152" width="6" height="2" rx="2"/>
+          <rect x="106" y="152" width="6" height="2" rx="2"/>
+          <rect x="116" y="152" width="6" height="2" rx="2"/>
+          <rect x="126" y="152" width="6" height="2" rx="2"/>
+          <rect x="136" y="152" width="6" height="2" rx="2"/>
+          <rect x="146" y="151" width="6" height="3" rx="2"/>
+          <rect x="156" y="151" width="6" height="3" rx="2"/>
+          <rect x="166" y="151" width="6" height="3" rx="2"/>
+          <rect x="176" y="151" width="6" height="3" rx="2"/>
+          <rect x="186" y="151" width="6" height="3" rx="2"/>
+          <rect x="196" y="150" width="6" height="4" rx="2"/>
+          <rect x="206" y="150" width="6" height="4" rx="2"/>
+          <rect x="216" y="150" width="6" height="4" rx="2"/>
+        </g>
+
+        <g fill="url(#gTS)" filter="url(#barGlow)">
+          <rect x="66"  y="153" width="6" height="1" rx="2"/>
+          <rect x="76"  y="153" width="6" height="1" rx="2"/>
+          <rect x="86"  y="153" width="6" height="1" rx="2"/>
+        </g>
+      </g>
+    </g>
+
+    <!-- ========== Row 4: Go (10% => 2/16 bars filled) ========== -->
+    <g>
+      <g filter="url(#rowShadow)">
+        <rect x="24" y="164" width="232" height="28" rx="14" fill="url(#rowBg)"/>
+        <rect x="24" y="164" width="232" height="28" rx="14" fill="none" stroke="#DDE6FF" opacity="0.8"/>
+        <path d="M28 168 H252" stroke="#FFFFFF" stroke-width="2" opacity="0.65" stroke-linecap="round"/>
+      </g>
+
+      <circle cx="46" cy="178" r="14" fill="#22D3EE" opacity="0.18" filter="url(#bokeh)"/>
+
+      <rect x="38" y="169" width="18" height="18" rx="6" fill="#22D3EE" opacity="0.95"/>
+      <path d="M42 178c0-3 2-5 5-5h2c3 0 5 2 5 5s-2 5-5 5h-2c-3 0-5-2-5-5z"
+            fill="#E6FBFF" opacity="0.95"/>
+      <circle cx="47" cy="176.2" r="0.9" fill="#0EA5E9"/>
+      <circle cx="51" cy="176.2" r="0.9" fill="#0EA5E9"/>
+
+      <text x="66" y="182" class="label">Go</text>
+      <text x="244" y="182" text-anchor="end" class="pct" fill="#0EA5E9">10%</text>
+
+      <g aria-label="progress-go">
+        <g fill="#E7ECFF" opacity="0.9">
+          <rect x="66"  y="187" width="6" height="1" rx="2"/>
+          <rect x="76"  y="187" width="6" height="1" rx="2"/>
+          <rect x="86"  y="187" width="6" height="1" rx="2"/>
+          <rect x="96"  y="186" width="6" height="2" rx="2"/>
+          <rect x="106" y="186" width="6" height="2" rx="2"/>
+          <rect x="116" y="186" width="6" height="2" rx="2"/>
+          <rect x="126" y="186" width="6" height="2" rx="2"/>
+          <rect x="136" y="186" width="6" height="2" rx="2"/>
+          <rect x="146" y="185" width="6" height="3" rx="2"/>
+          <rect x="156" y="185" width="6" height="3" rx="2"/>
+          <rect x="166" y="185" width="6" height="3" rx="2"/>
+          <rect x="176" y="185" width="6" height="3" rx="2"/>
+          <rect x="186" y="185" width="6" height="3" rx="2"/>
+          <rect x="196" y="184" width="6" height="4" rx="2"/>
+          <rect x="206" y="184" width="6" height="4" rx="2"/>
+          <rect x="216" y="184" width="6" height="4" rx="2"/>
+        </g>
+
+        <g fill="url(#gGo)" filter="url(#barGlow)">
+          <rect x="66" y="187" width="6" height="1" rx="2"/>
+          <rect x="76" y="187" width="6" height="1" rx="2"/>
+        </g>
+      </g>
+    </g>
+
+    <!-- ========== Row 5: C++ (8% => 1/16 bars filled) ========== -->
+    <g>
+      <g filter="url(#rowShadow)">
+        <rect x="24" y="198" width="232" height="28" rx="14" fill="url(#rowBg)"/>
+        <rect x="24" y="198" width="232" height="28" rx="14" fill="none" stroke="#DDE6FF" opacity="0.8"/>
+        <path d="M28 202 H252" stroke="#FFFFFF" stroke-width="2" opacity="0.65" stroke-linecap="round"/>
+      </g>
+
+      <circle cx="46" cy="212" r="14" fill="#A855F7" opacity="0.18" filter="url(#bokeh)"/>
+
+      <circle cx="47" cy="212" r="9" fill="#8B5CF6" opacity="0.95"/>
+      <text x="47" y="215.5" text-anchor="middle" class="mini" fill="#F5F3FF">C+</text>
+
+      <text x="66" y="216" class="label" fill="#4C1D95">C++</text>
+      <text x="244" y="216" text-anchor="end" class="pct" fill="#7C3AED">8%</text>
+
+      <g aria-label="progress-cpp">
+        <g fill="#E7ECFF" opacity="0.9">
+          <rect x="66"  y="221" width="6" height="1" rx="2"/>
+          <rect x="76"  y="221" width="6" height="1" rx="2"/>
+          <rect x="86"  y="221" width="6" height="1" rx="2"/>
+          <rect x="96"  y="220" width="6" height="2" rx="2"/>
+          <rect x="106" y="220" width="6" height="2" rx="2"/>
+          <rect x="116" y="220" width="6" height="2" rx="2"/>
+          <rect x="126" y="220" width="6" height="2" rx="2"/>
+          <rect x="136" y="220" width="6" height="2" rx="2"/>
+          <rect x="146" y="219" width="6" height="3" rx="2"/>
+          <rect x="156" y="219" width="6" height="3" rx="2"/>
+          <rect x="166" y="219" width="6" height="3" rx="2"/>
+          <rect x="176" y="219" width="6" height="3" rx="2"/>
+          <rect x="186" y="219" width="6" height="3" rx="2"/>
+          <rect x="196" y="218" width="6" height="4" rx="2"/>
+          <rect x="206" y="218" width="6" height="4" rx="2"/>
+          <rect x="216" y="218" width="6" height="4" rx="2"/>
+        </g>
+
+        <g fill="url(#gCpp)" filter="url(#barGlow)">
+          <rect x="66" y="221" width="6" height="1" rx="2"/>
+        </g>
+      </g>
+    </g>
+
+    <!-- ========== Row 6: Ruby (7% => 1/16 bars filled) ========== -->
+    <g>
+      <g filter="url(#rowShadow)">
+        <rect x="24" y="232" width="232" height="28" rx="14" fill="url(#rowBg)"/>
+        <rect x="24" y="232" width="232" height="28" rx="14" fill="none" stroke="#FFD5DF" opacity="0.65"/>
+        <path d="M28 236 H252" stroke="#FFFFFF" stroke-width="2" opacity="0.65" stroke-linecap="round"/>
+      </g>
+
+      <circle cx="46" cy="246" r="14" fill="#FB7185" opacity="0.18" filter="url(#bokeh)"/>
+
+      <path d="M47 237 L55 244 L47 255 L39 244 Z" fill="#F43F5E" opacity="0.95"/>
+      <path d="M47 237 L52 244 L47 244 Z" fill="#FB7185" opacity="0.95"/>
+      <path d="M47 237 L42 244 L47 244 Z" fill="#E11D48" opacity="0.95"/>
+
+      <text x="66" y="250" class="label" fill="#9F1239">Ruby</text>
+      <text x="244" y="250" text-anchor="end" class="pct" fill="#E11D48">7%</text>
+
+      <g aria-label="progress-ruby">
+        <g fill="#E7ECFF" opacity="0.9">
+          <rect x="66"  y="255" width="6" height="1" rx="2"/>
+          <rect x="76"  y="255" width="6" height="1" rx="2"/>
+          <rect x="86"  y="255" width="6" height="1" rx="2"/>
+          <rect x="96"  y="254" width="6" height="2" rx="2"/>
+          <rect x="106" y="254" width="6" height="2" rx="2"/>
+          <rect x="116" y="254" width="6" height="2" rx="2"/>
+          <rect x="126" y="254" width="6" height="2" rx="2"/>
+          <rect x="136" y="254" width="6" height="2" rx="2"/>
+          <rect x="146" y="253" width="6" height="3" rx="2"/>
+          <rect x="156" y="253" width="6" height="3" rx="2"/>
+          <rect x="166" y="253" width="6" height="3" rx="2"/>
+          <rect x="176" y="253" width="6" height="3" rx="2"/>
+          <rect x="186" y="253" width="6" height="3" rx="2"/>
+          <rect x="196" y="252" width="6" height="4" rx="2"/>
+          <rect x="206" y="252" width="6" height="4" rx="2"/>
+          <rect x="216" y="252" width="6" height="4" rx="2"/>
+        </g>
+
+        <g fill="url(#gRuby)" filter="url(#barGlow)">
+          <rect x="66" y="255" width="6" height="1" rx="2"/>
+        </g>
+      </g>
+    </g>
+
+  </g>
+</svg>

@@ -82,8 +82,8 @@ serve(async (req) => {
         paddingRight: parseInt(url.searchParams.get('paddingRight') || '25'),
         paddingBottom: parseInt(url.searchParams.get('paddingBottom') || '25'),
         paddingLeft: parseInt(url.searchParams.get('paddingLeft') || '25'),
-        width: parseInt(url.searchParams.get('width') || '495'),
-        height: parseInt(url.searchParams.get('height') || '195'),
+        width: url.searchParams.get('width') ? parseInt(url.searchParams.get('width')!) : undefined,
+        height: url.searchParams.get('height') ? parseInt(url.searchParams.get('height')!) : undefined,
         customText: url.searchParams.get('customText') || '',
         animate: url.searchParams.get('animate') !== 'false',
         animation: url.searchParams.get('animation') || 'fadeIn',
@@ -196,8 +196,6 @@ function generateSVG(params: CardParams): string {
     paddingRight = 25,
     paddingBottom = 25,
     paddingLeft = 25,
-    width = 495,
-    height = 195,
     customText = '',
     animate = true,
     animation = 'fadeIn',
@@ -216,6 +214,14 @@ function generateSVG(params: CardParams): string {
     activity,
     quote,
   } = params;
+
+  // Type-specific default dimensions
+  const defaultDimensions: Record<string, { width: number; height: number }> = {
+    languages: { width: 300, height: 300 },
+  };
+  const defaults = defaultDimensions[type] || { width: 495, height: 195 };
+  const width = params.width || defaults.width;
+  const height = params.height || defaults.height;
 
   const borderStyle = showBorder
     ? `stroke="${borderColor}" stroke-width="2"`
@@ -462,97 +468,166 @@ function generateStatsSVG(p: any): string {
 function generateLanguagesSVG(p: any): string {
   const { languages, animate } = p;
   const langs = languages.slice(0, 6);
-  // Use padding from parameters with sensible defaults
-  const leftPadding = p.paddingLeft ?? 44;
-  const topPadding = p.paddingTop ?? 25;
-  const rightPadding = p.paddingRight ?? 44;
-  const bottomPadding = p.paddingBottom ?? 25;
-  const barWidth = p.width - leftPadding - rightPadding; // Full width minus padding
-  const barHeight = 12;
 
-  // Generate the stacked progress bar segments
-  let barSegments = '';
-  let currentX = 0;
+  // Card dimensions (language card uses taller resolution)
+  const cardWidth = p.width || 300;
+  const cardHeight = p.height || 300;
+  const rowHeight = 28;
+  const rowGap = 6;
+  const maxBarWidth = 145;
 
-  for (let i = 0; i < langs.length; i++) {
-    const lang = langs[i];
-    const segmentWidth = barWidth * (lang.percentage / 100);
-    barSegments += `<rect x="${currentX}" y="0" width="${segmentWidth}" height="${barHeight}" fill="${lang.color}"/>`;
-    currentX += segmentWidth + 1; // 1px gap between segments
-  }
+  // Get max percentage for scaling
+  const maxPercentage = Math.max(...langs.map((l: any) => l.percentage), 35);
 
-  // Generate the legend - 2 columns, 3 rows each
-  let leftColumn = '';
-  let rightColumn = '';
-  const rowSpacing = 28;
+  // Language-specific gradient colors
+  const langGradients: Record<string, { start: string; end: string; pct: string }> = {
+    'JavaScript': { start: '#FDE047', end: '#F59E0B', pct: '#F59E0B' },
+    'TypeScript': { start: '#22D3EE', end: '#0284C7', pct: '#0284C7' },
+    'Python': { start: '#38BDF8', end: '#2563EB', pct: '#2563EB' },
+    'Go': { start: '#67E8F9', end: '#0EA5E9', pct: '#0EA5E9' },
+    'C++': { start: '#C084FC', end: '#6D28D9', pct: '#7C3AED' },
+    'C': { start: '#A3A3A3', end: '#525252', pct: '#525252' },
+    'Ruby': { start: '#FB7185', end: '#E11D48', pct: '#E11D48' },
+    'Rust': { start: '#FB923C', end: '#EA580C', pct: '#EA580C' },
+    'Java': { start: '#F87171', end: '#DC2626', pct: '#DC2626' },
+    'PHP': { start: '#A78BFA', end: '#7C3AED', pct: '#7C3AED' },
+    'HTML': { start: '#FB923C', end: '#EA580C', pct: '#EA580C' },
+    'CSS': { start: '#60A5FA', end: '#2563EB', pct: '#2563EB' },
+    'Shell': { start: '#4ADE80', end: '#16A34A', pct: '#16A34A' },
+    'Swift': { start: '#FB923C', end: '#F97316', pct: '#F97316' },
+    'Kotlin': { start: '#A78BFA', end: '#7C3AED', pct: '#7C3AED' },
+    'Dart': { start: '#22D3EE', end: '#0891B2', pct: '#0891B2' },
+    'Vue': { start: '#4ADE80', end: '#059669', pct: '#059669' },
+    'default': { start: '#94A3B8', end: '#475569', pct: '#475569' },
+  };
 
-  for (let i = 0; i < langs.length; i++) {
-    const lang = langs[i];
-    const col = i < 3 ? 0 : 1;
-    const row = i < 3 ? i : i - 3;
-    const delayClass = animate ? `class="animate delay-${i + 1}"` : '';
+  // Get short name for badge
+  const getBadge = (name: string): string => {
+    const badges: Record<string, string> = {
+      'JavaScript': 'JS', 'TypeScript': 'TS', 'Python': 'Py', 'C++': 'C+',
+      'C#': 'C#', 'Go': 'Go', 'Ruby': '💎', 'Rust': 'Rs', 'Java': 'Jv',
+      'PHP': 'PH', 'HTML': 'HT', 'CSS': 'CS', 'Shell': 'SH', 'Swift': 'Sw',
+      'Kotlin': 'Kt', 'Dart': 'Dt', 'Vue': 'Vu', 'C': 'C',
+    };
+    return badges[name] || name.substring(0, 2).toUpperCase();
+  };
 
-    const item = `<g transform="translate(0, ${row * rowSpacing})">
-      <circle cx="6" cy="6" r="6" fill="${lang.color}"/>
-      <text x="22" y="6" class="lang-label" font-weight="700" dominant-baseline="middle">${lang.name} <tspan font-weight="400">${lang.percentage.toFixed(2)}%</tspan></text>
+  // Generate gradient definitions
+  let gradientDefs = '';
+  langs.forEach((lang: any, i: number) => {
+    const grad = langGradients[lang.name] || langGradients['default'];
+    gradientDefs += `
+    <linearGradient id="gLang${i}" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="${grad.start}"/>
+      <stop offset="1" stop-color="${grad.end}"/>
+    </linearGradient>`;
+  });
+
+  // Generate rows
+  let rows = '';
+  langs.forEach((lang: any, i: number) => {
+    const y = 62 + i * (rowHeight + rowGap);
+    const barWidth = Math.max((lang.percentage / maxPercentage) * maxBarWidth, 20);
+    const grad = langGradients[lang.name] || langGradients['default'];
+    const badge = getBadge(lang.name);
+    const delayClass = animate ? `class="delay-${i + 1}"` : '';
+
+    rows += `
+    <!-- Row ${i + 1}: ${lang.name} -->
+    <g ${delayClass}>
+      <g filter="url(#rowShadow)">
+        <rect x="24" y="${y}" width="232" height="${rowHeight}" rx="14" fill="url(#rowBg)"/>
+        <rect x="24" y="${y}" width="232" height="${rowHeight}" rx="14" fill="none" stroke="#DDE6FF" stroke-opacity="0.8"/>
+        <path d="M28 ${y + 4} H252" stroke="#FFFFFF" stroke-width="2" opacity="0.65" stroke-linecap="round"/>
+      </g>
+      
+      <!-- Subtle glow -->
+      <circle cx="40" cy="${y + 14}" r="14" fill="${grad.start}" opacity="0.2" filter="url(#bokeh)"/>
+      
+      <!-- Badge -->
+      <rect x="32" y="${y + 5}" width="18" height="18" rx="6" fill="${grad.start}" opacity="0.95"/>
+      <text x="41" y="${y + 18}" text-anchor="middle" class="mini" fill="#111827">${badge}</text>
+      
+      <!-- Label & Percentage -->
+      <text x="58" y="${y + 18}" class="label">${lang.name}</text>
+      <text x="244" y="${y + 18}" text-anchor="end" class="pct" fill="${grad.pct}">${Math.round(lang.percentage)}%</text>
+      
+      <!-- Progress Bar -->
+      <rect x="58" y="${y + 20}" width="${barWidth}" height="6" rx="3" fill="url(#gLang${i})" filter="url(#barGlow)"/>
     </g>`;
+  });
 
-    if (col === 0) {
-      leftColumn += item;
-    } else {
-      rightColumn += item;
-    }
-  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${cardWidth}" height="${cardHeight}" viewBox="0 0 ${cardWidth} ${cardHeight}">
+  <defs>
+    <!-- Card background gradient -->
+    <linearGradient id="cardBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#EAF5FF"/>
+      <stop offset="0.55" stop-color="#F2F0FF"/>
+      <stop offset="1" stop-color="#FFF1F7"/>
+    </linearGradient>
 
-  const columnOffset = Math.floor((p.width - leftPadding) / 2);
+    <!-- Row background -->
+    <linearGradient id="rowBg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F6F8FF"/>
+    </linearGradient>
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${p.width}" height="${p.height}" viewBox="0 0 ${p.width} ${p.height}">
-  ${p.gradientDefs || ''}
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap');
-    .title { font: 600 18px 'Inter', sans-serif; fill: ${p.primaryColor}; }
-    .lang-label { font: 400 12px 'Inter', sans-serif; fill: ${p.textColor}; }
-    ${animate ? `
-    @keyframes fadeIn {
-      0% { opacity: 0; transform: translateY(-10px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-    .animate { animation: fadeIn 0.8s ease-out forwards; opacity: 0; }
-    .delay-1 { animation-delay: 0.1s; }
-    .delay-2 { animation-delay: 0.2s; }
-    .delay-3 { animation-delay: 0.3s; }
-    .delay-4 { animation-delay: 0.4s; }
-    .delay-5 { animation-delay: 0.5s; }
-    .delay-6 { animation-delay: 0.6s; }
-    ` : ''}
-  </style>
-  
-  <rect x="1" y="1" width="${p.width - 2}" height="${p.height - 2}" rx="${p.borderRadius}" fill="${p.bgColor}" ${p.showBorder ? `stroke="${p.borderColor}" stroke-width="2"` : ''}/>
-  
-  <g transform="translate(${leftPadding}, ${topPadding})" ${animate ? 'class="animate"' : ''}>
-    <text x="0" y="18" class="title">Most Used Languages</text>
-    
-    <!-- Progress Bar -->
-    <g transform="translate(0, 40)">
-      <defs>
-        <clipPath id="barClip">
-          <rect width="${barWidth}" height="${barHeight}" rx="5"/>
-        </clipPath>
-      </defs>
-      <g clip-path="url(#barClip)">
-        ${barSegments}
-      </g>
+    ${gradientDefs}
+
+    <!-- Shadows -->
+    <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#2B3A67" flood-opacity="0.18"/>
+    </filter>
+    <filter id="rowShadow" x="-20%" y="-50%" width="140%" height="200%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#2B3A67" flood-opacity="0.12"/>
+    </filter>
+    <filter id="barGlow" x="-30%" y="-200%" width="160%" height="500%">
+      <feGaussianBlur stdDeviation="1.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="bokeh" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+
+    <style>
+      .title { font: 700 18px/1.2 Inter, system-ui, sans-serif; fill: #1F3B7A; }
+      .label { font: 700 13px/1.2 Inter, system-ui, sans-serif; fill: #2B3A67; }
+      .pct   { font: 800 13px/1.2 Inter, system-ui, sans-serif; }
+      .mini  { font: 800 9px/1.0 Inter, system-ui, sans-serif; }
+      ${animate ? `
+      @keyframes fadeIn { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
+      .card { animation: fadeIn 0.4s ease-out forwards; opacity: 0; }
+      .delay-1 { animation: fadeIn 0.4s ease-out 0.1s forwards; opacity: 0; }
+      .delay-2 { animation: fadeIn 0.4s ease-out 0.15s forwards; opacity: 0; }
+      .delay-3 { animation: fadeIn 0.4s ease-out 0.2s forwards; opacity: 0; }
+      .delay-4 { animation: fadeIn 0.4s ease-out 0.25s forwards; opacity: 0; }
+      .delay-5 { animation: fadeIn 0.4s ease-out 0.3s forwards; opacity: 0; }
+      .delay-6 { animation: fadeIn 0.4s ease-out 0.35s forwards; opacity: 0; }
+      ` : ''}
+    </style>
+  </defs>
+
+  <!-- Card -->
+  <g filter="url(#cardShadow)" ${animate ? 'class="card"' : ''}>
+    <rect x="10" y="10" width="${cardWidth - 20}" height="${cardHeight - 20}" rx="22" fill="url(#cardBg)"/>
+
+    <!-- Soft bokeh dots -->
+    <g filter="url(#bokeh)" opacity="0.55">
+      <circle cx="${cardWidth - 55}" cy="34" r="12" fill="#FDE68A"/>
+      <circle cx="${cardWidth - 34}" cy="44" r="10" fill="#C7D2FE"/>
+      <circle cx="${cardWidth - 45}" cy="56" r="9" fill="#FDA4AF"/>
     </g>
-    
-    <!-- Legend -->
-    <g transform="translate(0, 70)">
-      <g transform="translate(0, 0)">
-        ${leftColumn}
-      </g>
-      <g transform="translate(${columnOffset}, 0)">
-        ${rightColumn}
-      </g>
+
+    <!-- Header icon + title -->
+    <g transform="translate(26 28)">
+      <path d="M10 3 L4 9 L10 15" fill="none" stroke="#7C3AED" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M22 3 L28 9 L22 15" fill="none" stroke="#38BDF8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M16 2 L13 9 L17 9 L14 16" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
     </g>
+    <text x="58" y="42" class="title">Top Languages</text>
+
+    <!-- Language Rows -->
+    ${rows}
   </g>
 </svg>`;
 }
