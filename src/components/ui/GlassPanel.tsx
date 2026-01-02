@@ -10,9 +10,9 @@ interface GlassPanelProps {
   active?: boolean;
 }
 
-export function GlassPanel({ 
-  children, 
-  className, 
+export function GlassPanel({
+  children,
+  className,
   glow = "none",
   hover = false,
   accent = "none",
@@ -42,10 +42,10 @@ export function GlassPanel({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl p-6 transition-all duration-300",
-        "backdrop-blur-2xl",
+        "relative overflow-hidden rounded-2xl p-6 transition-all duration-500",
+        "backdrop-blur-2xl group",
         "text-white",
-        hover && "hover:scale-[1.02] cursor-pointer hover:shadow-[0_8px_40px_-8px_rgba(255,255,255,0.1)]",
+        hover && "cursor-pointer hover:shadow-[0_8px_40px_-8px_rgba(255,255,255,0.1)]",
         glow === "primary" && "shadow-glow",
         glow === "secondary" && "shadow-glow-secondary",
         className
@@ -53,13 +53,13 @@ export function GlassPanel({
       style={{
         background: `linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)`,
         border: `1px solid ${accentEdgeColors[accent]}`,
-        boxShadow: active 
-          ? `0 0 60px -8px ${glowColors[accent]}, 
-             0 4px 30px rgba(0, 0, 0, 0.3), 
+        boxShadow: active
+          ? `0 0 60px -8px ${glowColors[accent]},
+             0 4px 30px rgba(0, 0, 0, 0.3),
              0 0 0 1px rgba(255, 255, 255, 0.05),
              inset 0 1px 0 rgba(255, 255, 255, 0.1),
              inset 0 -1px 0 rgba(0, 0, 0, 0.1)`
-          : `0 4px 30px rgba(0, 0, 0, 0.2), 
+          : `0 4px 30px rgba(0, 0, 0, 0.2),
              0 0 0 1px rgba(255, 255, 255, 0.03),
              inset 0 1px 0 rgba(255, 255, 255, 0.08),
              inset 0 -1px 0 rgba(0, 0, 0, 0.05)`,
@@ -67,10 +67,20 @@ export function GlassPanel({
         "--glow-color": glowColors[accent],
       } as React.CSSProperties}
     >
+      {/* Interactive hover gradient that follows cursor - approximated with large radial gradient on hover */}
+      {hover && (
+        <div
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+          style={{
+            background: `radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), ${particleColors[accent].replace('0.6', '0.1')}, transparent 40%)`
+          }}
+        />
+      )}
+
       {/* Frost particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Particle 1 */}
-        <div 
+        <div
           className="absolute w-1 h-1 rounded-full"
           style={{
             background: particleColors[accent],
@@ -81,7 +91,7 @@ export function GlassPanel({
           }}
         />
         {/* Particle 2 */}
-        <div 
+        <div
           className="absolute w-0.5 h-0.5 rounded-full"
           style={{
             background: particleColors[accent],
@@ -93,7 +103,7 @@ export function GlassPanel({
           }}
         />
         {/* Particle 3 */}
-        <div 
+        <div
           className="absolute w-1.5 h-1.5 rounded-full"
           style={{
             background: particleColors[accent],
@@ -106,7 +116,7 @@ export function GlassPanel({
           }}
         />
         {/* Particle 4 */}
-        <div 
+        <div
           className="absolute w-0.5 h-0.5 rounded-full"
           style={{
             background: particleColors[accent],
@@ -118,7 +128,7 @@ export function GlassPanel({
           }}
         />
         {/* Particle 5 */}
-        <div 
+        <div
           className="absolute w-1 h-1 rounded-full"
           style={{
             background: particleColors[accent],
@@ -130,7 +140,7 @@ export function GlassPanel({
           }}
         />
         {/* Shimmer overlay */}
-        <div 
+        <div
           className="absolute inset-0"
           style={{
             background: `radial-gradient(ellipse at 50% 0%, ${particleColors[accent]}, transparent 60%)`,
@@ -140,23 +150,23 @@ export function GlassPanel({
       </div>
 
       {/* Top highlight edge */}
-      <div 
+      <div
         className="absolute top-0 left-0 right-0 h-px"
         style={{
           background: `linear-gradient(90deg, transparent 10%, ${accentEdgeColors[accent]} 50%, transparent 90%)`
         }}
       />
-      
+
       {/* Left edge highlight */}
-      <div 
+      <div
         className="absolute top-0 left-0 bottom-0 w-px"
         style={{
           background: `linear-gradient(180deg, ${accentEdgeColors[accent]} 0%, transparent 50%, rgba(255,255,255,0.05) 100%)`
         }}
       />
-      
+
       {/* Slice animation border effect */}
-      <div 
+      <div
         className="absolute inset-0 rounded-2xl pointer-events-none"
         style={{
           background: `linear-gradient(90deg, transparent 25%, ${glowColors[accent]} 50%, transparent 75%)`,
@@ -169,27 +179,27 @@ export function GlassPanel({
           padding: '1px',
         }}
       />
-      
+
       {/* Inner frost effect */}
-      <div 
+      <div
         className="absolute inset-0 rounded-2xl pointer-events-none opacity-30"
         style={{
           background: `radial-gradient(ellipse at 30% 0%, rgba(255,255,255,0.1), transparent 50%)`
         }}
       />
-      
+
       <div className="relative z-10">{children}</div>
     </div>
   );
 }
 
 // Inner frosted glass sub-panel component
-export function GlassInnerPanel({ 
-  children, 
+export function GlassInnerPanel({
+  children,
   className,
   accent = "none"
-}: { 
-  children: ReactNode; 
+}: {
+  children: ReactNode;
   className?: string;
   accent?: "green" | "teal" | "purple" | "none";
 }) {
@@ -203,7 +213,7 @@ export function GlassInnerPanel({
   return (
     <div
       className={cn(
-        "relative rounded-xl overflow-hidden backdrop-blur-sm",
+        "relative rounded-xl overflow-hidden backdrop-blur-sm transition-all duration-300",
         className
       )}
       style={{
@@ -217,7 +227,7 @@ export function GlassInnerPanel({
       }}
     >
       {/* Top edge frost highlight */}
-      <div 
+      <div
         className="absolute top-0 left-2 right-2 h-px"
         style={{
           background: `linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)`
