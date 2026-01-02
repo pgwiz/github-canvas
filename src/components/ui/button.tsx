@@ -15,7 +15,7 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        premium: "bg-gradient-to-r from-primary to-secondary text-primary-foreground hover:shadow-lg hover:shadow-primary/20 hover:scale-105 active:scale-95 border-none",
+        premium: "group relative overflow-hidden bg-gradient-to-r from-primary to-secondary text-primary-foreground hover:shadow-lg hover:shadow-primary/20 hover:scale-105 active:scale-95 border-none",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -38,9 +38,25 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, children, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
-    return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
+
+    if (variant === "premium" && !asChild) {
+      return (
+        <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props}>
+          <span className="relative z-10 flex items-center gap-2">
+            {children}
+          </span>
+          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+        </Comp>
+      );
+    }
+
+    return (
+      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props}>
+        {children}
+      </Comp>
+    );
   },
 );
 Button.displayName = "Button";
