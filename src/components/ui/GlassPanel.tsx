@@ -63,7 +63,7 @@ export function GlassPanel({
              0 0 0 1px rgba(255, 255, 255, 0.03),
              inset 0 1px 0 rgba(255, 255, 255, 0.08),
              inset 0 -1px 0 rgba(0, 0, 0, 0.05)`,
-        // @ts-ignore
+        // @ts-expect-error - Custom CSS variable not in React.CSSProperties
         "--glow-color": glowColors[accent],
       } as React.CSSProperties}
     >
