@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { CardPreview } from "@/components/generator/CardPreview";
-import { templates } from "@/components/generator/TemplateGallery";
 import { CustomizationPanel } from "@/components/generator/CustomizationPanel";
 import { LinkGenerator } from "@/components/generator/LinkGenerator";
 import { Search, Sparkles, RefreshCw } from "lucide-react";
@@ -15,6 +14,8 @@ import { useGitHubStats, GitHubStats } from "@/hooks/useGitHubStats";
 import { useDevQuote, DevQuote } from "@/hooks/useDevQuote";
 import { useQuoteOfTheDay } from "@/hooks/useQuoteOfTheDay";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ThemeSelector } from "@/components/generator/ThemeSelector";
+import confetti from "canvas-confetti";
 
 export type CardType = "stats" | "languages" | "streak" | "activity" | "quote" | "custom" | "banner" | "contribution";
 
@@ -143,6 +144,13 @@ export default function Generator() {
 
     if (result) {
       setGithubData(result);
+      // Trigger confetti on success
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#0CF709', '#00e1ff', '#ffffff'] // Neon colors from theme
+      });
       toast({
         title: "Stats fetched!",
         description: `Successfully fetched data for ${config.username}`,
@@ -319,38 +327,10 @@ export default function Generator() {
               )}
 
               {/* Template Gallery */}
-              <GlassPanel accent="purple">
-                <Label className="text-lg font-semibold mb-4 block">
-                  Choose a Template
-                </Label>
-                <Select
-                  value={config.theme}
-                  onValueChange={(v) => updateConfig({ theme: v })}
-                >
-                  <SelectTrigger className="w-full h-12 bg-background/30 backdrop-blur-sm border-border/30">
-                    <SelectValue placeholder="Select a theme" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
-                    {templates.map((t) => (
-                      <SelectItem key={t.id} value={t.id} className="cursor-pointer">
-                        <div className="flex items-center gap-3">
-                          <div className="flex gap-1">
-                            <div
-                              className="w-3 h-3 rounded-full shadow-sm"
-                              style={{ backgroundColor: t.colors.primary }}
-                            />
-                            <div
-                              className="w-3 h-3 rounded-full shadow-sm"
-                              style={{ backgroundColor: t.colors.secondary }}
-                            />
-                          </div>
-                          <span className="font-medium">{t.name}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </GlassPanel>
+              <ThemeSelector
+                selectedTheme={config.theme}
+                onSelectTheme={(theme) => updateConfig({ theme })}
+              />
 
               {/* Customization Panel */}
               <GlassPanel accent="green">
