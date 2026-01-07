@@ -2,9 +2,10 @@ import { CardConfig } from "@/pages/Generator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Copy, Check, Image, Code, FileText, Twitter, Linkedin, Download, Link2 } from "lucide-react";
+import { Copy, Check, Image, Code, FileText, Twitter, Linkedin, Download, Link2, Sparkles } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface LinkGeneratorProps {
   config: CardConfig;
@@ -62,6 +63,8 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
       toast({
         title: "Copied!",
         description: "Link copied to clipboard",
+        // @ts-expect-error - Action is valid for toast but types might be strict
+        action: <Sparkles className="w-5 h-5 text-primary animate-pulse" />,
       });
       setTimeout(() => setCopiedTab(null), 2000);
     } catch (err) {
@@ -179,20 +182,36 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
     window.open(linkedinUrl, '_blank', 'width=600,height=400');
   };
 
-  const CopyButton = ({ text, tab }: { text: string; tab: string }) => (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => copyToClipboard(text, tab)}
-      className="shrink-0 bg-background/30 backdrop-blur-sm border-border/30"
-    >
-      {copiedTab === tab ? (
-        <Check className="w-4 h-4 text-primary" />
-      ) : (
-        <Copy className="w-4 h-4" />
-      )}
-    </Button>
-  );
+  const CopyButton = ({ text, tab }: { text: string; tab: string }) => {
+    const isCopied = copiedTab === tab;
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => copyToClipboard(text, tab)}
+        className={cn(
+          "shrink-0 transition-all duration-300 relative overflow-hidden",
+          isCopied ? "bg-primary/20 border-primary/50 text-primary w-24" : "bg-background/30 backdrop-blur-sm border-border/30 w-10 hover:w-12 hover:bg-background/50"
+        )}
+      >
+        <div className="relative flex items-center justify-center">
+            <Check
+                className={cn(
+                    "w-4 h-4 text-primary absolute transition-all duration-300",
+                    isCopied ? "scale-100 opacity-100 rotate-0" : "scale-0 opacity-0 rotate-90"
+                )}
+            />
+            <Copy
+                className={cn(
+                    "w-4 h-4 transition-all duration-300",
+                    isCopied ? "scale-0 opacity-0 -rotate-90" : "scale-100 opacity-100 rotate-0"
+                )}
+            />
+        </div>
+        {isCopied && <span className="ml-2 animate-in fade-in slide-in-from-left-1 duration-200 text-xs font-bold">Copied</span>}
+      </Button>
+    );
+  };
 
   return (
     <div className="relative rounded-lg overflow-hidden">
@@ -204,12 +223,12 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
           {config.type === "quote" && (
             <Button
               onClick={() => copyToClipboard(imageUrl, "quoteUrl")}
-              className="w-full bg-primary/20 hover:bg-primary/30 border border-primary/30"
+              className="w-full bg-primary/20 hover:bg-primary/30 border border-primary/30 transition-all active:scale-[0.98]"
               variant="outline"
             >
               {copiedTab === "quoteUrl" ? (
                 <>
-                  <Check className="w-4 h-4 mr-2 text-primary" />
+                  <Check className="w-4 h-4 mr-2 text-primary animate-bounce" />
                   Copied!
                 </>
               ) : (
@@ -227,7 +246,7 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
               variant="outline"
               onClick={downloadAsSVG}
               disabled={isDownloading}
-              className="flex-1 min-w-[120px] bg-background/30 backdrop-blur-sm border-border/30 hover:bg-background/50"
+              className="flex-1 min-w-[120px] bg-background/30 backdrop-blur-sm border-border/30 hover:bg-background/50 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               <Download className="w-4 h-4 mr-2" />
               SVG
@@ -236,7 +255,7 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
               variant="outline"
               onClick={downloadAsPNG}
               disabled={isDownloading}
-              className="flex-1 min-w-[120px] bg-background/30 backdrop-blur-sm border-border/30 hover:bg-background/50"
+              className="flex-1 min-w-[120px] bg-background/30 backdrop-blur-sm border-border/30 hover:bg-background/50 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               <Download className="w-4 h-4 mr-2" />
               PNG
@@ -244,7 +263,7 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
             <Button
               variant="outline"
               onClick={openTwitterShare}
-              className="flex-1 min-w-[120px] bg-background/30 backdrop-blur-sm border-border/30 hover:bg-background/50"
+              className="flex-1 min-w-[120px] bg-background/30 backdrop-blur-sm border-border/30 hover:bg-background/50 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               <Twitter className="w-4 h-4 mr-2" />
               Twitter/X
@@ -252,7 +271,7 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
             <Button
               variant="outline"
               onClick={openLinkedInShare}
-              className="flex-1 min-w-[120px] bg-background/30 backdrop-blur-sm border-border/30 hover:bg-background/50"
+              className="flex-1 min-w-[120px] bg-background/30 backdrop-blur-sm border-border/30 hover:bg-background/50 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               <Linkedin className="w-4 h-4 mr-2" />
               LinkedIn
@@ -262,26 +281,27 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
           {/* Link Tabs */}
           <Tabs defaultValue="image" className="w-full">
             <TabsList className="grid grid-cols-3 w-full mb-4 bg-background/30 backdrop-blur-sm">
-              <TabsTrigger value="image" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
+              <TabsTrigger value="image" className="flex items-center gap-2 data-[state=active]:bg-primary/20 transition-all">
                 <Image className="w-4 h-4" />
                 Image URL
               </TabsTrigger>
-              <TabsTrigger value="markdown" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
+              <TabsTrigger value="markdown" className="flex items-center gap-2 data-[state=active]:bg-primary/20 transition-all">
                 <FileText className="w-4 h-4" />
                 Markdown
               </TabsTrigger>
-              <TabsTrigger value="html" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
+              <TabsTrigger value="html" className="flex items-center gap-2 data-[state=active]:bg-primary/20 transition-all">
                 <Code className="w-4 h-4" />
                 HTML
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="image">
+            <TabsContent value="image" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="flex gap-2">
                 <Input
                   value={imageUrl}
                   readOnly
-                  className="font-mono text-xs bg-background/30 backdrop-blur-sm border-border/30"
+                  className="font-mono text-xs bg-background/30 backdrop-blur-sm border-border/30 focus-visible:ring-primary/50"
+                  onClick={(e) => e.currentTarget.select()}
                 />
                 <CopyButton text={imageUrl} tab="image" />
               </div>
@@ -290,12 +310,13 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
               </p>
             </TabsContent>
 
-            <TabsContent value="markdown">
+            <TabsContent value="markdown" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="flex gap-2">
                 <Input
                   value={markdownCode}
                   readOnly
-                  className="font-mono text-xs bg-background/30 backdrop-blur-sm border-border/30"
+                  className="font-mono text-xs bg-background/30 backdrop-blur-sm border-border/30 focus-visible:ring-primary/50"
+                  onClick={(e) => e.currentTarget.select()}
                 />
                 <CopyButton text={markdownCode} tab="markdown" />
               </div>
@@ -304,12 +325,13 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
               </p>
             </TabsContent>
 
-            <TabsContent value="html">
+            <TabsContent value="html" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="flex gap-2">
                 <Input
                   value={htmlCode}
                   readOnly
-                  className="font-mono text-xs bg-background/30 backdrop-blur-sm border-border/30"
+                  className="font-mono text-xs bg-background/30 backdrop-blur-sm border-border/30 focus-visible:ring-primary/50"
+                  onClick={(e) => e.currentTarget.select()}
                 />
                 <CopyButton text={htmlCode} tab="html" />
               </div>
