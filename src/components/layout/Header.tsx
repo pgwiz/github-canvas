@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Github, FileCode, BookOpen, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 
 const navItems = [
   { href: "/", label: "Home", icon: Sparkles },
@@ -21,7 +22,7 @@ export function Header() {
           <span className="font-bold text-lg gradient-text">GitStats</span>
         </Link>
 
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-1 p-1 rounded-full bg-secondary/30 border border-white/5 backdrop-blur-md">
           {navItems.map((item) => {
             const isActive = location.pathname === item.href;
             const Icon = item.icon;
@@ -30,14 +31,21 @@ export function Header() {
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                  isActive
-                    ? "bg-primary/20 text-primary border border-primary/50"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  "relative px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 flex items-center gap-2",
+                  isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{item.label}</span>
+                {isActive && (
+                  <motion.div
+                    layoutId="navbar-pill"
+                    className="absolute inset-0 bg-primary rounded-full shadow-glow"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                   <Icon className="w-4 h-4" />
+                   <span className="hidden sm:inline">{item.label}</span>
+                </span>
               </Link>
             );
           })}
