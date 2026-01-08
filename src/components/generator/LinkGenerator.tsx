@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Copy, Check, Image, Code, FileText, Twitter, Linkedin, Download, Link2 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
+import confetti from "canvas-confetti";
 
 interface LinkGeneratorProps {
   config: CardConfig;
@@ -59,6 +60,15 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedTab(tab);
+
+      // Trigger confetti
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#8B5CF6', '#D946EF', '#F97316', '#0EA5E9']
+      });
+
       toast({
         title: "Copied!",
         description: "Link copied to clipboard",
@@ -89,6 +99,14 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+
+      // Trigger confetti on successful download
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#8B5CF6', '#D946EF', '#F97316', '#0EA5E9']
+      });
 
       toast({
         title: "Downloaded!",
@@ -138,6 +156,14 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
               a.click();
               document.body.removeChild(a);
               URL.revokeObjectURL(url);
+
+              // Trigger confetti on successful download
+              confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#8B5CF6', '#D946EF', '#F97316', '#0EA5E9']
+              });
 
               toast({
                 title: "Downloaded!",

@@ -5,16 +5,55 @@ import { ArrowRight, Sparkles, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { GlassPanel, GlassInnerPanel } from "@/components/ui/GlassPanel";
 import { TiltCard } from "@/components/ui/TiltCard";
+import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
+import { useEffect } from "react";
 
 export function HeroSection() {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  // Smooth spring animation for mouse movement
+  const springConfig = { damping: 25, stiffness: 100 };
+  const springX = useSpring(mouseX, springConfig);
+  const springY = useSpring(mouseY, springConfig);
+
+  // Parallax transform for orbs
+  const orb1X = useTransform(springX, [-0.5, 0.5], [20, -20]);
+  const orb1Y = useTransform(springY, [-0.5, 0.5], [20, -20]);
+
+  const orb2X = useTransform(springX, [-0.5, 0.5], [-30, 30]);
+  const orb2Y = useTransform(springY, [-0.5, 0.5], [-30, 30]);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      // Normalize mouse position from -0.5 to 0.5
+      const { innerWidth, innerHeight } = window;
+      mouseX.set((e.clientX / innerWidth) - 0.5);
+      mouseY.set((e.clientY / innerHeight) - 0.5);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
+
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Background grid */}
       <SpotlightGrid opacity={0.15} spotlightRadius={400} />
 
-      {/* Gradient orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[120px] animate-pulse-glow" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/20 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: "1s" }} />
+      {/* Gradient orbs with Parallax */}
+      <motion.div
+        style={{ x: orb1X, y: orb1Y }}
+        className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[120px] animate-pulse-glow"
+      />
+      <motion.div
+        style={{ x: orb2X, y: orb2Y }}
+        className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/20 rounded-full blur-[120px] animate-pulse-glow"
+        // Note: We can't use style={{ animationDelay: "1s" }} directly with motion.div if we are also binding style.x/y
+        // but className animations are CSS based so they work independently.
+        // However, to be safe and avoid conflicts, we can wrap orbs in a container or use animate prop.
+        // For simplicity, keeping the CSS animation class.
+      />
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
