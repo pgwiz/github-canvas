@@ -5,6 +5,7 @@ import { ArrowRight, Sparkles, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { GlassPanel, GlassInnerPanel } from "@/components/ui/GlassPanel";
 import { TiltCard } from "@/components/ui/TiltCard";
+import { HackerText } from "@/components/ui/HackerText";
 
 export function HeroSection() {
   return (
@@ -27,7 +28,9 @@ export function HeroSection() {
           {/* Main heading */}
           <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
             <span className="text-foreground">Beautiful </span>
-            <span className="gradient-text text-glow-primary">GitHub Stats</span>
+            <span className="gradient-text text-glow-primary">
+              <HackerText text="GitHub Stats" speed={50} />
+            </span>
             <br />
             <span className="text-foreground">For Your README</span>
           </h1>
