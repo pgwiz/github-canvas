@@ -4,6 +4,7 @@ import { Github, FileCode, BookOpen, Sparkles, Search } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useCommandMenu } from "./command-menu-context";
+import { MagneticButton } from "@/components/ui/MagneticButton";
 
 const navItems = [
   { href: "/", label: "Home", icon: Sparkles },
@@ -59,7 +60,7 @@ export function Header() {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3 group relative z-10">
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:border-primary/50 group-hover:shadow-[0_0_15px_rgba(12,247,9,0.3)] transition-all duration-300">
-            <Github className="w-5 h-5 text-primary transition-transform group-hover:scale-110" />
+            <Github className="w-5 h-5 text-primary transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" />
           </div>
           <span className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70 group-hover:from-primary group-hover:to-secondary transition-all duration-300">GitStats</span>
         </Link>
@@ -70,24 +71,32 @@ export function Header() {
               const isActive = location.pathname === item.href;
               const Icon = item.icon;
               return (
-                <Link
+                <MagneticButton
                   key={item.href}
-                  to={item.href}
-                  className={cn(
-                    "relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors z-10",
-                    isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  )}
+                  asChild
+                  strength={0.2}
+                  activeScale={0.95}
+                  shimmer={false}
+                  className="bg-transparent hover:bg-transparent border-none p-0"
                 >
-                  {isActive && (
-                    <motion.div
-                      layoutId="nav-pill"
-                      className="absolute inset-0 bg-primary rounded-full z-[-1]"
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    />
-                  )}
-                  <Icon className="w-4 h-4" />
-                  <span className="hidden sm:inline">{item.label}</span>
-                </Link>
+                  <Link
+                    to={item.href}
+                    className={cn(
+                      "relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors z-10",
+                      isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="nav-pill"
+                        className="absolute inset-0 bg-primary rounded-full z-[-1]"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    )}
+                    <Icon className="w-4 h-4" />
+                    <span className="hidden sm:inline">{item.label}</span>
+                  </Link>
+                </MagneticButton>
               );
             })}
           </nav>
