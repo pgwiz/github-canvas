@@ -1,10 +1,11 @@
 import { GlassPanel } from "@/components/ui/GlassPanel";
-import { SpotlightCard } from "@/components/ui/SpotlightCard";
-import { 
-  Palette, 
-  Zap, 
-  Share2, 
-  Code2, 
+import { Spotlight } from "@/components/ui/Spotlight";
+import { Reveal } from "@/components/ui/Reveal";
+import {
+  Palette,
+  Zap,
+  Share2,
+  Code2,
   Layout,
   Quote,
   Image
@@ -77,35 +78,36 @@ export function FeaturesSection() {
             Powerful features to create stunning GitHub profile visualizations
           </p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
-              <SpotlightCard
-                key={index}
-                className="h-full rounded-2xl group cursor-pointer hover:scale-[1.02] hover:shadow-[0_8px_40px_-8px_rgba(255,255,255,0.1)] transition-all duration-300"
-                spotlightColor="rgba(255, 255, 255, 0.15)"
-              >
-                <GlassPanel accent={feature.accent} className="h-full border-0 bg-opacity-50">
-                  <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
-                    style={{
-                      background: 'transparent',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                    }}
-                  >
-                    <Icon className={`w-7 h-7 ${feature.iconColor}`} />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-white">
-                    {feature.title}
-                  </h3>
-                  <p className="text-white/60">
-                    {feature.description}
-                  </p>
-                </GlassPanel>
-              </SpotlightCard>
+              <Reveal key={index} delay={0.1 * index} className="h-full" width="100%">
+                <Spotlight
+                  className="h-full rounded-2xl group cursor-pointer hover:scale-[1.02] hover:shadow-[0_8px_40px_-8px_rgba(255,255,255,0.1)] transition-all duration-300"
+                  fill="rgba(255, 255, 255, 0.15)"
+                >
+                  <GlassPanel accent={feature.accent} className="h-full border-0 bg-opacity-50">
+                    <div
+                      className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+                      style={{
+                        background: 'transparent',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                      }}
+                    >
+                      <Icon className={`w-7 h-7 ${feature.iconColor}`} />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2 text-white">
+                      {feature.title}
+                    </h3>
+                    <p className="text-white/60">
+                      {feature.description}
+                    </p>
+                  </GlassPanel>
+                </Spotlight>
+              </Reveal>
             );
           })}
         </div>

@@ -4,6 +4,8 @@ import { ArrowRight, Sparkles, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { GlassPanel, GlassInnerPanel } from "@/components/ui/GlassPanel";
 import { TiltCard } from "@/components/ui/TiltCard";
+import { MockCard } from "@/components/home/MockCard";
+import { GradientText } from "@/components/ui/GradientText";
 import { motion, useSpring, useMotionValue, useTransform } from "framer-motion";
 import { useEffect } from "react";
 
@@ -104,12 +106,14 @@ export function HeroSection() {
               Beautiful{" "}
             </motion.span>
             <motion.span
-              className="gradient-text text-glow-primary inline-block"
+              className="inline-block"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.2, type: "spring" }}
             >
-              GitHub Stats
+              <GradientText className="text-glow-primary font-bold">
+                GitHub Stats
+              </GradientText>
             </motion.span>
             <br />
             <motion.span
@@ -167,7 +171,7 @@ export function HeroSection() {
             transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
           >
             {/* User Stats Card - Green accent */}
-            <TiltCard className="h-full">
+            <TiltCard className="h-full" scale={1.05}>
               <GlassPanel hover accent="green" className="text-left h-full flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
@@ -179,15 +183,15 @@ export function HeroSection() {
                       <p className="text-sm text-white/60">Stars, commits, repos</p>
                     </div>
                   </div>
-                  <GlassInnerPanel accent="green" className="h-24 flex items-center justify-center group-hover:bg-primary/5 transition-colors">
-                    <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
+                  <GlassInnerPanel accent="green" className="h-32 flex items-center justify-center group-hover:bg-primary/5 transition-colors overflow-hidden">
+                    <MockCard type="user" />
                   </GlassInnerPanel>
                 </div>
               </GlassPanel>
             </TiltCard>
 
             {/* Streak Tracker Card - Teal accent (active/highlighted) */}
-            <TiltCard className="h-full translate-y-[-10px] md:translate-y-[-20px] z-10">
+            <TiltCard className="h-full translate-y-[-10px] md:translate-y-[-20px] z-10" scale={1.08}>
               <GlassPanel hover accent="teal" active className="text-left h-full flex flex-col justify-between animate-float">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
@@ -199,15 +203,15 @@ export function HeroSection() {
                       <p className="text-sm text-white/60">Current & longest streak</p>
                     </div>
                   </div>
-                  <GlassInnerPanel accent="teal" className="h-24 flex items-center justify-center group-hover:bg-secondary/5 transition-colors">
-                    <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
+                  <GlassInnerPanel accent="teal" className="h-32 flex items-center justify-center group-hover:bg-secondary/5 transition-colors overflow-hidden">
+                    <MockCard type="streak" />
                   </GlassInnerPanel>
                 </div>
               </GlassPanel>
             </TiltCard>
 
             {/* Languages Card - Purple accent */}
-            <TiltCard className="h-full">
+            <TiltCard className="h-full" scale={1.05}>
               <GlassPanel hover accent="purple" className="text-left h-full flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
@@ -219,8 +223,8 @@ export function HeroSection() {
                       <p className="text-sm text-white/60">Top programming languages</p>
                     </div>
                   </div>
-                  <GlassInnerPanel accent="purple" className="h-24 flex items-center justify-center group-hover:bg-chart-3/5 transition-colors">
-                    <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
+                  <GlassInnerPanel accent="purple" className="h-32 flex items-center justify-center group-hover:bg-chart-3/5 transition-colors overflow-hidden">
+                    <MockCard type="languages" />
                   </GlassInnerPanel>
                 </div>
               </GlassPanel>
