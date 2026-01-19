@@ -6,6 +6,33 @@ import { GlassPanel, GlassInnerPanel } from "@/components/ui/GlassPanel";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { motion, useSpring, useMotionValue, useTransform } from "framer-motion";
 import { useEffect } from "react";
+import { cn } from "@/lib/utils";
+
+const StreakCardContent = ({ animateFloat = false }: { animateFloat?: boolean }) => (
+  <TiltCard className="h-full">
+    <GlassPanel
+      hover
+      accent="teal"
+      active
+      className={cn("text-left h-full flex flex-col justify-between", animateFloat && "animate-float")}
+    >
+      <div>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 rounded-lg bg-secondary/20 flex items-center justify-center backdrop-blur-sm shadow-[0_0_15px_rgba(var(--secondary),0.3)]">
+            <span className="text-2xl">🔥</span>
+          </div>
+          <div>
+            <h3 className="font-semibold text-white">Streak Tracker</h3>
+            <p className="text-sm text-white/60">Current & longest streak</p>
+          </div>
+        </div>
+        <GlassInnerPanel accent="teal" className="h-24 flex items-center justify-center group-hover:bg-secondary/5 transition-colors">
+          <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
+        </GlassInnerPanel>
+      </div>
+    </GlassPanel>
+  </TiltCard>
+);
 
 export function HeroSection() {
   // Mouse follow effect for orbs
@@ -162,69 +189,72 @@ export function HeroSection() {
           {/* Stats preview cards with glassmorphism */}
           <motion.div
             className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
+            initial="hidden"
+            animate="show"
+            variants={{
+              hidden: { opacity: 0 },
+              show: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.2,
+                  delayChildren: 0.6
+                }
+              }
+            }}
           >
             {/* User Stats Card - Green accent */}
-            <TiltCard className="h-full">
-              <GlassPanel hover accent="green" className="text-left h-full flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center backdrop-blur-sm shadow-[0_0_15px_rgba(var(--primary),0.3)]">
-                      <span className="text-2xl">📊</span>
+            <motion.div variants={{ hidden: { opacity: 0, y: 40 }, show: { opacity: 1, y: 0, transition: { type: "spring", damping: 20 } } }} className="h-full">
+              <TiltCard className="h-full">
+                <GlassPanel hover accent="green" className="text-left h-full flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center backdrop-blur-sm shadow-[0_0_15px_rgba(var(--primary),0.3)]">
+                        <span className="text-2xl">📊</span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white">User Stats</h3>
+                        <p className="text-sm text-white/60">Stars, commits, repos</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-white">User Stats</h3>
-                      <p className="text-sm text-white/60">Stars, commits, repos</p>
-                    </div>
+                    <GlassInnerPanel accent="green" className="h-24 flex items-center justify-center group-hover:bg-primary/5 transition-colors">
+                      <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
+                    </GlassInnerPanel>
                   </div>
-                  <GlassInnerPanel accent="green" className="h-24 flex items-center justify-center group-hover:bg-primary/5 transition-colors">
-                    <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
-                  </GlassInnerPanel>
-                </div>
-              </GlassPanel>
-            </TiltCard>
+                </GlassPanel>
+              </TiltCard>
+            </motion.div>
 
             {/* Streak Tracker Card - Teal accent (active/highlighted) */}
-            <TiltCard className="h-full translate-y-[-10px] md:translate-y-[-20px] z-10">
-              <GlassPanel hover accent="teal" active className="text-left h-full flex flex-col justify-between animate-float">
-                <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-lg bg-secondary/20 flex items-center justify-center backdrop-blur-sm shadow-[0_0_15px_rgba(var(--secondary),0.3)]">
-                      <span className="text-2xl">🔥</span>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white">Streak Tracker</h3>
-                      <p className="text-sm text-white/60">Current & longest streak</p>
-                    </div>
-                  </div>
-                  <GlassInnerPanel accent="teal" className="h-24 flex items-center justify-center group-hover:bg-secondary/5 transition-colors">
-                    <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
-                  </GlassInnerPanel>
-                </div>
-              </GlassPanel>
-            </TiltCard>
+            <motion.div variants={{ hidden: { opacity: 0, y: 60 }, show: { opacity: 1, y: -20, transition: { type: "spring", damping: 20 } } }} className="h-full z-10 hidden md:block">
+              <StreakCardContent animateFloat={true} />
+            </motion.div>
+
+            {/* Mobile version without negative margin */}
+            <motion.div variants={{ hidden: { opacity: 0, y: 40 }, show: { opacity: 1, y: 0, transition: { type: "spring", damping: 20 } } }} className="h-full block md:hidden">
+              <StreakCardContent animateFloat={false} />
+            </motion.div>
 
             {/* Languages Card - Purple accent */}
-            <TiltCard className="h-full">
-              <GlassPanel hover accent="purple" className="text-left h-full flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-lg bg-chart-3/20 flex items-center justify-center backdrop-blur-sm shadow-[0_0_15px_rgba(139,92,246,0.3)]">
-                      <span className="text-2xl">💻</span>
+            <motion.div variants={{ hidden: { opacity: 0, y: 40 }, show: { opacity: 1, y: 0, transition: { type: "spring", damping: 20 } } }} className="h-full">
+              <TiltCard className="h-full">
+                <GlassPanel hover accent="purple" className="text-left h-full flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 rounded-lg bg-chart-3/20 flex items-center justify-center backdrop-blur-sm shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+                        <span className="text-2xl">💻</span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white">Languages</h3>
+                        <p className="text-sm text-white/60">Top programming languages</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-white">Languages</h3>
-                      <p className="text-sm text-white/60">Top programming languages</p>
-                    </div>
+                    <GlassInnerPanel accent="purple" className="h-24 flex items-center justify-center group-hover:bg-chart-3/5 transition-colors">
+                      <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
+                    </GlassInnerPanel>
                   </div>
-                  <GlassInnerPanel accent="purple" className="h-24 flex items-center justify-center group-hover:bg-chart-3/5 transition-colors">
-                    <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
-                  </GlassInnerPanel>
-                </div>
-              </GlassPanel>
-            </TiltCard>
+                </GlassPanel>
+              </TiltCard>
+            </motion.div>
           </motion.div>
         </div>
       </div>
