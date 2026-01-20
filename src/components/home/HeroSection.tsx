@@ -1,5 +1,7 @@
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { SpotlightGrid } from "@/components/ui/SpotlightGrid";
+import { Particles } from "@/components/ui/Particles";
+import { HackerText } from "@/components/ui/HackerText";
 import { ArrowRight, Sparkles, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { GlassPanel, GlassInnerPanel } from "@/components/ui/GlassPanel";
@@ -43,6 +45,15 @@ export function HeroSection() {
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Background grid */}
       <SpotlightGrid opacity={0.15} spotlightRadius={400} />
+
+      {/* Ambient Particles */}
+      <Particles
+        className="absolute inset-0 pointer-events-none z-0"
+        quantity={50}
+        color="#8B5CF6"
+        staticity={30}
+        ease={50}
+      />
 
       {/* Interactive Gradient Orbs */}
       <motion.div
@@ -109,7 +120,7 @@ export function HeroSection() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.2, type: "spring" }}
             >
-              GitHub Stats
+              <HackerText text="GitHub Stats" speed={50} />
             </motion.span>
             <br />
             <motion.span
