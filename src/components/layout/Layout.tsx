@@ -4,6 +4,7 @@ import { Footer } from "./Footer";
 import { CommandMenu } from "./CommandMenu";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
 import { NoiseOverlay } from "@/components/ui/NoiseOverlay";
+import { ScrollProgress } from "@/components/ui/ScrollProgress";
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,6 +13,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <ScrollProgress />
       <NoiseOverlay />
       <CommandMenu />
       <Header />
