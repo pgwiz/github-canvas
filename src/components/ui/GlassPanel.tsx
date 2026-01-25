@@ -6,7 +6,7 @@ interface GlassPanelProps {
   className?: string;
   glow?: "primary" | "secondary" | "none";
   hover?: boolean;
-  accent?: "green" | "teal" | "purple" | "none";
+  accent?: "green" | "teal" | "purple" | "pink" | "none";
   active?: boolean;
 }
 
@@ -43,6 +43,7 @@ export function GlassPanel({
     green: "hsl(var(--primary))",
     teal: "hsl(var(--secondary))",
     purple: "hsl(var(--chart-3))",
+    pink: "hsl(340, 75%, 60%)",
     none: "hsl(var(--foreground))"
   };
 
@@ -50,6 +51,7 @@ export function GlassPanel({
     green: "rgba(12, 247, 9, 0.3)",
     teal: "rgba(0, 225, 255, 0.3)",
     purple: "rgba(139, 92, 246, 0.3)",
+    pink: "rgba(236, 72, 153, 0.3)",
     none: "rgba(255, 255, 255, 0.15)"
   };
 
@@ -57,6 +59,7 @@ export function GlassPanel({
     green: "rgba(12, 247, 9, 0.6)",
     teal: "rgba(0, 225, 255, 0.6)",
     purple: "rgba(139, 92, 246, 0.6)",
+    pink: "rgba(236, 72, 153, 0.6)",
     none: "rgba(255, 255, 255, 0.4)"
   };
 
@@ -229,12 +232,13 @@ export function GlassInnerPanel({
 }: {
   children: ReactNode;
   className?: string;
-  accent?: "green" | "teal" | "purple" | "none";
+  accent?: "green" | "teal" | "purple" | "pink" | "none";
 }) {
   const accentBorders = {
     green: "rgba(12, 247, 9, 0.25)",
     teal: "rgba(0, 225, 255, 0.25)",
     purple: "rgba(139, 92, 246, 0.25)",
+    pink: "rgba(236, 72, 153, 0.25)",
     none: "rgba(255, 255, 255, 0.1)"
   };
 
