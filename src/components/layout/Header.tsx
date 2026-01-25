@@ -4,6 +4,7 @@ import { Github, FileCode, BookOpen, Sparkles, Search } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useCommandMenu } from "./command-menu-context";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const navItems = [
   { href: "/", label: "Home", icon: Sparkles },
@@ -92,6 +93,7 @@ export function Header() {
             })}
           </nav>
 
+          <ThemeToggle />
           <button
             onClick={() => setOpen(true)}
             className="hidden md:flex items-center gap-2 px-3 py-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground text-sm transition-all duration-300 hover:border-primary/30 group"

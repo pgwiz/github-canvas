@@ -1,5 +1,6 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { motion, useMotionTemplate, useMotionValue } from "framer-motion";
 
 interface SpotlightGridProps extends React.HTMLAttributes<HTMLDivElement> {
   gridSize?: number; // Size of grid cells (default: 50)
@@ -19,24 +20,25 @@ export function SpotlightGrid({
   ...props
 }: SpotlightGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: -1000, y: -1000 });
+  const mouseX = useMotionValue(-1000);
+  const mouseY = useMotionValue(-1000);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
-      setPosition({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-      });
+      mouseX.set(e.clientX - rect.left);
+      mouseY.set(e.clientY - rect.top);
     };
 
-    // Move spotlight off-screen when mouse leaves the area
     const handleMouseLeave = () => {
-       setPosition({ x: -1000, y: -1000 });
+      mouseX.set(-1000);
+      mouseY.set(-1000);
     };
 
     const container = containerRef.current;
+    // We attach listeners to the parent to track mouse over the whole area
+    // that the grid covers (usually a section or full page)
     if (container && container.parentElement) {
         container.parentElement.addEventListener("mousemove", handleMouseMove);
         container.parentElement.addEventListener("mouseleave", handleMouseLeave);
@@ -48,7 +50,9 @@ export function SpotlightGrid({
             container.parentElement.removeEventListener("mouseleave", handleMouseLeave);
         }
     };
-  }, []);
+  }, [mouseX, mouseY]);
+
+  const maskImage = useMotionTemplate`radial-gradient(circle ${spotlightRadius}px at ${mouseX}px ${mouseY}px, black, transparent)`;
 
   return (
     <div
@@ -56,7 +60,7 @@ export function SpotlightGrid({
       className={cn("absolute inset-0 overflow-hidden pointer-events-none", className)}
       {...props}
     >
-      <div
+      <motion.div
         className="absolute inset-0 transition-opacity duration-300"
         style={{
             backgroundImage: `
@@ -64,8 +68,8 @@ export function SpotlightGrid({
               linear-gradient(to bottom, rgba(${gridColor}, ${opacity}) 1px, transparent 1px)
             `,
             backgroundSize: `${gridSize}px ${gridSize}px`,
-            maskImage: `radial-gradient(circle ${spotlightRadius}px at ${position.x}px ${position.y}px, black, transparent)`,
-            WebkitMaskImage: `radial-gradient(circle ${spotlightRadius}px at ${position.x}px ${position.y}px, black, transparent)`,
+            maskImage: maskImage,
+            WebkitMaskImage: maskImage,
         }}
       />
 

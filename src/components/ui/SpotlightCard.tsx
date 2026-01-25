@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
+import { motion, useMotionTemplate, useMotionValue } from "framer-motion";
 
 interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -13,45 +14,43 @@ export const SpotlightCard = ({
   spotlightColor = "rgba(255, 255, 255, 0.15)",
   ...props
 }: SpotlightCardProps) => {
-  const divRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [opacity, setOpacity] = useState(0);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const opacity = useMotionValue(0);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!divRef.current) return;
+    const { currentTarget, clientX, clientY } = e;
+    const { left, top } = currentTarget.getBoundingClientRect();
 
-    const div = divRef.current;
-    const rect = div.getBoundingClientRect();
-
-    setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
   };
 
   const handleMouseEnter = () => {
-    setOpacity(1);
+    opacity.set(1);
   };
 
   const handleMouseLeave = () => {
-    setOpacity(0);
+    opacity.set(0);
   };
 
   return (
     <div
-      ref={divRef}
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        "relative overflow-hidden rounded-xl",
+        "relative overflow-hidden rounded-xl group",
         className
       )}
       {...props}
     >
       {/* Spotlight overlay */}
-      <div
-        className="pointer-events-none absolute -inset-px transition duration-300 z-10"
+      <motion.div
+        className="pointer-events-none absolute -inset-px transition-opacity duration-300 z-10"
         style={{
           opacity,
-          background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 40%)`,
+          background: useMotionTemplate`radial-gradient(600px circle at ${mouseX}px ${mouseY}px, ${spotlightColor}, transparent 40%)`,
         }}
       />
       <div className="relative z-0">{children}</div>
