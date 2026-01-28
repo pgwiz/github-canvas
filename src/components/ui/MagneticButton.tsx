@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button, ButtonProps } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface MagneticButtonProps extends ButtonProps {
   strength?: number; // How strong the magnetic pull is (default: 0.5)
@@ -14,6 +15,7 @@ export function MagneticButton({
   shimmer = true,
   className,
   children,
+  onClick,
   ...props
 }: MagneticButtonProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -21,6 +23,7 @@ export function MagneticButton({
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isPressed, setIsPressed] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [ripples, setRipples] = useState<{ x: number; y: number; id: number }[]>([]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
     const { clientX, clientY } = e;
@@ -41,11 +44,32 @@ export function MagneticButton({
     setIsHovered(false);
   };
 
-  const handleMouseDown = () => setIsPressed(true);
-  const handleMouseUp = () => setIsPressed(false);
+  const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+    setIsPressed(true);
+
+    // Create ripple
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const id = Date.now();
+
+    setRipples((prev) => [...prev, { x, y, id }]);
+
+    // Clean up ripple after animation
+    setTimeout(() => {
+        setRipples((prev) => prev.filter((r) => r.id !== id));
+    }, 1000);
+
+    if (props.onMouseDown) props.onMouseDown(e);
+  };
+
+  const handleMouseUp = (e: React.MouseEvent<HTMLButtonElement>) => {
+    setIsPressed(false);
+    if (props.onMouseUp) props.onMouseUp(e);
+  };
 
   // If asChild is true, we pass children directly to Button (which becomes Slot).
-  // We cannot inject shimmer or wrapper div because Slot expects a single child.
+  // We cannot easily inject shimmer or ripples because Slot expects a single child.
   if (props.asChild) {
     return (
       <Button
@@ -55,6 +79,7 @@ export function MagneticButton({
         onMouseLeave={handleMouseLeave}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
+        onClick={onClick}
         className={cn(
           "relative transition-transform duration-200 ease-out will-change-transform",
           className
@@ -77,6 +102,7 @@ export function MagneticButton({
       onMouseLeave={handleMouseLeave}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
+      onClick={onClick}
       className={cn(
         "relative transition-transform duration-200 ease-out will-change-transform overflow-hidden",
         className
@@ -106,6 +132,27 @@ export function MagneticButton({
           }}
         />
       )}
+
+      {/* Ripple Effect */}
+      <AnimatePresence>
+        {ripples.map((ripple) => (
+            <motion.span
+                key={ripple.id}
+                initial={{ width: 0, height: 0, opacity: 0.5 }}
+                animate={{ width: 500, height: 500, opacity: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="absolute bg-white/30 rounded-full pointer-events-none"
+                style={{
+                    left: ripple.x,
+                    top: ripple.y,
+                    x: "-50%",
+                    y: "-50%",
+                }}
+            />
+        ))}
+      </AnimatePresence>
+
       <div className="relative z-10 flex items-center justify-center gap-2">
         {children}
       </div>

@@ -1,5 +1,6 @@
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { SpotlightGrid } from "@/components/ui/SpotlightGrid";
+import { HackerText } from "@/components/ui/HackerText";
 import { ArrowRight, Sparkles, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { GlassPanel, GlassInnerPanel } from "@/components/ui/GlassPanel";
@@ -124,7 +125,7 @@ export function HeroSection() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.2, type: "spring" }}
             >
-              GitHub Stats
+              <HackerText text="GitHub Stats" />
             </motion.span>
             <br />
             <motion.span
