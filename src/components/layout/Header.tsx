@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Github, FileCode, BookOpen, Sparkles, Search } from "lucide-react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useCommandMenu } from "./command-menu-context";
 
@@ -14,8 +14,15 @@ const navItems = [
 export function Header() {
   const location = useLocation();
   const { setOpen } = useCommandMenu();
-  const { scrollY } = useScroll();
+  const { scrollY, scrollYProgress } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
+
+  // Smooth progress bar
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
 
   useEffect(() => {
     return scrollY.onChange((latest) => {
@@ -50,9 +57,15 @@ export function Header() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
-      {/* Animated bottom gradient line */}
+      {/* Scroll Progress Bar */}
+      <motion.div
+        className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary via-secondary to-primary origin-left z-50"
+        style={{ scaleX }}
+      />
+
+      {/* Animated bottom border (fallback/decoration) */}
       <div className={cn(
-        "absolute bottom-0 left-0 h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent transition-all duration-500",
+        "absolute bottom-0 left-0 h-[1px] bg-white/5 transition-all duration-500",
         isScrolled ? "w-full opacity-100" : "w-0 opacity-0 left-1/2 -translate-x-1/2"
       )} />
 

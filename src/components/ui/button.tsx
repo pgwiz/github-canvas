@@ -16,6 +16,8 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
         premium: "group relative overflow-hidden bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_100%] animate-shimmer text-primary-foreground font-bold tracking-wide hover:shadow-[0_0_30px_-5px_hsl(var(--primary)/0.5)] hover:scale-[1.02] active:scale-[0.98] border-none transition-all duration-300",
+        cyber: "relative group border border-primary/50 bg-black/40 text-primary hover:bg-primary/10 hover:border-primary hover:shadow-[0_0_15px_hsl(var(--primary)/0.4)] transition-all duration-300 font-mono tracking-wider uppercase",
+        neomorph: "bg-[#1a1a1a] text-gray-300 shadow-[5px_5px_10px_#0d0d0d,-5px_-5px_10px_#272727] hover:shadow-[2px_2px_5px_#0d0d0d,-2px_-2px_5px_#272727] active:shadow-[inset_5px_5px_10px_#0d0d0d,inset_-5px_-5px_10px_#272727] hover:text-white transition-all duration-200 border-none",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -57,6 +59,25 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           </span>
         </Comp>
       );
+    }
+
+    if (variant === "cyber" && !asChild) {
+      return (
+        <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props}>
+          {/* Corner accents */}
+          <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-primary opacity-50 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-primary opacity-50 group-hover:opacity-100 transition-opacity" />
+
+          {/* Scanline effect */}
+          <div className="absolute inset-0 overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+             <div className="w-full h-[2px] bg-primary/30 animate-scanline" />
+          </div>
+
+          <span className="relative z-10 flex items-center gap-2">
+            {children}
+          </span>
+        </Comp>
+      )
     }
 
     // Standard button with subtle click effect built into variants
