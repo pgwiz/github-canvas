@@ -4,11 +4,20 @@ import { ArrowRight, Sparkles, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { GlassPanel, GlassInnerPanel } from "@/components/ui/GlassPanel";
 import { TiltCard } from "@/components/ui/TiltCard";
-import { motion, useSpring, useMotionValue, useTransform } from "framer-motion";
-import { useEffect } from "react";
+import { motion, useSpring, useMotionValue, useTransform, useScroll } from "framer-motion";
+import { useEffect, useRef } from "react";
 import { Particles } from "@/components/ui/Particles";
+import { HackerText } from "@/components/ui/HackerText";
 
 export function HeroSection() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollY } = useScroll();
+
+  // Parallax/Tilt effect on scroll
+  const heroRotateX = useTransform(scrollY, [0, 500], [0, 15]);
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+  const heroScale = useTransform(scrollY, [0, 500], [1, 0.9]);
+
   // Mouse follow effect for orbs
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -95,8 +104,16 @@ export function HeroSection() {
         }}
       />
 
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
+      <div className="container mx-auto px-4 relative z-10" ref={containerRef}>
+        <motion.div
+          className="max-w-4xl mx-auto text-center"
+          style={{
+            rotateX: heroRotateX,
+            opacity: heroOpacity,
+            scale: heroScale,
+            transformPerspective: 1000
+          }}
+        >
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -118,14 +135,18 @@ export function HeroSection() {
             >
               Beautiful{" "}
             </motion.span>
-            <motion.span
-              className="gradient-text text-glow-primary inline-block"
+            <motion.div
+              className="inline-block"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.2, type: "spring" }}
             >
-              GitHub Stats
-            </motion.span>
+              <HackerText
+                text="GitHub Stats"
+                className="gradient-text text-glow-primary"
+                speed={40}
+              />
+            </motion.div>
             <br />
             <motion.span
               className="text-foreground inline-block"
@@ -148,6 +169,7 @@ export function HeroSection() {
             Choose from templates or create your own design.
             No authentication required.
           </motion.p>
+        </motion.div>
 
           {/* CTA buttons */}
           <motion.div
@@ -241,7 +263,6 @@ export function HeroSection() {
               </GlassPanel>
             </TiltCard>
           </motion.div>
-        </div>
       </div>
     </section>
   );

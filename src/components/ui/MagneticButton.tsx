@@ -56,7 +56,7 @@ export function MagneticButton({
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         className={cn(
-          "relative transition-transform duration-200 ease-out will-change-transform",
+          "relative transition-transform duration-200 ease-[cubic-bezier(0.25,1,0.5,1)] will-change-transform",
           className
         )}
         style={{
@@ -78,7 +78,7 @@ export function MagneticButton({
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       className={cn(
-        "relative transition-transform duration-200 ease-out will-change-transform overflow-hidden",
+        "relative transition-transform duration-200 ease-[cubic-bezier(0.25,1,0.5,1)] will-change-transform overflow-hidden",
         className
       )}
       style={{
@@ -86,6 +86,27 @@ export function MagneticButton({
       }}
       {...props}
     >
+      {/* Liquid Glow Effect */}
+      {shimmer && (
+        <div
+          className="absolute inset-0 pointer-events-none transition-opacity duration-500"
+          style={{
+            opacity: isHovered ? 1 : 0,
+            background: `radial-gradient(120px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255,255,255,0.15), transparent 50%)`,
+          }}
+        />
+      )}
+
+      {/* Secondary Ambient Glow */}
+       {shimmer && isHovered && (
+        <div
+          className="absolute inset-0 pointer-events-none transition-opacity duration-500"
+          style={{
+            background: `radial-gradient(300px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255,255,255,0.05), transparent 70%)`,
+          }}
+        />
+      )}
+
       {/* Shine effect */}
       {isHovered && (
         <div
@@ -97,15 +118,6 @@ export function MagneticButton({
         />
       )}
 
-      {/* Internal spotlight effect */}
-      {shimmer && isHovered && (
-        <div
-          className="absolute inset-0 pointer-events-none transition-opacity duration-300"
-          style={{
-            background: `radial-gradient(150px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255,255,255,0.15), transparent 80%)`
-          }}
-        />
-      )}
       <div className="relative z-10 flex items-center justify-center gap-2">
         {children}
       </div>
