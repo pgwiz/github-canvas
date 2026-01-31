@@ -291,11 +291,13 @@ export default function Generator() {
                     className="group relative h-12 px-6 overflow-hidden bg-primary hover:bg-primary/90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(12,247,9,0.3)] hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out" />
-                    <span className="relative flex items-center">
+                    <span className="relative flex items-center min-w-[140px] justify-center">
                       {isGenerating ? (
                         <>
-                          <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
-                          {config.type === "quote" ? "Generating..." : "Fetching..."}
+                          <span className="absolute inset-0 flex items-center justify-center">
+                             <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                          </span>
+                          <span className="opacity-0">{config.type === "quote" ? "Generate Quote" : "Fetch Stats"}</span>
                         </>
                       ) : (
                         <>

@@ -2,7 +2,8 @@ import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { MagneticButton } from "@/components/ui/MagneticButton";
-import { SpotlightGrid } from "@/components/ui/SpotlightGrid";
+import { Particles } from "@/components/ui/Particles";
+import { HackerText } from "@/components/ui/HackerText";
 import { Home } from "lucide-react";
 
 const NotFound = () => {
@@ -18,17 +19,18 @@ const NotFound = () => {
   return (
     <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-background p-4">
       {/* Dynamic Background */}
-      <SpotlightGrid
-        gridSize={40}
-        spotlightRadius={400}
-        opacity={0.15}
-        className="z-0"
+      <Particles
+        className="absolute inset-0 z-0"
+        quantity={150}
+        ease={80}
+        color="#ffffff"
+        refresh
       />
 
       <div className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-transparent via-background/50 to-background" />
 
       {/* Main Content */}
-      <div className="relative z-10 w-full max-w-md">
+      <div className="relative z-10 w-full max-w-md animate-in fade-in zoom-in duration-700 slide-in-from-bottom-10">
         <GlassPanel
           hover={true}
           glow="primary"
@@ -38,14 +40,14 @@ const NotFound = () => {
           {/* Animated 404 Visual */}
           <div className="mb-6 relative">
             <div className="absolute inset-0 animate-pulse-glow blur-2xl bg-primary/20 rounded-full" />
-            <h1 className="relative text-9xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-primary to-secondary animate-float">
-              404
-            </h1>
+            <div className="relative text-9xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-primary to-secondary animate-float">
+               <HackerText text="404" speed={150} />
+            </div>
           </div>
 
           <div className="space-y-4 mb-8">
             <h2 className="text-2xl font-bold tracking-tight text-white">
-              Lost in the Digital Void?
+              <HackerText text="Lost in the Digital Void?" speed={50} />
             </h2>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-[300px] mx-auto">
               It seems you've ventured into uncharted territory. The coordinates{" "}
