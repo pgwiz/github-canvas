@@ -28,13 +28,13 @@ export function ScrollToTop() {
   };
 
   return (
-    <div className="fixed bottom-8 right-8 z-50">
+    <div className="fixed bottom-8 right-8 z-50 pointer-events-none">
       <Button
         variant="outline"
         size="icon"
         onClick={scrollToTop}
         className={cn(
-          "rounded-full h-12 w-12 shadow-lg backdrop-blur-md bg-background/50 border-white/10 hover:bg-background/80 transition-all duration-300 transform",
+          "rounded-full h-12 w-12 shadow-lg backdrop-blur-md bg-background/50 border-white/10 hover:bg-background/80 transition-all duration-300 transform pointer-events-auto",
           isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"
         )}
         aria-label="Scroll to top"

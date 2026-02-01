@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   CommandDialog,
   CommandEmpty,
@@ -18,7 +18,10 @@ import {
   Sun,
   Github,
   Copy,
-  Monitor
+  Monitor,
+  Wand2,
+  Maximize2,
+  RefreshCw
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import confetti from "canvas-confetti";
@@ -27,12 +30,27 @@ import { useToast } from "@/hooks/use-toast";
 export function CommandMenu() {
   const { open, setOpen } = useCommandMenu();
   const navigate = useNavigate();
+  const location = useLocation();
   const { setTheme, theme } = useTheme();
   const { toast } = useToast();
+
+  const isGenerator = location.pathname === "/generator";
 
   const runCommand = (command: () => void) => {
     setOpen(false);
     command();
+  };
+
+  const toggleZenMode = () => {
+    window.dispatchEvent(new Event("toggle-zen-mode"));
+  };
+
+  const randomizeTheme = () => {
+    window.dispatchEvent(new Event("randomize-theme"));
+  };
+
+  const fetchStats = () => {
+    window.dispatchEvent(new Event("fetch-stats"));
   };
 
   const triggerConfetti = () => {
@@ -76,6 +94,26 @@ export function CommandMenu() {
         <CommandInput placeholder="Type a command or search..." />
         <CommandList className="pb-2">
           <CommandEmpty>No results found.</CommandEmpty>
+
+          {isGenerator && (
+            <>
+              <CommandGroup heading="Generator Actions">
+                <CommandItem onSelect={() => runCommand(toggleZenMode)}>
+                  <Maximize2 className="mr-2 h-4 w-4" />
+                  <span>Toggle Zen Mode</span>
+                </CommandItem>
+                <CommandItem onSelect={() => runCommand(randomizeTheme)}>
+                  <Wand2 className="mr-2 h-4 w-4 text-purple-500" />
+                  <span>Randomize Theme</span>
+                </CommandItem>
+                <CommandItem onSelect={() => runCommand(fetchStats)}>
+                  <RefreshCw className="mr-2 h-4 w-4 text-green-500" />
+                  <span>Fetch Stats / Quote</span>
+                </CommandItem>
+              </CommandGroup>
+              <CommandSeparator />
+            </>
+          )}
 
           <CommandGroup heading="Navigation">
             <CommandItem onSelect={() => runCommand(() => navigate("/"))}>

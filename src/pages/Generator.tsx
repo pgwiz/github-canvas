@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { GlassPanel } from "@/components/ui/GlassPanel";
@@ -11,9 +11,10 @@ import { ThemeSelector } from "@/components/generator/ThemeSelector";
 import { templates } from "@/lib/templates";
 import { CustomizationPanel } from "@/components/generator/CustomizationPanel";
 import { LinkGenerator } from "@/components/generator/LinkGenerator";
-import { Search, Sparkles, RefreshCw } from "lucide-react";
+import { Search, Sparkles, RefreshCw, Maximize2, Minimize2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGitHubStats, GitHubStats } from "@/hooks/useGitHubStats";
+import { cn } from "@/lib/utils";
 import { useDevQuote, DevQuote } from "@/hooks/useDevQuote";
 import { useQuoteOfTheDay } from "@/hooks/useQuoteOfTheDay";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -103,6 +104,7 @@ export default function Generator() {
   const [config, setConfig] = useState<CardConfig>(defaultConfig);
   const [githubData, setGithubData] = useState<GitHubStats | null>(null);
   const [currentQuote, setCurrentQuote] = useState<DevQuote | null>(null);
+  const [isZenMode, setIsZenMode] = useState(false);
   const { toast } = useToast();
 
   const { loading: statsLoading, error: statsError, fetchStats } = useGitHubStats();
@@ -120,7 +122,7 @@ export default function Generator() {
     });
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = useCallback(async () => {
     if (!config.username && config.type !== "quote" && config.type !== "custom") {
       toast({
         title: "Username required",
@@ -168,7 +170,7 @@ export default function Generator() {
         variant: "destructive",
       });
     }
-  };
+  }, [config.username, config.type, config.quoteTopic, generateQuote, fetchStats, statsError, toast]);
 
   // Generate a quote when switching to quote type
   useEffect(() => {
@@ -176,7 +178,7 @@ export default function Generator() {
       const topic = config.quoteTopic === "random" ? undefined : config.quoteTopic;
       generateQuote(topic).then(setCurrentQuote);
     }
-  }, [config.type]);
+  }, [config.type, config.quoteTopic, currentQuote, generateQuote]);
 
   // Update dimensions when card type changes
   useEffect(() => {
@@ -207,7 +209,7 @@ export default function Generator() {
     setConfig((prev) => ({ ...prev, ...updates }));
   };
 
-  const handleMagicTheme = () => {
+  const handleMagicTheme = useCallback(() => {
     // 1. Pick a random template
     const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
 
@@ -247,28 +249,66 @@ export default function Generator() {
       description: `Switched to ${randomTemplate.name} with ${enableGradient ? 'gradient' : 'flat'} style.`,
       className: "border-primary/50 text-foreground bg-background/80 backdrop-blur-xl",
     });
-  };
+  }, [toast]);
+
+  // Event listeners for external control (e.g. from Command Menu)
+  useEffect(() => {
+    const handleToggleZen = () => setIsZenMode(prev => !prev);
+    // Wrap handlers to avoid stale closures if possible, but for now simple invocation is fine
+    // Note: This relies on the function reference being fresh or safe to call
+    const handleRandomTheme = () => handleMagicTheme();
+    // For fetchStats/generate, we need to be careful about state.
+    // Ideally we would move these handlers into the same scope or use a stable ref.
+    // For this implementation, we'll assume the command triggers the same action.
+
+    // Using a custom event dispatcher pattern requires stable handlers or re-binding
+    const onRandomTheme = () => handleMagicTheme();
+    const onFetchStats = () => handleGenerate();
+
+    window.addEventListener("toggle-zen-mode", handleToggleZen);
+    window.addEventListener("randomize-theme", onRandomTheme);
+    window.addEventListener("fetch-stats", onFetchStats);
+
+    return () => {
+      window.removeEventListener("toggle-zen-mode", handleToggleZen);
+      window.removeEventListener("randomize-theme", onRandomTheme);
+      window.removeEventListener("fetch-stats", onFetchStats);
+    };
+  }, [handleGenerate, handleMagicTheme]); // Re-bind when handlers change
 
   return (
     <Layout>
       <PageTransition>
-        <div className="min-h-screen py-12">
-          <div className="container mx-auto px-4">
-            {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              <span className="gradient-text">Stats Generator</span>
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Create beautiful GitHub stats cards with full customization
-            </p>
+        <div className="min-h-screen py-12 relative">
+          {/* Zen Mode Toggle (Floating) */}
+          <div className="fixed bottom-8 right-8 z-50 pointer-events-none">
+            {isZenMode && (
+              <Button
+                onClick={() => setIsZenMode(false)}
+                className="rounded-full h-12 w-12 shadow-2xl bg-primary hover:bg-primary/90 animate-in fade-in zoom-in pointer-events-auto"
+                title="Exit Zen Mode"
+              >
+                <Minimize2 className="w-5 h-5" />
+              </Button>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Panel - Configuration */}
-            <div className="space-y-6">
-              {/* Username Input */}
-              <GlassPanel accent="green">
+          <div className={cn("container mx-auto px-4 transition-all duration-500", isZenMode && "max-w-6xl")}>
+            {/* Header */}
+            <div className={cn("text-center mb-12 transition-all duration-500", isZenMode && "opacity-0 h-0 mb-0 overflow-hidden")}>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                <span className="gradient-text">Stats Generator</span>
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Create beautiful GitHub stats cards with full customization
+              </p>
+            </div>
+
+            <div className={cn("grid gap-8 transition-all duration-500", isZenMode ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2")}>
+              {/* Left Panel - Configuration */}
+              <div className={cn("space-y-6 transition-all duration-500", isZenMode && "hidden opacity-0")}>
+                {/* Username Input */}
+                <GlassPanel accent="green">
                 <Label htmlFor="username" className="text-lg font-semibold mb-4 block">
                   GitHub Username
                 </Label>
@@ -398,12 +438,25 @@ export default function Generator() {
             </div>
 
             {/* Right Panel - Preview & Links */}
-            <div className="space-y-6">
+            <div className={cn("space-y-6 transition-all duration-500", isZenMode && "mx-auto w-full max-w-4xl pt-8")}>
               {/* Preview */}
-              <GlassPanel accent="teal" active>
-                <Label className="text-lg font-semibold mb-4 block">
-                  Live Preview
-                </Label>
+              <GlassPanel accent="teal" active className={cn("transition-all duration-500", isZenMode && "border-primary/30 shadow-[0_0_50px_-10px_rgba(var(--primary),0.1)]")}>
+                <div className="flex items-center justify-between mb-4">
+                  <Label className="text-lg font-semibold block">
+                    {isZenMode ? "Zen Mode Preview" : "Live Preview"}
+                  </Label>
+                  {!isZenMode && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsZenMode(true)}
+                      className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                      title="Enter Zen Mode"
+                    >
+                      <Maximize2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
                 {/* Nested frosted glass inner panel */}
                 <div className="relative rounded-lg overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 to-transparent backdrop-blur-md" />
