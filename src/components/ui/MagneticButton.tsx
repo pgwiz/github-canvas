@@ -62,6 +62,7 @@ export function MagneticButton({
         style={{
           transform: `translate(${position.x}px, ${position.y}px) scale(${isPressed ? activeScale : 1})`,
         }}
+        data-hover="magnetic"
         {...props}
       >
         {children}
@@ -84,6 +85,7 @@ export function MagneticButton({
       style={{
         transform: `translate(${position.x}px, ${position.y}px) scale(${isPressed ? activeScale : 1})`,
       }}
+      data-hover="magnetic"
       {...props}
     >
       {/* Shine effect */}
