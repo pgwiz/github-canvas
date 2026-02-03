@@ -3,42 +3,43 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { TiltCard } from "@/components/ui/TiltCard";
+import { PreviewWidget } from "@/components/ui/PreviewWidget";
 
 const cardTypes = [
   {
     name: "User Stats Card",
     description: "Display total stars, commits, PRs, issues, and more",
-    preview: "⭐ 1,234 | 📦 56 | 👥 789",
+    type: "user-stats" as const,
     accent: "green" as const,
   },
   {
     name: "Language Breakdown",
     description: "Show your most-used programming languages",
-    preview: "TypeScript 45% | Python 30% | Rust 15%",
+    type: "languages" as const,
     accent: "purple" as const,
   },
   {
     name: "Contribution Streak",
     description: "Track your current and longest contribution streak",
-    preview: "🔥 Current: 15 days | Best: 87 days",
+    type: "streak" as const,
     accent: "teal" as const,
   },
   {
     name: "Activity Graph",
     description: "Visualize your contribution activity over time",
-    preview: "▁▂▃▅▆▇█▆▅▃▂▁▂▅▇",
+    type: "activity" as const,
     accent: "teal" as const,
   },
   {
     name: "Dev Quotes",
     description: "Random inspirational quotes for developers",
-    preview: '"Code is poetry." - Unknown',
+    type: "quotes" as const,
     accent: "purple" as const,
   },
   {
     name: "Custom Image",
     description: "Create fully custom images with your own text and style",
-    preview: "Your text, your style",
+    type: "custom" as const,
     accent: "green" as const,
   },
 ];
@@ -73,9 +74,7 @@ export function CardTypesSection() {
                 <GlassPanel hover accent={card.accent} className="h-full flex flex-col justify-between group">
                   <div>
                     <GlassInnerPanel accent={card.accent} className="h-32 flex items-center justify-center mb-4 group-hover:scale-[1.02] transition-transform duration-300">
-                      <span className="font-mono text-sm text-white/50 text-center px-4 group-hover:text-white/80 transition-colors">
-                        {card.preview}
-                      </span>
+                      <PreviewWidget type={card.type} accent={card.accent} />
                     </GlassInnerPanel>
                     <h3 className="text-lg font-semibold text-white mb-1">
                       {card.name}

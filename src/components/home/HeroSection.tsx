@@ -7,6 +7,8 @@ import { TiltCard } from "@/components/ui/TiltCard";
 import { motion, useSpring, useMotionValue, useTransform } from "framer-motion";
 import { useEffect } from "react";
 import { Particles } from "@/components/ui/Particles";
+import { AnimatedText } from "@/components/ui/AnimatedText";
+import { PreviewWidget } from "@/components/ui/PreviewWidget";
 
 export function HeroSection() {
   // Mouse follow effect for orbs
@@ -109,32 +111,29 @@ export function HeroSection() {
           </motion.div>
 
           {/* Main heading */}
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-            <motion.span
-              className="text-foreground inline-block"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-            >
-              Beautiful{" "}
-            </motion.span>
-            <motion.span
-              className="gradient-text text-glow-primary inline-block"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.2, type: "spring" }}
-            >
-              GitHub Stats
-            </motion.span>
-            <br />
-            <motion.span
-              className="text-foreground inline-block"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-            >
-              For Your README
-            </motion.span>
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight flex flex-col items-center">
+            <div className="flex flex-wrap justify-center gap-x-4">
+              <AnimatedText
+                text="Beautiful"
+                className="text-foreground"
+                delay={0.1}
+                el="span"
+              />
+              <motion.span
+                className="gradient-text text-glow-primary inline-block"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.5, type: "spring" }}
+              >
+                GitHub Stats
+              </motion.span>
+            </div>
+            <AnimatedText
+              text="For Your README"
+              className="text-foreground"
+              delay={0.6}
+              el="span"
+            />
           </h1>
 
           {/* Subtitle */}
@@ -156,11 +155,14 @@ export function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
           >
-            <MagneticButton asChild size="lg" variant="premium" className="group px-8" strength={0.3}>
+            <MagneticButton asChild size="lg" variant="premium" className="group px-8 overflow-hidden relative" strength={0.3}>
               <Link to="/generator">
                 {/* Manual overlay for asChild usage since Button component can't inject into Slot */}
                 <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                 <span className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                {/* Shine effect */}
+                <div className="absolute inset-0 -translate-x-full group-hover:animate-shimmer bg-gradient-to-r from-transparent via-white/25 to-transparent z-20" />
 
                 <Zap className="w-5 h-5 mr-2 relative z-10 fill-current" />
                 <span className="relative z-10">Start Creating</span>
@@ -195,7 +197,7 @@ export function HeroSection() {
                     </div>
                   </div>
                   <GlassInnerPanel accent="green" className="h-24 flex items-center justify-center group-hover:bg-primary/5 transition-colors">
-                    <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
+                    <PreviewWidget type="user-stats" accent="green" />
                   </GlassInnerPanel>
                 </div>
               </GlassPanel>
@@ -215,7 +217,7 @@ export function HeroSection() {
                     </div>
                   </div>
                   <GlassInnerPanel accent="teal" className="h-24 flex items-center justify-center group-hover:bg-secondary/5 transition-colors">
-                    <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
+                    <PreviewWidget type="streak" accent="teal" />
                   </GlassInnerPanel>
                 </div>
               </GlassPanel>
@@ -235,7 +237,7 @@ export function HeroSection() {
                     </div>
                   </div>
                   <GlassInnerPanel accent="purple" className="h-24 flex items-center justify-center group-hover:bg-chart-3/5 transition-colors">
-                    <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
+                    <PreviewWidget type="languages" accent="purple" />
                   </GlassInnerPanel>
                 </div>
               </GlassPanel>
