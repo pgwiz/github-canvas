@@ -7,6 +7,7 @@ import { TiltCard } from "@/components/ui/TiltCard";
 import { motion, useSpring, useMotionValue, useTransform } from "framer-motion";
 import { useEffect } from "react";
 import { Particles } from "@/components/ui/Particles";
+import { PreviewWidget } from "@/components/ui/PreviewWidget";
 
 export function HeroSection() {
   // Mouse follow effect for orbs
@@ -194,8 +195,8 @@ export function HeroSection() {
                       <p className="text-sm text-white/60">Stars, commits, repos</p>
                     </div>
                   </div>
-                  <GlassInnerPanel accent="green" className="h-24 flex items-center justify-center group-hover:bg-primary/5 transition-colors">
-                    <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
+                  <GlassInnerPanel accent="green" className="h-24 flex items-center justify-center group-hover:bg-primary/5 transition-colors overflow-hidden">
+                    <PreviewWidget type="stats" />
                   </GlassInnerPanel>
                 </div>
               </GlassPanel>
@@ -214,8 +215,8 @@ export function HeroSection() {
                       <p className="text-sm text-white/60">Current & longest streak</p>
                     </div>
                   </div>
-                  <GlassInnerPanel accent="teal" className="h-24 flex items-center justify-center group-hover:bg-secondary/5 transition-colors">
-                    <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
+                  <GlassInnerPanel accent="teal" className="h-24 flex items-center justify-center group-hover:bg-secondary/5 transition-colors overflow-hidden">
+                    <PreviewWidget type="streak" />
                   </GlassInnerPanel>
                 </div>
               </GlassPanel>
@@ -234,8 +235,8 @@ export function HeroSection() {
                       <p className="text-sm text-white/60">Top programming languages</p>
                     </div>
                   </div>
-                  <GlassInnerPanel accent="purple" className="h-24 flex items-center justify-center group-hover:bg-chart-3/5 transition-colors">
-                    <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
+                  <GlassInnerPanel accent="purple" className="h-24 flex items-center justify-center group-hover:bg-chart-3/5 transition-colors overflow-hidden">
+                    <PreviewWidget type="languages" />
                   </GlassInnerPanel>
                 </div>
               </GlassPanel>

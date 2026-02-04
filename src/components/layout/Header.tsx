@@ -4,12 +4,15 @@ import { Github, FileCode, BookOpen, Sparkles, Search } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useCommandMenu } from "./command-menu-context";
+import { MagneticButton } from "@/components/ui/MagneticButton";
 
 const navItems = [
   { href: "/", label: "Home", icon: Sparkles },
   { href: "/generator", label: "Generator", icon: FileCode },
   { href: "/docs", label: "API Docs", icon: BookOpen },
 ];
+
+const MotionLink = motion(Link);
 
 export function Header() {
   const location = useLocation();
@@ -65,14 +68,32 @@ export function Header() {
         </Link>
 
         <div className="flex items-center gap-4">
-          <nav className="flex items-center gap-1 p-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+          <motion.nav
+            className="flex items-center gap-1 p-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.1,
+                  delayChildren: 0.2
+                }
+              }
+            }}
+          >
             {navItems.map((item) => {
               const isActive = location.pathname === item.href;
               const Icon = item.icon;
               return (
-                <Link
+                <MotionLink
                   key={item.href}
                   to={item.href}
+                  variants={{
+                    hidden: { opacity: 0, y: -10 },
+                    visible: { opacity: 1, y: 0 }
+                  }}
                   className={cn(
                     "relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors z-10",
                     isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
@@ -87,21 +108,34 @@ export function Header() {
                   )}
                   <Icon className="w-4 h-4" />
                   <span className="hidden sm:inline">{item.label}</span>
-                </Link>
+                </MotionLink>
               );
             })}
-          </nav>
+          </motion.nav>
 
-          <button
-            onClick={() => setOpen(true)}
-            className="hidden md:flex items-center gap-2 px-3 py-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground text-sm transition-all duration-300 hover:border-primary/30 group"
-          >
-            <Search className="w-4 h-4 group-hover:text-primary transition-colors" />
-            <span className="text-xs">Search...</span>
-            <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-white/10 bg-white/5 px-1.5 font-mono text-[10px] font-medium opacity-100">
-              <span className="text-xs">⌘</span>K
-            </kbd>
-          </button>
+          <div className="flex items-center gap-2">
+            <MagneticButton
+              asChild
+              className="hidden md:flex items-center gap-2 px-3 py-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground text-sm transition-all duration-300 hover:border-primary/30 group"
+              strength={0.2}
+              shimmer={false}
+              onClick={() => setOpen(true)}
+            >
+              <button>
+                <Search className="w-4 h-4 group-hover:text-primary transition-colors" />
+                <span className="text-xs">Search...</span>
+                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-white/10 bg-white/5 px-1.5 font-mono text-[10px] font-medium opacity-100 ml-2">
+                  <span className="text-xs">⌘</span>K
+                </kbd>
+              </button>
+            </MagneticButton>
+
+            <MagneticButton asChild className="md:hidden" size="icon" variant="ghost" onClick={() => setOpen(true)}>
+                <button>
+                    <Search className="w-5 h-5" />
+                </button>
+            </MagneticButton>
+          </div>
         </div>
       </div>
     </motion.header>
