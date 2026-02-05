@@ -7,6 +7,8 @@ import { TiltCard } from "@/components/ui/TiltCard";
 import { motion, useSpring, useMotionValue, useTransform } from "framer-motion";
 import { useEffect } from "react";
 import { Particles } from "@/components/ui/Particles";
+import { AnimatedText } from "@/components/ui/AnimatedText";
+import { PreviewWidget } from "@/components/ui/PreviewWidget";
 
 export function HeroSection() {
   // Mouse follow effect for orbs
@@ -110,31 +112,25 @@ export function HeroSection() {
 
           {/* Main heading */}
           <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-            <motion.span
-              className="text-foreground inline-block"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-            >
-              Beautiful{" "}
-            </motion.span>
+            <AnimatedText
+              text="Beautiful"
+              className="text-foreground mr-3"
+              delay={0.1}
+            />
             <motion.span
               className="gradient-text text-glow-primary inline-block"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.2, type: "spring" }}
+              transition={{ duration: 0.8, delay: 0.5, type: "spring" }}
             >
               GitHub Stats
             </motion.span>
             <br />
-            <motion.span
-              className="text-foreground inline-block"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-            >
-              For Your README
-            </motion.span>
+            <AnimatedText
+              text="For Your README"
+              className="text-foreground"
+              delay={0.8}
+            />
           </h1>
 
           {/* Subtitle */}
@@ -194,8 +190,8 @@ export function HeroSection() {
                       <p className="text-sm text-white/60">Stars, commits, repos</p>
                     </div>
                   </div>
-                  <GlassInnerPanel accent="green" className="h-24 flex items-center justify-center group-hover:bg-primary/5 transition-colors">
-                    <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
+                  <GlassInnerPanel accent="green" className="h-32 flex items-center justify-center group-hover:bg-primary/5 transition-colors p-0 overflow-hidden">
+                    <PreviewWidget type="stats" />
                   </GlassInnerPanel>
                 </div>
               </GlassPanel>
@@ -214,8 +210,8 @@ export function HeroSection() {
                       <p className="text-sm text-white/60">Current & longest streak</p>
                     </div>
                   </div>
-                  <GlassInnerPanel accent="teal" className="h-24 flex items-center justify-center group-hover:bg-secondary/5 transition-colors">
-                    <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
+                  <GlassInnerPanel accent="teal" className="h-32 flex items-center justify-center group-hover:bg-secondary/5 transition-colors p-0 overflow-hidden">
+                    <PreviewWidget type="streak" />
                   </GlassInnerPanel>
                 </div>
               </GlassPanel>
@@ -234,8 +230,8 @@ export function HeroSection() {
                       <p className="text-sm text-white/60">Top programming languages</p>
                     </div>
                   </div>
-                  <GlassInnerPanel accent="purple" className="h-24 flex items-center justify-center group-hover:bg-chart-3/5 transition-colors">
-                    <span className="text-white/40 font-mono text-sm group-hover:text-white/60 transition-colors">Preview Card</span>
+                  <GlassInnerPanel accent="purple" className="h-32 flex items-center justify-center group-hover:bg-chart-3/5 transition-colors p-0 overflow-hidden">
+                    <PreviewWidget type="languages" />
                   </GlassInnerPanel>
                 </div>
               </GlassPanel>
