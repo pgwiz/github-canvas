@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 
+const SUBSCRIBE_DELAY = 1500;
+const SUBSCRIBE_SUCCESS_TIMEOUT = 3000;
+
 const socialLinks = [
   { icon: Github, href: "https://github.com/pgwiz", label: "GitHub" },
   { icon: Twitter, href: "#", label: "Twitter" },
@@ -57,8 +60,8 @@ export function Footer() {
       setLoading(false);
       setSubscribed(true);
       setEmail("");
-      setTimeout(() => setSubscribed(false), 3000);
-    }, 1500);
+      setTimeout(() => setSubscribed(false), SUBSCRIBE_SUCCESS_TIMEOUT);
+    }, SUBSCRIBE_DELAY);
   };
 
   return (
