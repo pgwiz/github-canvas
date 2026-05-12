@@ -184,36 +184,60 @@ serve(async (req) => {
 function generateSVG(params: CardParams): string {
   const {
     type,
-    username = 'developer',
-    bgColor = '#0d1117',
-    primaryColor = '#0CF709',
-    secondaryColor = '#00e1ff',
-    textColor = '#c9d1d9',
-    borderColor = '#0CF709',
+    username: rawUsername = 'developer',
+    bgColor: rawBgColor = '#0d1117',
+    primaryColor: rawPrimaryColor = '#0CF709',
+    secondaryColor: rawSecondaryColor = '#00e1ff',
+    textColor: rawTextColor = '#c9d1d9',
+    borderColor: rawBorderColor = '#0CF709',
     borderRadius = 12,
     showBorder = true,
     paddingTop = 25,
     paddingRight = 25,
     paddingBottom = 25,
     paddingLeft = 25,
-    customText = '',
+    customText: rawCustomText = '',
     animate = true,
     animation = 'fadeIn',
     speed = 'normal',
     gradient = false,
     gradientType = 'linear',
     gradientAngle = 135,
-    gradientStart = '#667eea',
-    gradientEnd = '#764ba2',
-    bannerName = '',
-    bannerDescription = '',
+    gradientStart: rawGradientStart = '#667eea',
+    gradientEnd: rawGradientEnd = '#764ba2',
+    bannerName: rawBannerName = '',
+    bannerDescription: rawBannerDescription = '',
     waveStyle = 'wave',
     stats,
     languages,
     streak,
     activity,
-    quote,
+    quote: rawQuote,
   } = params;
+
+  // Sanitize user inputs
+  const username = escapeHTML(rawUsername);
+  const bgColor = escapeHTML(rawBgColor);
+  const primaryColor = escapeHTML(rawPrimaryColor);
+  const secondaryColor = escapeHTML(rawSecondaryColor);
+  const textColor = escapeHTML(rawTextColor);
+  const borderColor = escapeHTML(rawBorderColor);
+  const customText = escapeHTML(rawCustomText);
+  const gradientStart = escapeHTML(rawGradientStart);
+  const gradientEnd = escapeHTML(rawGradientEnd);
+  const bannerName = escapeHTML(rawBannerName);
+  const bannerDescription = escapeHTML(rawBannerDescription);
+
+  const quote = rawQuote ? {
+    quote: escapeHTML(rawQuote.quote),
+    author: escapeHTML(rawQuote.author)
+  } : undefined;
+
+  const safeLanguages = languages?.map(l => ({
+    ...l,
+    name: escapeHTML(l.name),
+    color: escapeHTML(l.color)
+  }));
 
   // Type-specific default dimensions
   const defaultDimensions: Record<string, { width: number; height: number }> = {
@@ -358,7 +382,7 @@ function generateSVG(params: CardParams): string {
         width, height, bgColor: bgFill, borderRadius, borderStyle,
         paddingTop, paddingRight, paddingBottom, paddingLeft,
         primaryColor, secondaryColor, textColor, animate,
-        languages: languages || [],
+        languages: safeLanguages || [],
         commonStyles, gradientDefs,
       });
 
@@ -1086,6 +1110,16 @@ function generateBannerSVG(p: any): string {
   <text text-anchor="middle" alignment-baseline="middle" x="50%" y="40%" class="banner-name">${bannerName}</text>
   <text text-anchor="middle" alignment-baseline="middle" x="50%" y="60%" class="banner-desc">${bannerDescription}</text>
 </svg>`;
+}
+
+function escapeHTML(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 function formatNumber(num: number): string {
