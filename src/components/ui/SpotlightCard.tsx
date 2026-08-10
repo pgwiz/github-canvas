@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 
 interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -14,24 +14,29 @@ export const SpotlightCard = ({
   ...props
 }: SpotlightCardProps) => {
   const divRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [opacity, setOpacity] = useState(0);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!divRef.current) return;
 
     const div = divRef.current;
     const rect = div.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-    setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    div.style.setProperty("--mouse-x", `${x}px`);
+    div.style.setProperty("--mouse-y", `${y}px`);
   };
 
   const handleMouseEnter = () => {
-    setOpacity(1);
+    if (divRef.current) {
+      divRef.current.style.setProperty("--spotlight-opacity", "1");
+    }
   };
 
   const handleMouseLeave = () => {
-    setOpacity(0);
+    if (divRef.current) {
+      divRef.current.style.setProperty("--spotlight-opacity", "0");
+    }
   };
 
   return (
@@ -41,20 +46,26 @@ export const SpotlightCard = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        "relative overflow-hidden rounded-xl",
+        "relative overflow-hidden rounded-xl bg-card border border-white/10",
         className
       )}
+      style={
+        {
+          "--spotlight-opacity": "0",
+          "--spotlight-color": spotlightColor,
+        } as React.CSSProperties
+      }
       {...props}
     >
       {/* Spotlight overlay */}
       <div
-        className="pointer-events-none absolute -inset-px transition duration-300 z-10"
+        className="pointer-events-none absolute inset-0 transition-opacity duration-500 z-10"
         style={{
-          opacity,
-          background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 40%)`,
+          opacity: "var(--spotlight-opacity)",
+          background: `radial-gradient(600px circle at var(--mouse-x, 0px) var(--mouse-y, 0px), var(--spotlight-color), transparent 40%)`,
         }}
       />
-      <div className="relative z-0">{children}</div>
+      <div className="relative z-0 h-full">{children}</div>
     </div>
   );
 };
