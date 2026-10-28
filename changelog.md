@@ -2,6 +2,15 @@
 
 All notable changes to the GitHub Canvas / GitStats project are documented in this file.
 
+## [2.2.1] - 2026-10-28
+
+### Visual Stabilization (Removed Card Bouncing & Floating)
+- **Eliminated Hero Card Floating / Bouncing**:
+  - Removed `animate-float` keyframe bobbing and asynchronous delays (`delay-0`, `delay-500`, `delay-1000`) from `HeroSection.tsx` and `NotFound.tsx`.
+  - Replaced 3D mouse wobble `TiltCard` with stable, solid containers to prevent erratic movement on mouse interaction.
+  - Aligned all three hero cards evenly on the horizontal axis without vertical staggered offsets.
+  - Removed continuous `animate-pulse` animations from badges and card icons.
+
 ## [2.2.0] - 2026-10-28
 
 ### Real Contribution Heatmap & Accurate Streak Engine (`/api/card?type=contribution` & `type=streak`)

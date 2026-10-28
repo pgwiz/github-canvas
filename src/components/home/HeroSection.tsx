@@ -3,43 +3,10 @@ import { SpotlightGrid } from "@/components/ui/SpotlightGrid";
 import { ArrowRight, Sparkles, Zap, BarChart3, Flame, Code2, Star, GitCommit, GitPullRequest, GitFork } from "lucide-react";
 import { Link } from "react-router-dom";
 import { GlassPanel, GlassInnerPanel } from "@/components/ui/GlassPanel";
-import { TiltCard } from "@/components/ui/TiltCard";
-import { motion, useSpring, useMotionValue, useTransform } from "framer-motion";
-import { useEffect } from "react";
+import { motion } from "framer-motion";
 import { Particles } from "@/components/ui/Particles";
 
 export function HeroSection() {
-  // Mouse follow effect for orbs
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-
-  // Smooth spring animation for mouse following
-  const springConfig = { damping: 25, stiffness: 150 };
-  const springX = useSpring(mouseX, springConfig);
-  const springY = useSpring(mouseY, springConfig);
-
-  // Inverted spring for the second orb
-  const springX2 = useSpring(mouseX, { ...springConfig, damping: 35 });
-  const springY2 = useSpring(mouseY, { ...springConfig, damping: 35 });
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const { clientX, clientY } = e;
-      const { innerWidth, innerHeight } = window;
-
-      // Calculate normalized position (-1 to 1)
-      const x = (clientX - innerWidth / 2) / (innerWidth / 2);
-      const y = (clientY - innerHeight / 2) / (innerHeight / 2);
-
-      // Update motion values
-      mouseX.set(x * 50); // Move up to 50px
-      mouseY.set(y * 50);
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [mouseX, mouseY]);
-
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Background Particles */}
@@ -68,7 +35,7 @@ export function HeroSection() {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 mb-8 backdrop-blur-sm"
           >
-            <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+            <Sparkles className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium text-primary">Visualize Your GitHub Journey</span>
           </motion.div>
 
@@ -150,8 +117,8 @@ export function HeroSection() {
             transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
           >
             {/* User Stats Card - Blue accent */}
-            <TiltCard className="h-full">
-              <GlassPanel hover accent="blue" className="text-left h-full flex flex-col justify-between animate-float delay-0">
+            <div className="h-full">
+              <GlassPanel hover accent="blue" className="text-left h-full flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-11 h-11 rounded-lg bg-primary/15 flex items-center justify-center border border-primary/25 shadow-[0_0_12px_rgba(59,130,246,0.2)]">
@@ -196,15 +163,15 @@ export function HeroSection() {
                   </GlassInnerPanel>
                 </div>
               </GlassPanel>
-            </TiltCard>
+            </div>
 
             {/* Streak Tracker Card - Cyan accent (active/highlighted) */}
-            <TiltCard className="h-full translate-y-[-10px] md:translate-y-[-20px] z-10">
-              <GlassPanel hover accent="teal" active className="text-left h-full flex flex-col justify-between animate-float delay-1000">
+            <div className="h-full z-10">
+              <GlassPanel hover accent="teal" active className="text-left h-full flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-11 h-11 rounded-lg bg-secondary/15 flex items-center justify-center border border-secondary/25 shadow-[0_0_12px_rgba(14,165,233,0.2)]">
-                      <Flame className="w-5 h-5 text-secondary animate-pulse" />
+                      <Flame className="w-5 h-5 text-secondary" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-white">Streak Tracker</h3>
@@ -235,11 +202,11 @@ export function HeroSection() {
                   </GlassInnerPanel>
                 </div>
               </GlassPanel>
-            </TiltCard>
+            </div>
 
             {/* Languages Card - Purple accent */}
-            <TiltCard className="h-full">
-              <GlassPanel hover accent="purple" className="text-left h-full flex flex-col justify-between animate-float delay-500">
+            <div className="h-full">
+              <GlassPanel hover accent="purple" className="text-left h-full flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-11 h-11 rounded-lg bg-purple-500/15 flex items-center justify-center border border-purple-500/25 shadow-[0_0_12px_rgba(139,92,246,0.2)]">
@@ -281,7 +248,7 @@ export function HeroSection() {
                   </GlassInnerPanel>
                 </div>
               </GlassPanel>
-            </TiltCard>
+            </div>
           </motion.div>
         </div>
       </div>

@@ -38,7 +38,7 @@ const NotFound = () => {
           {/* Animated 404 Visual */}
           <div className="mb-6 relative">
             
-            <h1 className="relative text-9xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-primary to-secondary animate-float">
+            <h1 className="relative text-9xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-primary to-secondary">
               404
             </h1>
           </div>
