@@ -843,7 +843,10 @@ async function fetchContributions(username: string): Promise<FetchedContribution
 
         let total = 0;
         if (typeof data.total === 'object' && data.total !== null) {
-          total = Object.values(data.total).reduce((sum, v) => sum + (Number(v) || 0), 0);
+          total = Object.values(data.total as Record<string, unknown>).reduce<number>(
+            (sum: number, v: unknown) => sum + (Number(v) || 0),
+            0
+          );
         } else if (typeof data.total === 'number') {
           total = data.total;
         } else {
