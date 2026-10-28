@@ -2,6 +2,14 @@
 
 All notable changes to the GitHub Canvas / GitStats project are documented in this file.
 
+## [2.1.2] - 2026-10-28
+
+### SVG Coordinate Preservation Bugfix
+- **Fixed SVG Keyframe Transformation Collapse**:
+  - **Root Cause**: `@keyframes fadeIn` in `cardRenderer.ts` and `api/card.ts` animated `transform: translateY(-6px)` to `transform: translateY(0)` with `animation-fill-mode: forwards`. In SVG, CSS `transform` properties override the XML `transform="translate(x, y)"` attributes on `<g>` elements. When the animation reached its final state, it reset the horizontal and vertical offsets to 0, causing all metrics, labels, and columns to collapse into a single overlapping smear at `(0,0)`.
+  - **Resolution**: Replaced keyframe translation with a pure opacity fade (`opacity: 0` to `opacity: 1`), fully preserving XML coordinate geometry across all browsers, embeds, and GitHub Camo proxies.
+  - **Cleanup**: Removed residual `<circle filter="blur(20px)" />` ambient glow element from the stats SVG template.
+
 ## [2.1.1] - 2026-10-28
 
 ### Visual Cleanliness & Rule Enforcement

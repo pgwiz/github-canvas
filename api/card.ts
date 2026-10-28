@@ -166,14 +166,12 @@ export function generateCardSVG(rawParams: CardParams): string {
   const m = speedMultipliers[speed] || 1;
 
   const animCSS = animate ? `
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes pulseGlow { 0%, 100% { filter: drop-shadow(0 0 2px ${primaryColor}40); } 50% { filter: drop-shadow(0 0 8px ${primaryColor}90); } }
-    .card-anim { animation: fadeIn ${0.6 * m}s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    .d-1 { animation-delay: ${0.08 * m}s; }
-    .d-2 { animation-delay: ${0.16 * m}s; }
-    .d-3 { animation-delay: ${0.24 * m}s; }
-    .d-4 { animation-delay: ${0.32 * m}s; }
-    ${animation === 'glow' ? `.glow-effect { animation: pulseGlow ${2.5 * m}s ease-in-out infinite; }` : ''}
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .card-anim { animation: fadeIn ${0.45 * m}s ease-out forwards; }
+    .d-1 { animation-delay: ${0.05 * m}s; }
+    .d-2 { animation-delay: ${0.1 * m}s; }
+    .d-3 { animation-delay: ${0.15 * m}s; }
+    .d-4 { animation-delay: ${0.2 * m}s; }
   ` : '';
 
   const baseStyles = `
