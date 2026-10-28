@@ -208,7 +208,7 @@ export default function Generator() {
       const topic = config.quoteTopic === "random" ? undefined : config.quoteTopic;
       generateQuote(topic).then(setCurrentQuote);
     }
-  }, [config.type]);
+  }, [config.type, config.quoteTopic, currentQuote, generateQuote]);
 
   // Update dimensions when card type changes
   useEffect(() => {
@@ -300,7 +300,7 @@ export default function Generator() {
             {/* Left Panel - Configuration */}
             <div className="space-y-6">
               {/* Username Input */}
-              <GlassPanel accent="green">
+              <GlassPanel accent="blue">
                 <Label htmlFor="username" className="text-lg font-semibold mb-4 block">
                   GitHub Username
                 </Label>
@@ -320,7 +320,7 @@ export default function Generator() {
                   <Button
                     onClick={handleGenerate}
                     disabled={isGenerating}
-                    className="group relative h-12 px-6 overflow-hidden bg-primary hover:bg-primary/90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(12,247,9,0.3)] hover:scale-[1.02] active:scale-[0.98]"
+                    className="group relative h-12 px-6 overflow-hidden bg-primary hover:bg-primary/90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(59,130,246,0.35)] hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out" />
                     <span className="relative flex items-center">
@@ -440,7 +440,7 @@ export default function Generator() {
               </GlassPanel>
 
               {/* Customization Panel */}
-              <GlassPanel accent="green">
+              <GlassPanel accent="blue">
                 <Label className="text-lg font-semibold mb-4 block">
                   Customize
                 </Label>

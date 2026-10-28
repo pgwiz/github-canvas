@@ -4,6 +4,7 @@ import { Github, FileCode, BookOpen, Sparkles, Search, Palette, UserCheck } from
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useCommandMenu } from "./command-menu-context";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const navItems = [
   { href: "/", label: "Home", icon: Sparkles },
@@ -104,6 +105,8 @@ export function Header() {
               <span className="text-xs">⌘</span>K
             </kbd>
           </button>
+
+          <ThemeToggle />
         </div>
       </div>
     </motion.header>

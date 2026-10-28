@@ -317,7 +317,7 @@ export function CardTypesSection() {
 
                     <div className="pt-2 border-t border-white/5 flex items-center justify-between">
                       <Link
-                        to={`/generator`}
+                        to={`/generator?type=${card.id}`}
                         className="text-xs font-medium text-primary hover:text-primary/80 inline-flex items-center gap-1.5 transition-colors group-hover:translate-x-0.5"
                       >
                         Customize {card.name}

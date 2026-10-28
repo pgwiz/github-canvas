@@ -24,7 +24,8 @@ export function MarkdownPreview({ content, className = "" }: MarkdownPreviewProp
  * - Images with markdown ![alt](url) and HTML <img ...>
  * - Headings # .. ######
  * - Badges and links
- * - Bullet lists
+ * - Bullet lists & Task lists
+ * - Markdown tables
  * - Code blocks and inline code
  * - Blockquotes
  */
@@ -33,8 +34,7 @@ function parseMarkdownToHtml(md: string): string {
 
   let html = md;
 
-  // Preserve HTML tags like <div align="...">, <p align="...">, <img ...>, <a>
-  // Replace code blocks first to protect their contents
+  // Preserve code blocks first to protect their contents
   const codeBlocks: string[] = [];
   html = html.replace(/```([a-z0-9]*)\n([\s\S]*?)```/gi, (_match, lang, code) => {
     const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
@@ -59,6 +59,28 @@ function parseMarkdownToHtml(md: string): string {
     return `<a href="${encodeURI(url)}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">${text}</a>`;
   });
 
+  // Tables
+  html = html.replace(/((?:\|[^\n]+\|\n?)+)/g, (tableMatch) => {
+    const lines = tableMatch.trim().split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) return tableMatch;
+
+    const parseRow = (line: string) =>
+      line.replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+
+    // Check if line 1 is separator
+    const headerCols = parseRow(lines[0]);
+    const isSep = /^\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?$/.test(lines[1]);
+    if (!isSep) return tableMatch;
+
+    const thead = `<thead><tr class="border-b border-white/15 bg-white/5">${headerCols.map(c => `<th class="px-4 py-2 text-left font-semibold text-foreground text-xs">${c}</th>`).join('')}</tr></thead>`;
+    const bodyRows = lines.slice(2).map(r => {
+      const cols = parseRow(r);
+      return `<tr class="border-b border-white/5 hover:bg-white/5">${cols.map(c => `<td class="px-4 py-2 text-muted-foreground text-xs">${c}</td>`).join('')}</tr>`;
+    }).join('');
+
+    return `<div class="overflow-x-auto my-4 rounded-lg border border-white/10"><table class="w-full text-left border-collapse">${thead}<tbody>${bodyRows}</tbody></table></div>`;
+  });
+
   // Headings
   html = html.replace(/^###### (.*$)/gim, '<h6 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mt-4 mb-2">$1</h6>');
   html = html.replace(/^##### (.*$)/gim, '<h5 class="text-sm font-semibold text-foreground mt-4 mb-2">$1</h5>');
@@ -73,18 +95,22 @@ function parseMarkdownToHtml(md: string): string {
   // Horizontal rules
   html = html.replace(/^---$/gim, '<hr class="border-white/10 my-6" />');
 
+  // Task lists
+  html = html.replace(/^\s*[-*]\s+\[x\]\s+(.*$)/gim, '<li class="ml-4 list-none flex items-center gap-2 text-foreground my-1"><input type="checkbox" checked disabled class="accent-primary rounded" /> <span>$1</span></li>');
+  html = html.replace(/^\s*[-*]\s+\[\s\]\s+(.*$)/gim, '<li class="ml-4 list-none flex items-center gap-2 text-muted-foreground my-1"><input type="checkbox" disabled class="rounded" /> <span>$1</span></li>');
+
   // Unordered list items: - item or * item
   html = html.replace(/^\s*[-*]\s+(.*$)/gim, '<li class="ml-4 list-disc text-muted-foreground my-1">$1</li>');
 
   // Wrap contiguous <li> in <ul>
-  html = html.replace(/((?:<li[^>]*>.*<\/li>\s*)+)/gim, '<ul class="my-3 space-y-1">$1</ul>');
+  html = html.replace(/((?:<li[^>]*>.*?<\/li>\s*)+)/gim, '<ul class="my-3 space-y-1">$1</ul>');
 
   // Bold & Italic
   html = html.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>');
   html = html.replace(/\*([^*]+)\*/g, '<em class="italic text-muted-foreground">$1</em>');
 
-  // Clean empty paragraphs and restore code blocks
+  // Restore code blocks
   codeBlocks.forEach((block, idx) => {
     html = html.replace(`__CODE_BLOCK_${idx}__`, block);
   });
@@ -94,7 +120,18 @@ function parseMarkdownToHtml(md: string): string {
   html = parts.map(part => {
     const trimmed = part.trim();
     if (!trimmed) return '';
-    if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<pre') || trimmed.startsWith('<div') || trimmed.startsWith('<p') || trimmed.startsWith('<blockquote') || trimmed.startsWith('<hr')) {
+    if (
+      trimmed.startsWith('<h') ||
+      trimmed.startsWith('<ul') ||
+      trimmed.startsWith('<pre') ||
+      trimmed.startsWith('<div') ||
+      trimmed.startsWith('<p') ||
+      trimmed.startsWith('<blockquote') ||
+      trimmed.startsWith('<hr') ||
+      trimmed.startsWith('<table') ||
+      trimmed.startsWith('<img') ||
+      trimmed.startsWith('<a')
+    ) {
       return trimmed;
     }
     return `<p class="my-2.5 text-muted-foreground">${trimmed.replace(/\n/g, '<br />')}</p>`;
