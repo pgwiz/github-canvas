@@ -1,11 +1,11 @@
 {
+  "buildCommand": "pnpm run build",
   "rewrites": [
     {
-      "source": "/:path*",
+      "source": "/((?!api/|assets/|favicon.ico).*)",
       "destination": "/index.html"
     }
   ],
-  "buildCommand": "npm run build && chmod +x ./deploy-functions.sh && ./deploy-functions.sh",
   "env": {
     "NEXT_PUBLIC_SUPABASE_URL": "https://edxiyetfcnugrmxhmvpq.supabase.co",
     "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY": "sb_publishable_U2c-dQgP8-e53ePtJn1MsQ_ePZwgly1"
