@@ -1,6 +1,7 @@
 export interface CardParams {
   type: string;
   username?: string;
+  repo?: string;
   theme?: string;
   bgColor?: string;
   primaryColor?: string;
@@ -16,6 +17,8 @@ export interface CardParams {
   width?: number;
   height?: number;
   customText?: string;
+  customDescription?: string;
+  showOwner?: boolean;
   animate?: boolean;
   animation?: string;
   speed?: string;
@@ -43,7 +46,21 @@ export interface CardParams {
     endDate?: string;
     longestStreakStart?: string;
     longestStreakEnd?: string;
-    days?: Array<{ contributionCount: number }>;
+    currentStreakStart?: string;
+    currentStreakEnd?: string;
+    days?: Array<{ date?: string; contributionCount: number; level?: number }>;
+  };
+  contributionDays?: Array<{ date: string; count: number; level: number }>;
+  repoData?: {
+    name: string;
+    owner: string;
+    description: string | null;
+    stars: number;
+    forks: number;
+    language: string | null;
+    languageColor?: string;
+    isFork?: boolean;
+    isArchived?: boolean;
   };
   activity?: number[];
   quote?: { quote: string; author: string };
@@ -66,7 +83,40 @@ export const THEMES: Record<string, { bg: string; primary: string; secondary: st
   'catppuccin': { bg: '#1e1e2e', primary: '#cba6f7', secondary: '#f5c2e7', text: '#cdd6f4', border: '#cba6f7' },
   'aurora': { bg: '#0b0d17', primary: '#00d9ff', secondary: '#ff6bcb', text: '#e0e0e0', border: '#00d9ff' },
   'matrix': { bg: '#000000', primary: '#00ff00', secondary: '#00aa00', text: '#00ff00', border: '#00ff00' },
-  'neon': { bg: '#0d1117', primary: '#38bdf8', secondary: '#818cf8', text: '#c9d1d9', border: '#38bdf8' },
+  'neon': { bg: '#0d1117', primary: '#0CF709', secondary: '#00e1ff', text: '#c9d1d9', border: '#0CF709' },
+  'transparent': { bg: 'none', primary: '#58a6ff', secondary: '#8b949e', text: '#c9d1d9', border: '#30363d' },
+};
+
+export const LANGUAGE_COLORS: Record<string, string> = {
+  TypeScript: '#3178c6',
+  JavaScript: '#f1e05a',
+  Python: '#3572a5',
+  Rust: '#dea584',
+  Go: '#00add8',
+  Java: '#b07219',
+  'C++': '#f34b7d',
+  C: '#555555',
+  'C#': '#178600',
+  PHP: '#4F5D95',
+  Ruby: '#701516',
+  Swift: '#F05138',
+  Kotlin: '#A97BFF',
+  Dart: '#00B4AB',
+  HTML: '#e34c26',
+  CSS: '#563d7c',
+  SCSS: '#c6538c',
+  Vue: '#41b883',
+  Shell: '#89e051',
+  PowerShell: '#012456',
+  Solidity: '#AA6746',
+  Svelte: '#ff3e00',
+  Elixir: '#6e4a7e',
+  Haskell: '#5e5086',
+  Lua: '#000080',
+  R: '#198CE7',
+  Scala: '#c22d40',
+  Zig: '#ec915c',
+  Cloud: '#00e1ff',
 };
 
 export const FALLBACK_QUOTES = [
@@ -87,7 +137,7 @@ export function formatNumber(num: number): string {
 }
 
 export function escapeXml(str: string): string {
-  return str
+  return (str || '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -101,7 +151,7 @@ export function generateCardSVG(rawParams: CardParams): string {
 
   const type = rawParams.type || 'stats';
   const username = rawParams.username || 'developer';
-  const bgColor = rawParams.bgColor || theme.bg;
+  const bgColor = rawParams.bgColor !== undefined ? rawParams.bgColor : theme.bg;
   const primaryColor = rawParams.primaryColor || theme.primary;
   const secondaryColor = rawParams.secondaryColor || theme.secondary;
   const textColor = rawParams.textColor || theme.text;
@@ -118,13 +168,14 @@ export function generateCardSVG(rawParams: CardParams): string {
   const gradientEnd = rawParams.gradientEnd || secondaryColor;
   const bannerName = rawParams.bannerName || username;
   const bannerDescription = rawParams.bannerDescription || 'Full Stack Architect & Open-Source Builder';
-  const waveStyle = rawParams.waveStyle || 'wave';
 
   const defaultDimensions: Record<string, { width: number; height: number }> = {
     languages: { width: 340, height: 320 },
-    contribution: { width: 620, height: 260 },
+    contribution: { width: 720, height: 250 },
     stats: { width: 495, height: 195 },
     streak: { width: 495, height: 195 },
+    pin: { width: 400, height: 120 },
+    repo: { width: 400, height: 120 },
     activity: { width: 495, height: 195 },
     quote: { width: 495, height: 195 },
     banner: { width: 600, height: 200 },
@@ -137,7 +188,6 @@ export function generateCardSVG(rawParams: CardParams): string {
 
   const borderStyle = showBorder ? `stroke="${borderColor}" stroke-width="1.5"` : '';
 
-  // Gradient background
   let gradientDef = '';
   let bgFill = bgColor;
   if (gradient) {
@@ -162,7 +212,6 @@ export function generateCardSVG(rawParams: CardParams): string {
     bgFill = 'url(#bgGrad)';
   }
 
-  // Animation speed multiplier
   const speedMultipliers: Record<string, number> = { slow: 1.8, normal: 1, fast: 0.6 };
   const m = speedMultipliers[speed] || 1;
 
@@ -188,8 +237,285 @@ export function generateCardSVG(rawParams: CardParams): string {
     </style>
   `;
 
-  // Render by card type
   switch (type) {
+    case 'contribution': {
+      const streak = rawParams.streak || { current: 58, longest: 97, total: 16691 };
+      const days = rawParams.contributionDays || (rawParams.streak?.days?.map((d) => ({
+        date: d.date || '',
+        count: d.contributionCount,
+        level: d.level !== undefined ? d.level : (d.contributionCount === 0 ? 0 : d.contributionCount <= 3 ? 1 : d.contributionCount <= 6 ? 2 : d.contributionCount <= 9 ? 3 : 4),
+      }))) || [];
+
+      const initial = username.charAt(0).toUpperCase() || 'U';
+
+      const cols = 53;
+      const rows = 7;
+      const startX = 52;
+      const gridY = 82;
+      const availableW = width - startX - 24;
+      const pitchX = Math.max(9, Math.min(13, availableW / cols));
+      const cellSize = Math.max(7, pitchX - 2.5);
+
+      const totalCells = cols * rows;
+      const displayDays = days.length >= totalCells
+        ? days.slice(-totalCells)
+        : Array.from({ length: totalCells }).map((_, i) => {
+            const existing = days[days.length - totalCells + i];
+            if (existing) return existing;
+            // Generate clean mock distribution if no days provided
+            const count = Math.random() > 0.6 ? Math.floor(Math.random() * 8) : 0;
+            const level = count === 0 ? 0 : count <= 3 ? 1 : count <= 6 ? 2 : count <= 9 ? 3 : 4;
+            return { date: '', count, level };
+          });
+
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthLabels: Array<{ text: string; col: number }> = [];
+      let lastMonth = -1;
+
+      for (let c = 0; c < cols; c++) {
+        const d = displayDays[c * rows];
+        if (d && d.date) {
+          const mIdx = new Date(d.date).getMonth();
+          if (mIdx !== lastMonth && (c === 0 || c - (monthLabels[monthLabels.length - 1]?.col ?? -10) >= 3)) {
+            monthLabels.push({ text: months[mIdx], col: c });
+            lastMonth = mIdx;
+          }
+        }
+      }
+
+      let cellsSvg = '';
+      for (let c = 0; c < cols; c++) {
+        for (let r = 0; r < rows; r++) {
+          const idx = c * rows + r;
+          const day = displayDays[idx] || { count: 0, level: 0 };
+          const x = Math.round(startX + c * pitchX);
+          const y = Math.round(gridY + r * pitchX);
+
+          let cellFill = `${textColor}`;
+          let fillOpacity = 0.08;
+
+          if (day.level === 1) {
+            cellFill = primaryColor;
+            fillOpacity = 0.32;
+          } else if (day.level === 2) {
+            cellFill = primaryColor;
+            fillOpacity = 0.58;
+          } else if (day.level === 3) {
+            cellFill = primaryColor;
+            fillOpacity = 0.82;
+          } else if (day.level >= 4) {
+            cellFill = primaryColor;
+            fillOpacity = 1.0;
+          }
+
+          cellsSvg += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="2" fill="${cellFill}" fill-opacity="${fillOpacity}" />\n`;
+        }
+      }
+
+      const gridBottomY = Math.round(gridY + rows * pitchX + 18);
+
+      return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+  <defs>${gradientDef}</defs>
+  ${baseStyles}
+  <rect x="1" y="1" width="${width - 2}" height="${height - 2}" rx="${borderRadius}" fill="${bgFill}" ${borderStyle} />
+
+  <!-- Header Section -->
+  <g transform="translate(24, 20)">
+    <circle cx="16" cy="16" r="16" fill="${primaryColor}" fill-opacity="0.12" stroke="${primaryColor}" stroke-opacity="0.4" stroke-width="1.5" />
+    <text x="16" y="21" text-anchor="middle" font-size="13" font-weight="800" fill="${primaryColor}">${escapeXml(initial)}</text>
+
+    <text class="header-title" x="42" y="16">${escapeXml(username)}'s Contribution Graph</text>
+    <text class="header-sub" x="42" y="28">GitHub Activity Calendar</text>
+
+    <g transform="translate(${width - 48}, 14)" text-anchor="end" class="${animate ? 'card-anim d-1' : ''}">
+      <text font-size="11" font-weight="600" fill="${textColor}">
+        <tspan fill="${primaryColor}" font-weight="800">${formatNumber(streak.total)}</tspan> Contributions  |  
+        <tspan fill="${secondaryColor}" font-weight="800">${streak.current}</tspan>d Streak  |  
+        <tspan fill="${primaryColor}" font-weight="800">${streak.longest}</tspan>d Longest
+      </text>
+    </g>
+
+    <line x1="0" y1="40" x2="${width - 48}" y2="40" stroke="${textColor}" stroke-opacity="0.1" stroke-width="1" />
+  </g>
+
+  <!-- Month Labels -->
+  <g class="${animate ? 'card-anim d-2' : ''}">
+    ${monthLabels.map((m) => `<text x="${Math.round(startX + m.col * pitchX)}" y="${gridY - 8}" font-size="9" font-weight="600" fill="${textColor}" fill-opacity="0.55">${m.text}</text>`).join('\n    ')}
+  </g>
+
+  <!-- Day Labels -->
+  <g class="${animate ? 'card-anim d-2' : ''}">
+    <text x="${startX - 8}" y="${Math.round(gridY + 1 * pitchX + cellSize - 1)}" text-anchor="end" font-size="8.5" font-weight="500" fill="${textColor}" fill-opacity="0.45">Mon</text>
+    <text x="${startX - 8}" y="${Math.round(gridY + 3 * pitchX + cellSize - 1)}" text-anchor="end" font-size="8.5" font-weight="500" fill="${textColor}" fill-opacity="0.45">Wed</text>
+    <text x="${startX - 8}" y="${Math.round(gridY + 5 * pitchX + cellSize - 1)}" text-anchor="end" font-size="8.5" font-weight="500" fill="${textColor}" fill-opacity="0.45">Fri</text>
+  </g>
+
+  <!-- Contribution Heatmap Grid -->
+  <g class="${animate ? 'card-anim d-3' : ''}">
+    ${cellsSvg}
+  </g>
+
+  <!-- Footer Legend -->
+  <g transform="translate(24, ${gridBottomY})" class="${animate ? 'card-anim d-4' : ''}">
+    <text x="${startX - 24}" y="7" font-size="10" font-weight="500" fill="${textColor}" fill-opacity="0.5">Real-time commit calendar</text>
+
+    <g transform="translate(${width - 48 - 140}, 0)">
+      <text x="0" y="7" font-size="9" font-weight="500" fill="${textColor}" fill-opacity="0.5">Less</text>
+      <rect x="28" y="0" width="8" height="8" rx="1.5" fill="${textColor}" fill-opacity="0.08" />
+      <rect x="40" y="0" width="8" height="8" rx="1.5" fill="${primaryColor}" fill-opacity="0.32" />
+      <rect x="52" y="0" width="8" height="8" rx="1.5" fill="${primaryColor}" fill-opacity="0.58" />
+      <rect x="64" y="0" width="8" height="8" rx="1.5" fill="${primaryColor}" fill-opacity="0.82" />
+      <rect x="76" y="0" width="8" height="8" rx="1.5" fill="${primaryColor}" fill-opacity="1.0" />
+      <text x="92" y="7" font-size="9" font-weight="500" fill="${textColor}" fill-opacity="0.5">More</text>
+    </g>
+  </g>
+</svg>`;
+    }
+
+    case 'pin':
+    case 'repo': {
+      const showOwner = rawParams.showOwner === true;
+      const repo = rawParams.repoData || {
+        name: rawParams.repo || 'repository',
+        owner: username,
+        description: rawParams.customDescription || `Pinned repository by @${username}`,
+        stars: 0,
+        forks: 0,
+        language: 'TypeScript',
+        languageColor: LANGUAGE_COLORS['TypeScript'],
+        isFork: false,
+        isArchived: false,
+      };
+
+      const displayName = showOwner ? `${repo.owner}/${repo.name}` : repo.name;
+      const maxLineChars = Math.max(30, Math.floor((width - 48) / 6.5));
+      const words = (repo.description || '').split(' ');
+      const lines: string[] = [];
+      let curLine = '';
+
+      for (const w of words) {
+        if ((curLine + ' ' + w).length > maxLineChars) {
+          lines.push(curLine.trim());
+          curLine = w;
+          if (lines.length === 2) break;
+        } else {
+          curLine = curLine ? curLine + ' ' + w : w;
+        }
+      }
+      if (curLine && lines.length < 2) lines.push(curLine.trim());
+
+      const descBlock = lines.map((l, idx) =>
+        `<tspan x="24" dy="${idx === 0 ? 0 : 16}">${escapeXml(l)}</tspan>`
+      ).join('');
+
+      const badgeText = repo.isArchived ? 'Archived' : repo.isFork ? 'Fork' : 'Public';
+      const badgeWidth = badgeText.length * 6.5 + 16;
+      const badgeX = width - 24 - badgeWidth;
+
+      return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+  <defs>${gradientDef}</defs>
+  ${baseStyles}
+  <rect x="1" y="1" width="${width - 2}" height="${height - 2}" rx="${borderRadius}" fill="${bgFill}" ${borderStyle} />
+
+  <!-- Header -->
+  <g class="${animate ? 'card-anim d-1' : ''}" transform="translate(24, 22)">
+    <path d="M0 1.75A.75.75 0 0 1 .75 1h4.253c1.227 0 2.317.59 3 1.501A3.743 3.743 0 0 1 11 1h4.25a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75h-4.25a2.25 2.25 0 0 0-2.25 2.25.75.75 0 0 1-1.5 0 2.25 2.25 0 0 0-2.25-2.25H.75a.75.75 0 0 1-.75-.75V1.75Zm8.25 10.18a3.758 3.758 0 0 1 1.25-.93V2.503a2.25 2.25 0 0 0-1.25.928v8.499ZM6.75 2.504a2.25 2.25 0 0 0-1.25-.93v8.5a3.757 3.757 0 0 1 1.25.93V2.504Z" fill="${secondaryColor}" />
+    <text font-size="14" font-weight="700" fill="${primaryColor}" x="22" y="11">${escapeXml(displayName)}</text>
+  </g>
+
+  <!-- Badge -->
+  <g class="${animate ? 'card-anim d-1' : ''}">
+    <rect x="${badgeX}" y="12" width="${badgeWidth}" height="18" rx="9" fill="${textColor}" fill-opacity="0.08" stroke="${textColor}" stroke-opacity="0.18" stroke-width="1" />
+    <text font-size="9" font-weight="600" fill="${textColor}" opacity="0.85" x="${badgeX + badgeWidth / 2}" y="24" text-anchor="middle">${badgeText}</text>
+  </g>
+
+  <!-- Description -->
+  <g class="${animate ? 'card-anim d-2' : ''}">
+    <text font-size="11.5" font-weight="400" fill="${textColor}" opacity="0.8" x="24" y="52">
+      ${descBlock}
+    </text>
+  </g>
+
+  <!-- Footer Meta -->
+  <g class="${animate ? 'card-anim d-3' : ''}" transform="translate(24, ${height - 20})">
+    <g transform="translate(0, 0)">
+      <circle cx="5" cy="-4" r="4.5" fill="${repo.languageColor || primaryColor}" />
+      <text font-size="11" font-weight="500" fill="${textColor}" opacity="0.85" x="14" y="0">${escapeXml(repo.language || 'Code')}</text>
+    </g>
+
+    <g transform="translate(110, 0)">
+      <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z" fill="${secondaryColor}" transform="translate(0, -9) scale(0.85)" />
+      <text font-size="11" font-weight="500" fill="${textColor}" opacity="0.85" x="18" y="0">${formatNumber(repo.stars)}</text>
+    </g>
+
+    <g transform="translate(180, 0)">
+      <path d="M5 3.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm0 2.122a2.25 2.25 0 1 0-1.5 0v.878A2.25 2.25 0 0 0 5.75 8.5h1.5v2.128a2.251 2.251 0 1 0 1.5 0V8.5h1.5a2.25 2.25 0 0 0 2.25-2.25v-.878a2.25 2.25 0 1 0-1.5 0v.878a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 5 6.25v-.878Zm3.75 7.378a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm3-8.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" fill="${secondaryColor}" transform="translate(0, -9) scale(0.85)" />
+      <text font-size="11" font-weight="500" fill="${textColor}" opacity="0.85" x="18" y="0">${formatNumber(repo.forks)}</text>
+    </g>
+  </g>
+</svg>`;
+    }
+
+    case 'streak': {
+      const streak = rawParams.streak || { current: 58, longest: 97, total: 16691 };
+      const colW = Math.round((width - 48) / 3);
+
+      const longestSub = streak.longestStreakStart && streak.longestStreakEnd
+        ? `${streak.longestStreakStart} to ${streak.longestStreakEnd}`
+        : 'Personal record';
+      const currentSub = streak.current > 0 ? 'Streak continuing' : 'Inactive today';
+
+      return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+  <defs>${gradientDef}</defs>
+  ${baseStyles}
+  <rect x="1" y="1" width="${width - 2}" height="${height - 2}" rx="${borderRadius}" fill="${bgFill}" ${borderStyle} />
+
+  <g transform="translate(24, 22)">
+    <g class="${animate ? 'card-anim d-1' : ''}">
+      <text class="header-title" x="0" y="12">Contribution Streak</text>
+      <text class="header-sub" x="${width - 48}" y="12" text-anchor="end">Active Profile</text>
+      <line x1="0" y1="22" x2="${width - 48}" y2="22" stroke="${textColor}" stroke-opacity="0.1" stroke-width="1" />
+    </g>
+
+    <g transform="translate(0, 48)">
+      <g transform="translate(0, 0)" class="${animate ? 'card-anim d-1' : ''}">
+        <text class="stat-lbl" x="0" y="14">Total Contributions</text>
+        <text class="stat-val" x="0" y="44" fill="${textColor}">${formatNumber(streak.total)}</text>
+        <text font-size="10" fill="${textColor}" opacity="0.4" x="0" y="64">Lifetime total</text>
+      </g>
+
+      <line x1="${colW - 10}" y1="8" x2="${colW - 10}" y2="70" stroke="${textColor}" stroke-opacity="0.1" />
+
+      <g transform="translate(${colW}, 0)" class="${animate ? 'card-anim d-2' : ''}">
+        <g transform="translate(0, 2)">
+          <path d="M12 2c.5 3-1.5 5.5-2.5 7.5S8 13.5 9 16c.8-1.5 2-2.5 3.5-3 0 2 1.5 3.5 1.5 5.5 0 3-2.5 5.5-5.5 5.5S3 21.5 3 18.5C3 13 8 7 12 2z" fill="${primaryColor}" />
+        </g>
+        <text class="stat-lbl" x="22" y="14" fill="${primaryColor}">Current Streak</text>
+        <text class="stat-val" x="0" y="44" fill="${primaryColor}">${streak.current} Days</text>
+        <text font-size="10" fill="${secondaryColor}" x="0" y="64">${currentSub}</text>
+      </g>
+
+      <line x1="${colW * 2 - 10}" y1="8" x2="${colW * 2 - 10}" y2="70" stroke="${textColor}" stroke-opacity="0.1" />
+
+      <g transform="translate(${colW * 2}, 0)" class="${animate ? 'card-anim d-3' : ''}">
+        <text class="stat-lbl" x="0" y="14">Longest Streak</text>
+        <text class="stat-val" x="0" y="44" fill="${secondaryColor}">${streak.longest} Days</text>
+        <text font-size="10" fill="${textColor}" opacity="0.4" x="0" y="64">${longestSub}</text>
+      </g>
+    </g>
+
+    <g transform="translate(0, 136)" class="${animate ? 'card-anim d-4' : ''}">
+      ${Array.from({ length: 16 }).map((_, i) => {
+        const dotW = Math.round((width - 48 - 15 * 4) / 16);
+        const x = i * (dotW + 4);
+        const active = i >= 8;
+        return `<rect x="${x}" y="0" width="${dotW}" height="4" rx="2" fill="${active ? primaryColor : secondaryColor}" fill-opacity="${0.2 + (i * 0.05)}" />`;
+      }).join('')}
+    </g>
+  </g>
+</svg>`;
+    }
+
     case 'stats': {
       const stats = rawParams.stats || { totalStars: 1420, publicRepos: 48, followers: 890, totalForks: 312 };
       return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
@@ -204,16 +530,13 @@ export function generateCardSVG(rawParams: CardParams): string {
   <rect x="1" y="1" width="${width - 2}" height="${height - 2}" rx="${borderRadius}" fill="${bgFill}" ${borderStyle} />
 
   <g transform="translate(24, 22)">
-    <!-- Header -->
     <g class="${animate ? 'card-anim d-1' : ''}">
       <text class="header-title" x="0" y="12">${escapeXml(username)}'s GitHub Stats</text>
       <text class="header-sub" x="${width - 48}" y="12" text-anchor="end">Top Rank</text>
       <line x1="0" y1="22" x2="${width - 48}" y2="22" stroke="${textColor}" stroke-opacity="0.1" stroke-width="1" />
     </g>
 
-    <!-- Metrics 4-Col Grid -->
     <g transform="translate(0, 48)">
-      <!-- Stars -->
       <g transform="translate(0, 0)" class="${animate ? 'card-anim d-1' : ''}">
         <rect x="0" y="0" width="36" height="36" rx="8" fill="${primaryColor}" fill-opacity="0.12" />
         <path d="M18 10l2.3 4.7 5.2.8-3.8 3.7.9 5.2-4.6-2.4-4.6 2.4.9-5.2-3.8-3.7 5.2-.8L18 10z" fill="${primaryColor}" />
@@ -221,7 +544,6 @@ export function generateCardSVG(rawParams: CardParams): string {
         <text class="stat-lbl" x="48" y="34">Total Stars</text>
       </g>
 
-      <!-- Repos -->
       <g transform="translate(${Math.round((width - 48) / 2)}, 0)" class="${animate ? 'card-anim d-2' : ''}">
         <rect x="0" y="0" width="36" height="36" rx="8" fill="${secondaryColor}" fill-opacity="0.12" />
         <path d="M11 14h14v10H11z M14 11h8v3h-8z" fill="none" stroke="${secondaryColor}" stroke-width="1.8" stroke-linejoin="round" />
@@ -229,7 +551,6 @@ export function generateCardSVG(rawParams: CardParams): string {
         <text class="stat-lbl" x="48" y="34">Repositories</text>
       </g>
 
-      <!-- Followers -->
       <g transform="translate(0, 56)" class="${animate ? 'card-anim d-3' : ''}">
         <rect x="0" y="0" width="36" height="36" rx="8" fill="${primaryColor}" fill-opacity="0.12" />
         <path d="M14 17a4 4 0 100-8 4 4 0 000 8zm8 2a3 3 0 100-6 3 3 0 000 6zm-8 2c-3.3 0-8 1.7-8 5v2h16v-2c0-3.3-4.7-5-8-5z" fill="${primaryColor}" />
@@ -237,7 +558,6 @@ export function generateCardSVG(rawParams: CardParams): string {
         <text class="stat-lbl" x="48" y="34">Followers</text>
       </g>
 
-      <!-- Forks -->
       <g transform="translate(${Math.round((width - 48) / 2)}, 56)" class="${animate ? 'card-anim d-4' : ''}">
         <rect x="0" y="0" width="36" height="36" rx="8" fill="${secondaryColor}" fill-opacity="0.12" />
         <path d="M13 11a2 2 0 100-4 2 2 0 000 4zm10 0a2 2 0 100-4 2 2 0 000 4zm-5 14a2 2 0 100-4 2 2 0 000 4z M13 11v3c0 2 1.5 3.5 3.5 3.5h3c2 0 3.5-1.5 3.5-3.5v-3 M18 17.5v3.5" fill="none" stroke="${secondaryColor}" stroke-width="1.8" stroke-linecap="round" />
@@ -293,7 +613,6 @@ export function generateCardSVG(rawParams: CardParams): string {
       <line x1="0" y1="22" x2="${barWidth}" y2="22" stroke="${textColor}" stroke-opacity="0.1" stroke-width="1" />
     </g>
 
-    <!-- Unified Stacked Progress Bar -->
     <g transform="translate(0, 36)" class="${animate ? 'card-anim d-2' : ''}">
       <rect x="0" y="0" width="${barWidth}" height="8" rx="4" fill="${textColor}" fill-opacity="0.1" />
       <g clip-path="url(#barClip)">${progressSegments}</g>
@@ -301,67 +620,6 @@ export function generateCardSVG(rawParams: CardParams): string {
     <clipPath id="barClip"><rect x="0" y="36" width="${barWidth}" height="8" rx="4" /></clipPath>
 
     ${rows}
-  </g>
-</svg>`;
-    }
-
-    case 'streak': {
-      const streak = rawParams.streak || { current: 32, longest: 145, total: 1240 };
-      const colW = Math.round((width - 48) / 3);
-
-      return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
-  <defs>${gradientDef}</defs>
-  ${baseStyles}
-  <rect x="1" y="1" width="${width - 2}" height="${height - 2}" rx="${borderRadius}" fill="${bgFill}" ${borderStyle} />
-
-  <g transform="translate(24, 22)">
-    <!-- Header -->
-    <g class="${animate ? 'card-anim d-1' : ''}">
-      <text class="header-title" x="0" y="12">Contribution Streak</text>
-      <text class="header-sub" x="${width - 48}" y="12" text-anchor="end">Active Today</text>
-      <line x1="0" y1="22" x2="${width - 48}" y2="22" stroke="${textColor}" stroke-opacity="0.1" stroke-width="1" />
-    </g>
-
-    <!-- 3 Metrics Columns -->
-    <g transform="translate(0, 48)">
-      <!-- Total Contributions -->
-      <g transform="translate(0, 0)" class="${animate ? 'card-anim d-1' : ''}">
-        <text class="stat-lbl" x="0" y="14">Total Contributions</text>
-        <text class="stat-val" x="0" y="44" fill="${textColor}">${formatNumber(streak.total)}</text>
-        <text font-size="10" fill="${textColor}" opacity="0.4" x="0" y="64">Lifetime commits</text>
-      </g>
-
-      <line x1="${colW - 10}" y1="8" x2="${colW - 10}" y2="70" stroke="${textColor}" stroke-opacity="0.1" />
-
-      <!-- Current Streak (Hero Center) -->
-      <g transform="translate(${colW}, 0)" class="${animate ? 'card-anim d-2' : ''}">
-        <g transform="translate(0, 2)">
-          <path d="M12 2c.5 3-1.5 5.5-2.5 7.5S8 13.5 9 16c.8-1.5 2-2.5 3.5-3 0 2 1.5 3.5 1.5 5.5 0 3-2.5 5.5-5.5 5.5S3 21.5 3 18.5C3 13 8 7 12 2z" fill="${primaryColor}" />
-        </g>
-        <text class="stat-lbl" x="22" y="14" fill="${primaryColor}">Current Streak</text>
-        <text class="stat-val" x="0" y="44" fill="${primaryColor}">${streak.current} Days</text>
-        <text font-size="10" fill="${secondaryColor}" x="0" y="64">Streak continuing</text>
-      </g>
-
-      <line x1="${colW * 2 - 10}" y1="8" x2="${colW * 2 - 10}" y2="70" stroke="${textColor}" stroke-opacity="0.1" />
-
-      <!-- Longest Streak -->
-      <g transform="translate(${colW * 2}, 0)" class="${animate ? 'card-anim d-3' : ''}">
-        <text class="stat-lbl" x="0" y="14">Longest Streak</text>
-        <text class="stat-val" x="0" y="44" fill="${secondaryColor}">${streak.longest} Days</text>
-        <text font-size="10" fill="${textColor}" opacity="0.4" x="0" y="64">Personal record</text>
-      </g>
-    </g>
-
-    <!-- Mini Progress Dots/Ticks -->
-    <g transform="translate(0, 136)" class="${animate ? 'card-anim d-4' : ''}">
-      ${Array.from({ length: 16 }).map((_, i) => {
-        const dotW = Math.round((width - 48 - 15 * 4) / 16);
-        const x = i * (dotW + 4);
-        const active = i >= 10;
-        return `<rect x="${x}" y="0" width="${dotW}" height="4" rx="2" fill="${active ? primaryColor : secondaryColor}" fill-opacity="${0.2 + (i * 0.05)}" />`;
-      }).join('')}
-    </g>
   </g>
 </svg>`;
     }
@@ -384,7 +642,7 @@ export function generateCardSVG(rawParams: CardParams): string {
       return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     ${gradientDef}
-    <linearGradient id="actArea" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="actArea" x1="0%" y1="0%" x2="0%" y2="1">
       <stop offset="0%" stop-color="${primaryColor}" stop-opacity="0.35" />
       <stop offset="100%" stop-color="${primaryColor}" stop-opacity="0.0" />
     </linearGradient>
@@ -393,21 +651,18 @@ export function generateCardSVG(rawParams: CardParams): string {
   <rect x="1" y="1" width="${width - 2}" height="${height - 2}" rx="${borderRadius}" fill="${bgFill}" ${borderStyle} />
 
   <g transform="translate(24, 22)">
-    <!-- Header -->
     <g class="${animate ? 'card-anim d-1' : ''}">
       <text class="header-title" x="0" y="12">Weekly Activity</text>
       <text class="header-sub" x="${graphW}" y="12" text-anchor="end">Last 12 Weeks</text>
       <line x1="0" y1="22" x2="${graphW}" y2="22" stroke="${textColor}" stroke-opacity="0.1" stroke-width="1" />
     </g>
 
-    <!-- Trend Chart -->
     <g transform="translate(0, 48)" class="${animate ? 'card-anim d-2' : ''}">
       <path d="${areaD}" fill="url(#actArea)" />
       <path d="${pathD}" fill="none" stroke="${primaryColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
       ${points.map((pt, i) => (i % 3 === 0 || i === points.length - 1) ? `<circle cx="${pt.x}" cy="${pt.y}" r="3.5" fill="${bgFill}" stroke="${primaryColor}" stroke-width="2" />` : '').join('')}
     </g>
 
-    <!-- Legend -->
     <g transform="translate(0, 134)" class="${animate ? 'card-anim d-3' : ''}">
       <text font-size="10" fill="${textColor}" opacity="0.5" x="0" y="10">Earlier</text>
       <text font-size="10" fill="${textColor}" opacity="0.5" x="${graphW / 2}" y="10" text-anchor="middle">Mid-Period</text>
@@ -445,24 +700,20 @@ export function generateCardSVG(rawParams: CardParams): string {
   <rect x="1" y="1" width="${width - 2}" height="${height - 2}" rx="${borderRadius}" fill="${bgFill}" ${borderStyle} />
 
   <g transform="translate(24, 22)">
-    <!-- Header -->
     <g class="${animate ? 'card-anim d-1' : ''}">
       <text class="header-title" x="0" y="12">Developer Wisdom</text>
       <text class="header-sub" x="${width - 48}" y="12" text-anchor="end">#inspiration</text>
       <line x1="0" y1="22" x2="${width - 48}" y2="22" stroke="${textColor}" stroke-opacity="0.1" stroke-width="1" />
     </g>
 
-    <!-- Quote Mark Icon -->
     <path d="M14 0c-4 0-7 3-7 7 0 2 1 4 3 5-1 2-3 4-5 5l2 2c4-2 7-6 7-9V0zm14 0c-4 0-7 3-7 7 0 2 1 4 3 5-1 2-3 4-5 5l2 2c4-2 7-6 7-9V0z" fill="${primaryColor}" opacity="0.15" transform="translate(10, 32) scale(1.4)" />
 
-    <!-- Centered Quote Text -->
     <g class="${animate ? 'card-anim d-2' : ''}">
       <text x="${width / 2}" y="76" font-size="14" font-style="italic" font-weight="500" fill="${textColor}" text-anchor="middle" line-height="1.5">
         "${textBlock}"
       </text>
     </g>
 
-    <!-- Author Attribution -->
     <g class="${animate ? 'card-anim d-3' : ''}">
       <text x="${width / 2}" y="138" font-size="12" font-weight="600" fill="${secondaryColor}" text-anchor="middle">
         — ${escapeXml(q.author)}
@@ -476,7 +727,6 @@ export function generateCardSVG(rawParams: CardParams): string {
       const h = height;
       const w = width;
 
-      // Wave path animations
       const waveD1 = `M0 0 L0 ${Math.round(h * 0.6)} Q ${Math.round(w * 0.25)} ${Math.round(h * 0.8)} ${Math.round(w * 0.5)} ${Math.round(h * 0.65)} T ${w} ${Math.round(h * 0.75)} L ${w} 0 Z`;
       const waveD2 = `M0 0 L0 ${Math.round(h * 0.7)} Q ${Math.round(w * 0.25)} ${Math.round(h * 0.6)} ${Math.round(w * 0.5)} ${Math.round(h * 0.75)} T ${w} ${Math.round(h * 0.65)} L ${w} 0 Z`;
 
@@ -493,14 +743,12 @@ export function generateCardSVG(rawParams: CardParams): string {
   ${baseStyles}
   <rect x="1" y="1" width="${width - 2}" height="${height - 2}" rx="${borderRadius}" fill="${bgFill}" ${borderStyle} />
 
-  <!-- Animated Waves -->
   <g clip-path="url(#bannerClip)">
     <path d="${waveD1}" fill="url(#bannerWave)">
       ${animate ? `<animate attributeName="d" dur="${12 * m}s" repeatCount="indefinite" values="${waveD1};${waveD2};${waveD1}" />` : ''}
     </path>
   </g>
 
-  <!-- Banner Content -->
   <g transform="translate(${Math.round(width / 2)}, ${Math.round(height / 2)})" text-anchor="middle" class="${animate ? 'card-anim d-1' : ''}">
     <text y="-8" font-size="28" font-weight="800" fill="${primaryColor}" letter-spacing="-0.03em">
       ${escapeXml(bannerName)}

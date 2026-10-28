@@ -72,11 +72,53 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
       return `${supabaseUrl}/functions/v1/generate-card`;
     }
 
+    if (config.type === 'pin') {
+      return `${window.location.origin}/api/pin`;
+    }
+
     // Self-hosted (Vercel, Netlify, custom domain) or Localhost (if API is running) - use /api/card route
     return `${window.location.origin}/api/card`;
-  }, []);
+  }, [config.type]);
 
-  const imageUrl = `${apiEndpoint}?type=${config.type}&username=${config.username}&theme=${config.theme}&bg=${encodeURIComponent(config.bgColor)}&primary=${encodeURIComponent(config.primaryColor)}&secondary=${encodeURIComponent(config.secondaryColor)}&text=${encodeURIComponent(config.textColor)}&border=${encodeURIComponent(config.borderColor)}&radius=${config.borderRadius}&showBorder=${config.showBorder}&paddingTop=${config.paddingTop || 25}&paddingRight=${config.paddingRight || 25}&paddingBottom=${config.paddingBottom || 25}&paddingLeft=${config.paddingLeft || 25}&animation=${config.animation || 'fadeIn'}&speed=${config.animationSpeed || 'normal'}&gradient=${config.gradientEnabled}&gradientType=${config.gradientType}&gradientAngle=${config.gradientAngle}&gradientStart=${encodeURIComponent(config.gradientStart)}&gradientEnd=${encodeURIComponent(config.gradientEnd)}${config.type === 'banner' ? `&bannerName=${encodeURIComponent(config.bannerName)}&bannerDescription=${encodeURIComponent(config.bannerDescription)}&waveStyle=${encodeURIComponent(config.waveStyle)}` : ''}${config.customText ? `&customText=${encodeURIComponent(config.customText)}` : ''}`;
+  const imageUrl = useMemo(() => {
+    const params = new URLSearchParams();
+    if (config.type !== 'pin') {
+      params.set('type', config.type);
+    }
+    if (config.username) params.set('username', config.username);
+    if (config.type === 'pin' && config.repo) params.set('repo', config.repo);
+    if (config.theme) params.set('theme', config.theme);
+    if (config.bgColor) params.set('bg', config.bgColor);
+    if (config.primaryColor) params.set('primary', config.primaryColor);
+    if (config.secondaryColor) params.set('secondary', config.secondaryColor);
+    if (config.textColor) params.set('text', config.textColor);
+    if (config.borderColor) params.set('border', config.borderColor);
+    if (config.borderRadius !== undefined) params.set('radius', String(config.borderRadius));
+    if (config.showBorder !== undefined) params.set('showBorder', String(config.showBorder));
+    if (config.width) params.set('width', String(config.width));
+    if (config.height) params.set('height', String(config.height));
+    if (config.animation && config.animation !== 'none') params.set('animation', config.animation);
+    if (config.animationSpeed) params.set('speed', config.animationSpeed);
+    if (config.gradientEnabled) {
+      params.set('gradient', 'true');
+      if (config.gradientType) params.set('gradientType', config.gradientType);
+      if (config.gradientAngle) params.set('gradientAngle', String(config.gradientAngle));
+      if (config.gradientStart) params.set('gradientStart', config.gradientStart);
+      if (config.gradientEnd) params.set('gradientEnd', config.gradientEnd);
+    }
+    if (config.type === 'banner') {
+      if (config.bannerName) params.set('bannerName', config.bannerName);
+      if (config.bannerDescription) params.set('bannerDescription', config.bannerDescription);
+      if (config.waveStyle) params.set('waveStyle', config.waveStyle);
+    }
+    if (config.type === 'pin') {
+      if (config.customDescription) params.set('description', config.customDescription);
+      if (config.showOwner) params.set('show_owner', 'true');
+    }
+    if (config.customText) params.set('customText', config.customText);
+
+    return `${apiEndpoint}?${params.toString()}`;
+  }, [apiEndpoint, config]);
 
   const markdownCode = `![${config.username || "GitHub"} Stats](${imageUrl})`;
 

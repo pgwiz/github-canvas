@@ -2,6 +2,26 @@
 
 All notable changes to the GitHub Canvas / GitStats project are documented in this file.
 
+## [2.2.0] - 2026-10-28
+
+### Real Contribution Heatmap & Accurate Streak Engine (`/api/card?type=contribution` & `type=streak`)
+- **Resolved Broken Contribution Graph**:
+  - Implemented complete 53-week (cols) by 7-day (rows) SVG heatmap rendering in `api/card.ts` and `src/lib/cardRenderer.ts`.
+  - Added month axis indicators (Jan - Dec), weekday indicators (Mon, Wed, Fri), header stats badges, and 5-tier intensity scale legend.
+- **Fixed Fake Streak Calculation**:
+  - **Root Cause**: Previous implementation calculated streak using a mock formula based on public repo counts (`Math.floor(repos.length * 3.2)` yielded 145, `Math.floor(repos.length * 1.5)` yielded 32), generating inaccurate metrics that contradicted real commit history.
+  - **Resolution**: Integrated live multi-tiered contribution engine (GitHub GraphQL API with `GITHUB_TOKEN` -> jogruber all-time contributions API -> direct GitHub profile scrape fallback).
+  - Accurately tracks all-time longest streak (e.g. real 97-day streak for `@pgwiz` from May 26 to Aug 30, 2026), current active streak (e.g. 58 days continuing today), and lifetime total contributions (16,691).
+  - Added in-memory 30-minute caching for sub-5ms response times and rate-limit immunity.
+
+### Pinned Repository Card Engine (`/api/pin` & `/api/card?type=pin`)
+- **New Dedicated Endpoint `/api/pin`**:
+  - Full compatibility with `github-readme-stats` parameters: `username`, `repo`, `theme`, `border_color`, `title_color`, `text_color`, `icon_color`, `bg_color`, `show_owner`, `description`.
+  - Added automatic color normalizer supporting hex with or without `#`, `transparent` theme/background, and truncated hex typo resolution (e.g. `bg_color=0d11` -> `#0d1117`).
+  - Added graceful fallback for private or custom domain projects (e.g. `pgwiz.cloud`), ensuring pinned cards render rich vector graphics without throwing 404 or returning broken images.
+  - Added `Pinned` tab, repository inputs, and custom description options to `Generator.tsx` and `CustomizationPanel.tsx`.
+  - Added `/api/pin` documentation and live example to `/docs`.
+
 ## [2.1.2] - 2026-10-28
 
 ### SVG Coordinate Preservation Bugfix

@@ -27,6 +27,7 @@ export interface GitHubStats {
     startDate?: string;
     longestStreakStart?: string;
     longestStreakEnd?: string;
+    days?: Array<{ date?: string; contributionCount: number; level?: number }>;
   };
   activity: number[];
 }

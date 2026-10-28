@@ -237,14 +237,15 @@ async function fetchContributions(username: string): Promise<{
             }
           }
 
-          // Calculate current streak (from end backwards)
+          // Calculate current streak (from end backwards, filtering future days)
           const todayStr = new Date().toISOString().split('T')[0];
+          const pastContributions = contributions.filter((d) => d.date <= todayStr);
           let currentStreak = 0;
           let currentStreakStart = '';
           let currentStreakEnd = '';
 
-          for (let i = contributions.length - 1; i >= 0; i--) {
-            const day = contributions[i];
+          for (let i = pastContributions.length - 1; i >= 0; i--) {
+            const day = pastContributions[i];
             if (day.count > 0) {
               if (currentStreak === 0) {
                 currentStreakEnd = day.date;
@@ -378,6 +379,7 @@ serve(async (req) => {
         startDate: contributions.startDate,
         longestStreakStart: contributions.longestStreakStart,
         longestStreakEnd: contributions.longestStreakEnd,
+        days: contributions.days,
       },
       activity: Array.from({ length: 30 }, () => Math.floor(Math.random() * 15)),
     };

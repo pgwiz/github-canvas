@@ -55,6 +55,9 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
         bannerDescription: config.bannerDescription,
         waveStyle: config.waveStyle,
         quoteTopic: config.quoteTopic,
+        repo: config.repo,
+        customDescription: config.customDescription,
+        showOwner: config.showOwner,
       };
 
       if (githubData) {

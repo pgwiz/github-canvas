@@ -608,19 +608,59 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
                     </div>
                     <h3 className="text-sm font-medium mb-1">Standard Settings</h3>
                     <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-                      This card uses standard GitHub Contribution Graph settings. Customization for square size and gaps coming soon.
+                      This card renders a full 52-week GitHub contribution heatmap with real streaks, total contributions, month/day labels, and legend.
                     </p>
                   </div>
                 </div>
               )}
 
-              {config.type !== "custom" && config.type !== "banner" && config.type !== "contribution" && (
+              {config.type === "pin" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm mb-2 block">Repository Name</Label>
+                    <Input
+                      value={config.repo || ""}
+                      onChange={(e) => updateConfig({ repo: e.target.value })}
+                      placeholder="e.g. pgwiz.cloud or github-canvas"
+                      className="bg-background/30 border-border/30 focus:border-primary/50 transition-colors"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Target repository name to fetch real stars, forks, and language.
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label className="text-sm mb-2 block">Custom Description (Optional)</Label>
+                    <Textarea
+                      value={config.customDescription || ""}
+                      onChange={(e) => updateConfig({ customDescription: e.target.value })}
+                      placeholder="Override or provide custom project description..."
+                      className="min-h-[80px] bg-background/30 border-border/30 focus:border-primary/50 transition-colors text-sm"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2 pt-2">
+                    <input
+                      type="checkbox"
+                      id="showOwner"
+                      checked={config.showOwner || false}
+                      onChange={(e) => updateConfig({ showOwner: e.target.checked })}
+                      className="rounded border-border/30 text-primary focus:ring-primary h-4 w-4"
+                    />
+                    <Label htmlFor="showOwner" className="text-sm cursor-pointer">
+                      Show owner prefix (e.g. {config.username || 'username'}/{config.repo || 'repo'})
+                    </Label>
+                  </div>
+                </div>
+              )}
+
+              {config.type !== "custom" && config.type !== "banner" && config.type !== "contribution" && config.type !== "pin" && (
                 <div className="flex flex-col items-center justify-center py-12 text-muted-foreground animate-in fade-in zoom-in duration-300">
                   <div className="w-16 h-16 rounded-full bg-background/30 flex items-center justify-center mb-4">
                     <Type className="w-8 h-8 opacity-50" />
                   </div>
                   <p className="font-medium">No content settings available</p>
-                  <p className="text-sm mt-2 opacity-70 max-w-xs text-center">Select "Banner" or "Custom" card type to customize specific text content.</p>
+                  <p className="text-sm mt-2 opacity-70 max-w-xs text-center">Select "Banner", "Pinned", or "Custom" card type to customize specific text content.</p>
                 </div>
               )}
             </TabsContent>

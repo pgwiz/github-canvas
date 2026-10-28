@@ -14,10 +14,12 @@
    - Dark Background: Oceanic Midnight (`#090D16` / `#0B1220`)
    - Avoid blinding neon green (`#0CF709`) and multi-layer infinite drifting blur particles.
 3. **Card Generation Engine**:
-   - Resides in `src/lib/cardRenderer.ts` and `api/card.ts`.
+   - Resides in `src/lib/cardRenderer.ts`, `api/card.ts`, and `api/pin.ts`.
    - Runs natively on Vercel Serverless (Node.js) and in client `CardPreview.tsx`.
-   - Does NOT depend on un-updated remote Supabase functions.
+   - Supports: `stats`, `languages`, `streak`, `activity`, `quote`, `banner`, `contribution`, `pin`/`repo`, and `custom`.
    - Fetches live GitHub API metrics (`stars`, `repos`, `followers`, `forks`, `languages`).
+   - Contribution & Streak Engine: Multi-tier fallback (GraphQL -> jogruber all-time API -> GitHub profile scrape) with in-memory 30m cache, accurately computing real longest streak (e.g. 97d for pgwiz), real current streak (e.g. 58d continuing today), real total contributions (16,691), and 53-week heatmap cells.
+   - Pinned Repo Card Engine (`/api/pin`): Supports `github-readme-stats` parameter aliases (`border_color`, `title_color`, `text_color`, `icon_color`, `bg_color`), hex normalizer (handles missing `#` and `0d11` typos), and graceful fallback for private or custom domain repos (e.g. `pgwiz.cloud`).
 4. **AI Services Hierarchy**:
    - Primary Service: `https://cr.pgwiz.cloud/api/chat` (Header: `x-api-key: pgwiz2026!`) with payload `{ message: prompt }`.
    - Secondary: Mistral API (`mistral-small-latest`) with `MISTRAL_API_KEY`.

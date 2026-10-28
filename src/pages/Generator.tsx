@@ -14,7 +14,7 @@ import { CustomizationPanel } from "@/components/generator/CustomizationPanel";
 import { LinkGenerator } from "@/components/generator/LinkGenerator";
 import { 
   Search, Sparkles, RefreshCw, BarChart3, Code2, Flame, Activity, Quote, 
-  SlidersHorizontal, Grid3X3, Dices, Bug, Coffee, Clock, Eye, FlaskConical, CheckCircle2 
+  SlidersHorizontal, Grid3X3, Dices, Bug, Coffee, Clock, Eye, FlaskConical, CheckCircle2, Bookmark 
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGitHubStats, GitHubStats } from "@/hooks/useGitHubStats";
@@ -23,7 +23,7 @@ import { useQuoteOfTheDay } from "@/hooks/useQuoteOfTheDay";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import confetti from "canvas-confetti";
 
-export type CardType = "stats" | "languages" | "streak" | "activity" | "quote" | "custom" | "banner" | "contribution";
+export type CardType = "stats" | "languages" | "streak" | "activity" | "quote" | "custom" | "banner" | "contribution" | "pin";
 
 export type QuoteTopic = "random" | "debugging" | "coffee" | "deadlines" | "code-reviews" | "testing";
 
@@ -60,6 +60,10 @@ export interface CardConfig {
   bannerName: string;
   bannerDescription: string;
   waveStyle: WaveStyle;
+  // Pinned Repo fields
+  repo?: string;
+  customDescription?: string;
+  showOwner?: boolean;
 }
 
 const defaultConfig: CardConfig = {
@@ -92,6 +96,9 @@ const defaultConfig: CardConfig = {
   bannerName: "Your Name",
   bannerDescription: "Developer | Creator | Builder",
   waveStyle: "wave",
+  repo: "pgwiz.cloud",
+  customDescription: "",
+  showOwner: false,
 };
 
 const quoteTopics: { value: QuoteTopic; label: string; icon: typeof Dices }[] = [
@@ -213,13 +220,14 @@ export default function Generator() {
   // Update dimensions when card type changes
   useEffect(() => {
     const typeDimensions: Record<string, { width: number; height: number }> = {
-      languages: { width: 300, height: 300 },
-      contribution: { width: 620, height: 300 },
+      languages: { width: 340, height: 320 },
+      contribution: { width: 720, height: 250 },
+      pin: { width: 400, height: 120 },
       stats: { width: 495, height: 195 },
       streak: { width: 495, height: 195 },
       activity: { width: 495, height: 195 },
       quote: { width: 495, height: 195 },
-      banner: { width: 495, height: 195 },
+      banner: { width: 600, height: 200 },
       custom: { width: 495, height: 195 },
     };
     const dims = typeDimensions[config.type] || { width: 495, height: 195 };
@@ -354,7 +362,7 @@ export default function Generator() {
                   value={config.type}
                   onValueChange={(v) => updateConfig({ type: v as CardType })}
                 >
-                  <TabsList className="grid grid-cols-4 lg:grid-cols-4 w-full h-auto bg-background/30 backdrop-blur-sm p-1.5 gap-1">
+                  <TabsList className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 w-full h-auto bg-background/30 backdrop-blur-sm p-1.5 gap-1">
                     <TabsTrigger value="stats" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
                       <BarChart3 className="w-3.5 h-3.5" /> Stats
                     </TabsTrigger>
@@ -375,6 +383,9 @@ export default function Generator() {
                     </TabsTrigger>
                     <TabsTrigger value="contribution" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
                       <Grid3X3 className="w-3.5 h-3.5" /> Contribution
+                    </TabsTrigger>
+                    <TabsTrigger value="pin" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
+                      <Bookmark className="w-3.5 h-3.5" /> Pinned
                     </TabsTrigger>
                     <TabsTrigger value="custom" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
                       <SlidersHorizontal className="w-3.5 h-3.5" /> Custom
