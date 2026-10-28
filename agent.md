@@ -9,6 +9,7 @@ This document outlines operational guidance and engineering constraints for AI c
 2. **Icon & Visual Language**:
    - Use `lucide-react` icons exclusively.
    - Do not insert emojis into button labels, toasts, headings, SVG card generators, or generated Markdown templates.
+   - **No Glowing Blobs or Green Glowing Dots**: Never use ambient blur glowing blobs (e.g. `rounded-full blur-[120px]`), glowing blobs, or green pulsing status indicators. Always ask before adding any glow or blob effects.
 3. **Canvas & Animation Performance**:
    - In 2D HTML5 canvas components, always reset the transformation matrix before re-scaling on window resize (e.g., `ctx.setTransform(dpr, 0, 0, dpr, 0, 0)`).
    - Keep CSS animations subtle and performant (prefer `transform` and `opacity` transitions).

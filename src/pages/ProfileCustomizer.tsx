@@ -485,7 +485,7 @@ export default function ProfileCustomizer() {
                       >
                         {copied ? (
                           <>
-                            <Check className="w-3.5 h-3.5 mr-1.5 text-green-400" />
+                            <Check className="w-3.5 h-3.5 mr-1.5 text-primary" />
                             Copied
                           </>
                         ) : (

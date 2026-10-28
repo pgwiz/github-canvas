@@ -367,7 +367,7 @@ export default function Themes() {
                             title="Copy CSS variables"
                           >
                             {copiedId === `${theme.id}-css` ? (
-                              <Check className="w-3.5 h-3.5 text-green-400" />
+                              <Check className="w-3.5 h-3.5 text-primary" />
                             ) : (
                               <Copy className="w-3.5 h-3.5" />
                             )}

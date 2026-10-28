@@ -41,13 +41,6 @@ export function ScrollToTop() {
       >
         <ArrowUp className="h-5 w-5" />
       </Button>
-      {/* Glow effect behind the button */}
-      <div
-        className={cn(
-          "absolute inset-0 rounded-full bg-primary/20 blur-xl transition-opacity duration-300 -z-10",
-          isVisible ? "opacity-100" : "opacity-0"
-        )}
-      />
-    </div>
+      </div>
   );
 }

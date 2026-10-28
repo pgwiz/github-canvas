@@ -64,11 +64,7 @@ export function Footer() {
 
   return (
     <footer className="relative border-t border-border/40 bg-background/50 backdrop-blur-xl pt-16 pb-8 mt-auto overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[100px] -translate-y-1/2" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-secondary/5 rounded-full blur-[100px] translate-y-1/2" />
-      </div>
+      
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-16">
@@ -110,7 +106,7 @@ export function Footer() {
                     <Button
                       type="submit"
                       disabled={loading || subscribed}
-                      className={`relative min-w-[100px] overflow-hidden transition-all duration-300 ${subscribed ? 'bg-green-500 hover:bg-green-600' : ''}`}
+                      className={`relative min-w-[100px] overflow-hidden transition-all duration-300 ${subscribed ? 'bg-primary hover:bg-primary/90' : ''}`}
                     >
                       <span className="relative z-10 flex items-center gap-2">
                         {loading ? (

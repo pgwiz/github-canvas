@@ -130,7 +130,7 @@ export function CardTypesSection() {
             <span className="text-xs font-semibold text-secondary flex items-center gap-1.5">
               <Flame className="w-3.5 h-3.5 text-secondary" /> Daily Streak
             </span>
-            <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+            <span className="text-[10px] text-primary flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" /> Active Today
             </span>
           </div>
@@ -258,12 +258,6 @@ export function CardTypesSection() {
 
   return (
     <section className="py-24 relative bg-muted/10 overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
-        <div className="absolute top-1/2 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px]" />
-        <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-[120px]" />
-      </div>
-
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16 animate-in fade-in slide-in-from-bottom-8 duration-700">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 mb-4 backdrop-blur-sm">

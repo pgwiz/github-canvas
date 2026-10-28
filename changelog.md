@@ -2,6 +2,16 @@
 
 All notable changes to the GitHub Canvas / GitStats project are documented in this file.
 
+## [2.1.1] - 2026-10-28
+
+### Visual Cleanliness & Rule Enforcement
+- **Eliminated Ambient Glowing Blobs & Green Indicators**:
+  - Removed all ambient blur background orbs (`w-96 h-96 rounded-full blur-[140px]`) from `HeroSection.tsx`, `CardTypesSection.tsx`, `Footer.tsx`, and `NotFound.tsx`.
+  - Removed glowing backdrop blur blob from `ScrollToTop.tsx`.
+  - Replaced emerald/green status dots and checks with clean electric blue and neutral vectors in `CardTypesSection.tsx`, `Generator.tsx`, `ProfileCustomizer.tsx`, and `Themes.tsx`.
+- **Global & Project Rule Enforcement**:
+  - Added global user rule to `~/.gemini/GEMINI.md`, `memory.md`, and `agent.md` prohibiting glowing blobs and green pulsing indicators without explicit prior user consent.
+
 ## [2.1.0] - 2026-10-28
 
 ### Native Card Generation Engine & Zero-Emoji Architecture

@@ -32,12 +32,12 @@ const NotFound = () => {
         <GlassPanel
           hover={true}
           glow="primary"
-          accent="green"
+          accent="blue"
           className="flex flex-col items-center justify-center p-8 text-center"
         >
           {/* Animated 404 Visual */}
           <div className="mb-6 relative">
-            <div className="absolute inset-0 animate-pulse-glow blur-2xl bg-primary/20 rounded-full" />
+            
             <h1 className="relative text-9xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-primary to-secondary animate-float">
               404
             </h1>
@@ -71,9 +71,9 @@ const NotFound = () => {
 
           {/* Decor element */}
           <div className="mt-8 flex gap-2">
-             <div className="w-2 h-2 rounded-full bg-primary/40 animate-pulse" style={{ animationDelay: '0s' }} />
-             <div className="w-2 h-2 rounded-full bg-primary/40 animate-pulse" style={{ animationDelay: '0.3s' }} />
-             <div className="w-2 h-2 rounded-full bg-primary/40 animate-pulse" style={{ animationDelay: '0.6s' }} />
+             <div className="w-2 h-2 rounded-full bg-white/20" style={{ animationDelay: '0s' }} />
+             <div className="w-2 h-2 rounded-full bg-white/20" style={{ animationDelay: '0.3s' }} />
+             <div className="w-2 h-2 rounded-full bg-white/20" style={{ animationDelay: '0.6s' }} />
           </div>
         </GlassPanel>
       </div>

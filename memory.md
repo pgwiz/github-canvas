@@ -26,6 +26,8 @@
 5. **Regex & Event Performance**:
    - Do not use greedy wildcards like `/\[[\s\S]*\]/` or `/\{[\s\S]*"quote"[\s\S]*\}/` to parse JSON from LLMs, as they cause catastrophic backtracking on long text. Always use linear `indexOf` / `lastIndexOf` slicing.
    - Use `useMotionValue` and `useMotionTemplate` for mouse-tracking UI elements (e.g. `SpotlightCard`, `SpotlightGrid`) to prevent React state re-renders on mousemove.
+6. **No Glowing Blobs or Green Dots/Indicators**:
+   - Never use ambient blur glowing blobs (`rounded-full blur-[120px]`), pulsing green dots, or neon glow blobs. Always ask the user first before introducing any glow or blob effects.
 
 ## Routing Reference
 - `/`: Home landing page with live interactive card showcases.

@@ -59,42 +59,6 @@ export function HeroSection() {
         gridColor="59, 130, 246"
       />
 
-      {/* Interactive Gradient Orbs */}
-      <motion.div
-        className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/15 rounded-full blur-[140px] pointer-events-none"
-        style={{
-          x: springX,
-          y: springY,
-          opacity: 0.6
-        }}
-        animate={{
-          scale: [1, 1.08, 1],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-
-      <motion.div
-        className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/15 rounded-full blur-[140px] pointer-events-none"
-        style={{
-          x: useTransform(springX2, (val) => -val), // Invert movement
-          y: useTransform(springY2, (val) => -val),
-          opacity: 0.6
-        }}
-        animate={{
-          scale: [1.08, 1, 1.08],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 1
-        }}
-      />
-
       <div className="container mx-auto px-4 relative z-10 py-16">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}

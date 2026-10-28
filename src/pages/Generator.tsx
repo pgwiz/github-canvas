@@ -471,7 +471,7 @@ export default function Generator() {
                 </div>
                 {githubData && config.type !== "quote" && config.type !== "custom" && (
                   <p className="text-xs text-muted-foreground mt-4 text-center flex items-center justify-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Showing real data for @{githubData.user.login}
+                    <CheckCircle2 className="w-3.5 h-3.5 text-primary" /> Showing real data for @{githubData.user.login}
                   </p>
                 )}
               </GlassPanel>
