@@ -102,12 +102,13 @@ serve(async (req) => {
         const data = await response.json();
         const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-        // Parse quotes array from response
+        // Parse quotes array from response safely without regex backtracking
         let quotes = [];
         try {
-          const jsonMatch = content.match(/\[[\s\S]*\]/);
-          if (jsonMatch) {
-            quotes = JSON.parse(jsonMatch[0]);
+          const firstBracket = content.indexOf('[');
+          const lastBracket = content.lastIndexOf(']');
+          if (firstBracket !== -1 && lastBracket > firstBracket) {
+            quotes = JSON.parse(content.substring(firstBracket, lastBracket + 1));
           }
         } catch (e) {
           console.log(`Could not parse batch ${batch + 1}:`, e);

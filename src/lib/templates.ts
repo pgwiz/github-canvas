@@ -1,18 +1,49 @@
-export const templates = [
+export interface TemplateTheme {
+  id: string;
+  name: string;
+  category: "Modern" | "Cyber" | "Popular" | "Minimal" | "Vibrant";
+  description: string;
+  colors: {
+    bg: string;
+    primary: string;
+    secondary: string;
+    text: string;
+    border: string;
+  };
+}
+
+export const templates: TemplateTheme[] = [
   {
-    id: "neon",
-    name: "Neon",
+    id: "electric-blue",
+    name: "Electric Blue",
+    category: "Modern",
+    description: "Deep oceanic midnight with glowing electric sapphire and cyan neon accents.",
     colors: {
-      bg: "#0d1117",
-      primary: "#0CF709",
-      secondary: "#00e1ff",
-      text: "#c9d1d9",
-      border: "#0CF709",
+      bg: "#0b1220",
+      primary: "#3b82f6",
+      secondary: "#06b6d4",
+      text: "#f1f5f9",
+      border: "#3b82f6",
+    },
+  },
+  {
+    id: "midnight",
+    name: "Midnight",
+    category: "Modern",
+    description: "Deep obsidian backdrop with gold stars and lavender glow.",
+    colors: {
+      bg: "#0f0f23",
+      primary: "#ffff66",
+      secondary: "#9999cc",
+      text: "#cccccc",
+      border: "#ffff66",
     },
   },
   {
     id: "tokyo-night",
     name: "Tokyo Night",
+    category: "Popular",
+    description: "Inspired by the vibrant lights of downtown Tokyo under the night sky.",
     colors: {
       bg: "#1a1b26",
       primary: "#7aa2f7",
@@ -24,6 +55,8 @@ export const templates = [
   {
     id: "dracula",
     name: "Dracula",
+    category: "Popular",
+    description: "The classic dark theme with gothic purples, pinks, and cyans.",
     colors: {
       bg: "#282a36",
       primary: "#ff79c6",
@@ -35,6 +68,8 @@ export const templates = [
   {
     id: "github-dark",
     name: "GitHub Dark",
+    category: "Minimal",
+    description: "Official GitHub dark canvas styling with refined slate blues and borders.",
     colors: {
       bg: "#0d1117",
       primary: "#58a6ff",
@@ -46,6 +81,8 @@ export const templates = [
   {
     id: "ocean",
     name: "Ocean",
+    category: "Modern",
+    description: "Calm abyssal teal with luminous seafoam green highlights.",
     colors: {
       bg: "#0a192f",
       primary: "#64ffda",
@@ -57,6 +94,8 @@ export const templates = [
   {
     id: "sunset",
     name: "Sunset",
+    category: "Vibrant",
+    description: "Warm crimson coral and twilight yellow gradients over velvet evening.",
     colors: {
       bg: "#1a1a2e",
       primary: "#ff6b6b",
@@ -68,6 +107,8 @@ export const templates = [
   {
     id: "forest",
     name: "Forest",
+    category: "Minimal",
+    description: "Earthy moss greens and natural sage tones for a balanced organic aesthetic.",
     colors: {
       bg: "#1e2a1e",
       primary: "#7cb342",
@@ -77,19 +118,10 @@ export const templates = [
     },
   },
   {
-    id: "midnight",
-    name: "Midnight",
-    colors: {
-      bg: "#0f0f23",
-      primary: "#ffff66",
-      secondary: "#9999cc",
-      text: "#cccccc",
-      border: "#ffff66",
-    },
-  },
-  {
     id: "cyberpunk",
     name: "Cyberpunk",
+    category: "Cyber",
+    description: "High-contrast magenta and laser cyan cutting through deep shadows.",
     colors: {
       bg: "#0a0a0f",
       primary: "#f706cf",
@@ -101,6 +133,8 @@ export const templates = [
   {
     id: "nord",
     name: "Nord",
+    category: "Minimal",
+    description: "Arctic, north-bluish palette created for clean, focused developer environments.",
     colors: {
       bg: "#2e3440",
       primary: "#88c0d0",
@@ -112,6 +146,8 @@ export const templates = [
   {
     id: "monokai",
     name: "Monokai",
+    category: "Vibrant",
+    description: "Beloved high-contrast code palette with electric yellow-green and ruby pink.",
     colors: {
       bg: "#272822",
       primary: "#a6e22e",
@@ -123,6 +159,8 @@ export const templates = [
   {
     id: "gruvbox",
     name: "Gruvbox",
+    category: "Minimal",
+    description: "Warm retro groove with vintage amber, turquoise, and aged parchment text.",
     colors: {
       bg: "#282828",
       primary: "#fabd2f",
@@ -134,6 +172,8 @@ export const templates = [
   {
     id: "solarized",
     name: "Solarized",
+    category: "Minimal",
+    description: "Scientifically engineered color contrasts with deep teal and solar yellow.",
     colors: {
       bg: "#002b36",
       primary: "#b58900",
@@ -145,6 +185,8 @@ export const templates = [
   {
     id: "catppuccin",
     name: "Catppuccin",
+    category: "Popular",
+    description: "Soothing pastel tones of mocha, lavender, and pink for comfortable viewing.",
     colors: {
       bg: "#1e1e2e",
       primary: "#cba6f7",
@@ -156,6 +198,8 @@ export const templates = [
   {
     id: "aurora",
     name: "Aurora",
+    category: "Cyber",
+    description: "Northern lights celestial cyan and ultraviolet pulses across obsidian.",
     colors: {
       bg: "#0b0d17",
       primary: "#00d9ff",
@@ -167,12 +211,27 @@ export const templates = [
   {
     id: "matrix",
     name: "Matrix",
+    category: "Cyber",
+    description: "Iconic terminal monochrome green cascading down deep pitch darkness.",
     colors: {
       bg: "#000000",
       primary: "#00ff00",
       secondary: "#00aa00",
       text: "#00ff00",
       border: "#00ff00",
+    },
+  },
+  {
+    id: "neon",
+    name: "Neon",
+    category: "Cyber",
+    description: "Cybernetic high-voltage green and laser cyan highlights.",
+    colors: {
+      bg: "#0d1117",
+      primary: "#0CF709",
+      secondary: "#00e1ff",
+      text: "#c9d1d9",
+      border: "#0CF709",
     },
   },
 ];

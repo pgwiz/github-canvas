@@ -84,8 +84,8 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
 
   // Social sharing URLs
   const shareText = config.username
-    ? `Check out my GitHub stats! 🚀 Generated with GitHub Stats Visualizer`
-    : `Create beautiful GitHub stats cards with GitHub Stats Visualizer! 🎨`;
+    ? `Check out my GitHub stats! Generated with GitHub Stats Visualizer`
+    : `Create beautiful GitHub stats cards with GitHub Stats Visualizer!`;
 
   const currentPageUrl = window.location.origin;
 

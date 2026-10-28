@@ -389,7 +389,7 @@ const Setup = () => {
                     onChange={(e) => setSetupConfig(prev => ({ ...prev, serviceRoleKey: e.target.value }))}
                   />
                   <p className="text-xs text-muted-foreground">
-                    ⚠️ Keep this secret! Only used for initial database setup.
+                    <span className="text-amber-400 font-semibold">Note:</span> Keep this secret! Only used for initial database setup.
                   </p>
                 </div>
               </div>

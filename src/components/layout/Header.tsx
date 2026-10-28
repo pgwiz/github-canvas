@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Github, FileCode, BookOpen, Sparkles, Search } from "lucide-react";
+import { Github, FileCode, BookOpen, Sparkles, Search, Palette, UserCheck } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useCommandMenu } from "./command-menu-context";
@@ -8,7 +8,9 @@ import { useCommandMenu } from "./command-menu-context";
 const navItems = [
   { href: "/", label: "Home", icon: Sparkles },
   { href: "/generator", label: "Generator", icon: FileCode },
-  { href: "/docs", label: "API Docs", icon: BookOpen },
+  { href: "/themes", label: "Themes", icon: Palette },
+  { href: "/profile-customizer", label: "AI Profile", icon: UserCheck },
+  { href: "/docs", label: "Docs", icon: BookOpen },
 ];
 
 export function Header() {
@@ -58,7 +60,7 @@ export function Header() {
 
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3 group relative z-10">
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:border-primary/50 group-hover:shadow-[0_0_15px_rgba(12,247,9,0.3)] transition-all duration-300">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:border-primary/50 group-hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-300">
             <Github className="w-5 h-5 text-primary transition-transform group-hover:scale-110" />
           </div>
           <span className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70 group-hover:from-primary group-hover:to-secondary transition-all duration-300">GitStats</span>

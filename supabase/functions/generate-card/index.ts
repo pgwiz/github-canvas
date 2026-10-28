@@ -443,23 +443,27 @@ function generateStatsSVG(p: any): string {
     <text class="title">${p.username}'s GitHub Stats</text>
     
     <g transform="translate(0, 45)">
-      <text class="stat-value" fill="${p.primaryColor}">⭐ ${formatNumber(stats.totalStars)}</text>
-      <text class="stat-label" y="22">Total Stars</text>
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="${p.primaryColor}" transform="scale(0.75) translate(0, -18)"/>
+      <text class="stat-value" x="22" fill="${p.primaryColor}">${formatNumber(stats.totalStars)}</text>
+      <text class="stat-label" y="24">Total Stars</text>
     </g>
     
     <g transform="translate(115, 45)">
-      <text class="stat-value" fill="${p.secondaryColor}">📦 ${stats.publicRepos}</text>
-      <text class="stat-label" y="22">Repositories</text>
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" fill="none" stroke="${p.secondaryColor}" stroke-width="2" stroke-linejoin="round" transform="scale(0.75) translate(0, -18)"/>
+      <text class="stat-value" x="22" fill="${p.secondaryColor}">${stats.publicRepos}</text>
+      <text class="stat-label" y="24">Repositories</text>
     </g>
     
     <g transform="translate(230, 45)">
-      <text class="stat-value" fill="${p.primaryColor}">👥 ${formatNumber(stats.followers)}</text>
-      <text class="stat-label" y="22">Followers</text>
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" fill="none" stroke="${p.primaryColor}" stroke-width="2" stroke-linecap="round" transform="scale(0.75) translate(0, -18)"/>
+      <text class="stat-value" x="22" fill="${p.primaryColor}">${formatNumber(stats.followers)}</text>
+      <text class="stat-label" y="24">Followers</text>
     </g>
     
     <g transform="translate(345, 45)">
-      <text class="stat-value" fill="${p.secondaryColor}">🔀 ${formatNumber(stats.totalForks)}</text>
-      <text class="stat-label" y="22">Total Forks</text>
+      <path d="M6 3v12 M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M18 9a9 9 0 0 1-9 9" fill="none" stroke="${p.secondaryColor}" stroke-width="2" stroke-linecap="round" transform="scale(0.75) translate(0, -18)"/>
+      <text class="stat-value" x="22" fill="${p.secondaryColor}">${formatNumber(stats.totalForks)}</text>
+      <text class="stat-label" y="24">Total Forks</text>
     </g>
   </g>
 </svg>`;
@@ -505,7 +509,7 @@ function generateLanguagesSVG(p: any): string {
   const getBadge = (name: string): string => {
     const badges: Record<string, string> = {
       'JavaScript': 'JS', 'TypeScript': 'TS', 'Python': 'Py', 'C++': 'C+',
-      'C#': 'C#', 'Go': 'Go', 'Ruby': '💎', 'Rust': 'Rs', 'Java': 'Jv',
+      'C#': 'C#', 'Go': 'Go', 'Ruby': 'Rb', 'Rust': 'Rs', 'Java': 'Jv',
       'PHP': 'PH', 'HTML': 'HT', 'CSS': 'CS', 'Shell': 'SH', 'Swift': 'Sw',
       'Kotlin': 'Kt', 'Dart': 'Dt', 'Vue': 'Vu', 'C': 'C',
     };
@@ -803,7 +807,7 @@ function generateContributionSVG(p: any): string {
     <g transform="translate(${cardWidth - 190}, 0)">
       <text x="0" y="28" class="streak">Streak</text>
       <text x="55" y="28" class="streak-value">${currentStreak} days</text>
-      <text x="${currentStreak >= 10 ? 130 : 115}" y="28" font-size="18">🔥</text>
+      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" fill="${p.primaryColor}" stroke="${p.primaryColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" transform="translate(${currentStreak >= 10 ? 130 : 115}, 12) scale(0.9)"/>
     </g>
   </g>
   

@@ -95,16 +95,22 @@ Return as JSON: {"quote": "...", "author": "..."}`
 
           console.log('Gemini response:', content);
 
-          const jsonMatch = content.match(/\{[\s\S]*"quote"[\s\S]*"author"[\s\S]*\}/);
-          if (jsonMatch) {
-            const quote = JSON.parse(jsonMatch[0]);
+          const startIdx = content.indexOf('{');
+          const endIdx = content.lastIndexOf('}');
+          if (startIdx !== -1 && endIdx > startIdx) {
+            try {
+              const quote = JSON.parse(content.substring(startIdx, endIdx + 1));
+              if (quote && quote.quote && quote.author) {
+                // Cache the new quote
+                await supabase.schema('gitstats').from('quotes_cache').insert({ quote: quote.quote, author: quote.author });
 
-            // Cache the new quote
-            await supabase.schema('gitstats').from('quotes_cache').insert({ quote: quote.quote, author: quote.author });
-
-            return new Response(JSON.stringify(quote), {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
+                return new Response(JSON.stringify(quote), {
+                  headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                });
+              }
+            } catch (parseErr) {
+              console.warn('JSON parse error from AI quote:', parseErr);
+            }
           }
         }
       } catch (aiError) {

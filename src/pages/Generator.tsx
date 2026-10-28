@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { GlassPanel } from "@/components/ui/GlassPanel";
@@ -11,7 +12,10 @@ import { ThemeSelector } from "@/components/generator/ThemeSelector";
 import { templates } from "@/lib/templates";
 import { CustomizationPanel } from "@/components/generator/CustomizationPanel";
 import { LinkGenerator } from "@/components/generator/LinkGenerator";
-import { Search, Sparkles, RefreshCw } from "lucide-react";
+import { 
+  Search, Sparkles, RefreshCw, BarChart3, Code2, Flame, Activity, Quote, 
+  SlidersHorizontal, Grid3X3, Dices, Bug, Coffee, Clock, Eye, FlaskConical, CheckCircle2 
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGitHubStats, GitHubStats } from "@/hooks/useGitHubStats";
 import { useDevQuote, DevQuote } from "@/hooks/useDevQuote";
@@ -61,12 +65,12 @@ export interface CardConfig {
 const defaultConfig: CardConfig = {
   username: "",
   type: "stats",
-  theme: "neon",
-  bgColor: "#0d1117",
-  primaryColor: "#0CF709",
-  secondaryColor: "#00e1ff",
-  textColor: "#c9d1d9",
-  borderColor: "#0CF709",
+  theme: "midnight",
+  bgColor: "#090d16",
+  primaryColor: "#3B82F6",
+  secondaryColor: "#0EA5E9",
+  textColor: "#e2e8f0",
+  borderColor: "#3B82F6",
   borderRadius: 12,
   showBorder: true,
   paddingTop: 25,
@@ -81,8 +85,8 @@ const defaultConfig: CardConfig = {
   gradientEnabled: false,
   gradientType: "linear",
   gradientAngle: 135,
-  gradientStart: "#667eea",
-  gradientEnd: "#764ba2",
+  gradientStart: "#3b82f6",
+  gradientEnd: "#0ea5e9",
   previewFormat: "img",
   quoteTopic: "random",
   bannerName: "Your Name",
@@ -90,16 +94,17 @@ const defaultConfig: CardConfig = {
   waveStyle: "wave",
 };
 
-const quoteTopics: { value: QuoteTopic; label: string; emoji: string }[] = [
-  { value: "random", label: "Random", emoji: "🎲" },
-  { value: "debugging", label: "Debugging", emoji: "🐛" },
-  { value: "coffee", label: "Coffee & Code", emoji: "☕" },
-  { value: "deadlines", label: "Deadlines", emoji: "⏰" },
-  { value: "code-reviews", label: "Code Reviews", emoji: "👀" },
-  { value: "testing", label: "Testing", emoji: "🧪" },
+const quoteTopics: { value: QuoteTopic; label: string; icon: typeof Dices }[] = [
+  { value: "random", label: "Random", icon: Dices },
+  { value: "debugging", label: "Debugging", icon: Bug },
+  { value: "coffee", label: "Coffee & Code", icon: Coffee },
+  { value: "deadlines", label: "Deadlines", icon: Clock },
+  { value: "code-reviews", label: "Code Reviews", icon: Eye },
+  { value: "testing", label: "Testing", icon: FlaskConical },
 ];
 
 export default function Generator() {
+  const [searchParams] = useSearchParams();
   const [config, setConfig] = useState<CardConfig>(defaultConfig);
   const [githubData, setGithubData] = useState<GitHubStats | null>(null);
   const [currentQuote, setCurrentQuote] = useState<DevQuote | null>(null);
@@ -111,12 +116,39 @@ export default function Generator() {
 
   const isGenerating = statsLoading || quoteLoading;
 
+  useEffect(() => {
+    const themeParam = searchParams.get("theme");
+    const typeParam = searchParams.get("type");
+    const userParam = searchParams.get("username");
+
+    if (themeParam) {
+      const found = templates.find((t) => t.id === themeParam);
+      if (found) {
+        setConfig((prev) => ({
+          ...prev,
+          theme: found.id,
+          bgColor: found.colors.bg,
+          primaryColor: found.colors.primary,
+          secondaryColor: found.colors.secondary,
+          textColor: found.colors.text,
+          borderColor: found.colors.border,
+        }));
+      }
+    }
+    if (typeParam) {
+      setConfig((prev) => ({ ...prev, type: typeParam as CardType }));
+    }
+    if (userParam) {
+      setConfig((prev) => ({ ...prev, username: userParam }));
+    }
+  }, [searchParams]);
+
   const triggerConfetti = () => {
     confetti({
       particleCount: 100,
       spread: 70,
       origin: { y: 0.6 },
-      colors: ['#0CF709', '#00e1ff', '#667eea'],
+      colors: ['#3b82f6', '#06b6d4', '#60a5fa'],
     });
   };
 
@@ -243,7 +275,7 @@ export default function Generator() {
     });
 
     toast({
-      title: "✨ Magic Theme Applied!",
+      title: "Magic Theme Applied!",
       description: `Switched to ${randomTemplate.name} with ${enableGradient ? 'gradient' : 'flat'} style.`,
       className: "border-primary/50 text-foreground bg-background/80 backdrop-blur-xl",
     });
@@ -322,15 +354,31 @@ export default function Generator() {
                   value={config.type}
                   onValueChange={(v) => updateConfig({ type: v as CardType })}
                 >
-                  <TabsList className="grid grid-cols-4 lg:grid-cols-4 w-full h-auto bg-background/30 backdrop-blur-sm">
-                    <TabsTrigger value="stats" className="py-3 data-[state=active]:bg-secondary/20">📊 Stats</TabsTrigger>
-                    <TabsTrigger value="languages" className="py-3 data-[state=active]:bg-secondary/20">💻 Languages</TabsTrigger>
-                    <TabsTrigger value="streak" className="py-3 data-[state=active]:bg-secondary/20">🔥 Streak</TabsTrigger>
-                    <TabsTrigger value="activity" className="py-3 data-[state=active]:bg-secondary/20">📈 Activity</TabsTrigger>
-                    <TabsTrigger value="quote" className="py-3 data-[state=active]:bg-secondary/20">💬 Quote</TabsTrigger>
-                    <TabsTrigger value="banner" className="py-3 data-[state=active]:bg-secondary/20">🎨 Banner</TabsTrigger>
-                    <TabsTrigger value="contribution" className="py-3 data-[state=active]:bg-secondary/20">🟩 Contribution</TabsTrigger>
-                    <TabsTrigger value="custom" className="py-3 data-[state=active]:bg-secondary/20">✨ Custom</TabsTrigger>
+                  <TabsList className="grid grid-cols-4 lg:grid-cols-4 w-full h-auto bg-background/30 backdrop-blur-sm p-1.5 gap-1">
+                    <TabsTrigger value="stats" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
+                      <BarChart3 className="w-3.5 h-3.5" /> Stats
+                    </TabsTrigger>
+                    <TabsTrigger value="languages" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
+                      <Code2 className="w-3.5 h-3.5" /> Languages
+                    </TabsTrigger>
+                    <TabsTrigger value="streak" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
+                      <Flame className="w-3.5 h-3.5" /> Streak
+                    </TabsTrigger>
+                    <TabsTrigger value="activity" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
+                      <Activity className="w-3.5 h-3.5" /> Activity
+                    </TabsTrigger>
+                    <TabsTrigger value="quote" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
+                      <Quote className="w-3.5 h-3.5" /> Quote
+                    </TabsTrigger>
+                    <TabsTrigger value="banner" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
+                      <Sparkles className="w-3.5 h-3.5" /> Banner
+                    </TabsTrigger>
+                    <TabsTrigger value="contribution" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
+                      <Grid3X3 className="w-3.5 h-3.5" /> Contribution
+                    </TabsTrigger>
+                    <TabsTrigger value="custom" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
+                      <SlidersHorizontal className="w-3.5 h-3.5" /> Custom
+                    </TabsTrigger>
                   </TabsList>
                 </Tabs>
               </GlassPanel>
@@ -351,11 +399,17 @@ export default function Generator() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {quoteTopics.map((topic) => (
-                              <SelectItem key={topic.value} value={topic.value}>
-                                {topic.emoji} {topic.label}
-                              </SelectItem>
-                            ))}
+                            {quoteTopics.map((topic) => {
+                              const TopicIcon = topic.icon;
+                              return (
+                                <SelectItem key={topic.value} value={topic.value}>
+                                  <div className="flex items-center gap-2">
+                                    <TopicIcon className="w-3.5 h-3.5 text-primary" />
+                                    <span>{topic.label}</span>
+                                  </div>
+                                </SelectItem>
+                              );
+                            })}
                           </SelectContent>
                         </Select>
                       </div>
@@ -416,14 +470,14 @@ export default function Generator() {
                   </div>
                 </div>
                 {githubData && config.type !== "quote" && config.type !== "custom" && (
-                  <p className="text-xs text-muted-foreground mt-4 text-center">
-                    ✓ Showing real data for @{githubData.user.login}
+                  <p className="text-xs text-muted-foreground mt-4 text-center flex items-center justify-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Showing real data for @{githubData.user.login}
                   </p>
                 )}
               </GlassPanel>
 
               {/* Link Generator */}
-              <GlassPanel accent="green">
+              <GlassPanel accent="blue">
                 <Label className="text-lg font-semibold mb-4 block">
                   Share Your Card
                 </Label>

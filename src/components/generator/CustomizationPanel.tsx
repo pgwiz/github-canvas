@@ -7,31 +7,35 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
-import { Paintbrush, LayoutTemplate, Type, Palette, Move, Box, Layers, AlignCenterVertical, AlignCenterHorizontal } from "lucide-react";
+import { 
+  Paintbrush, LayoutTemplate, Type, Palette, Move, Box, Layers, AlignCenterVertical, AlignCenterHorizontal,
+  Sparkles, Maximize2, Waves, SunMedium, Eye, Terminal, ArrowLeft, ArrowRight, ArrowUp, Activity, Pause,
+  Hourglass, Clock, Zap, MoveUpRight, CircleDot, HeartPulse, Wind, Cpu, Lightbulb
+} from "lucide-react";
 
 const animations = [
-  { value: "fadeIn", label: "Fade In", icon: "✨" },
-  { value: "scaleIn", label: "Scale In", icon: "🎯" },
-  { value: "wave", label: "Wave", icon: "🌊" },
-  { value: "glow", label: "Glow", icon: "💫" },
-  { value: "blink", label: "Blink", icon: "👁️" },
-  { value: "typing", label: "Typing", icon: "⌨️" },
-  { value: "slideInLeft", label: "Slide Left", icon: "⬅️" },
-  { value: "slideInRight", label: "Slide Right", icon: "➡️" },
-  { value: "slideInUp", label: "Slide Up", icon: "⬆️" },
-  { value: "bounce", label: "Bounce", icon: "🏀" },
-  { value: "none", label: "None", icon: "⏸️" },
+  { value: "fadeIn", label: "Fade In", icon: Sparkles },
+  { value: "scaleIn", label: "Scale In", icon: Maximize2 },
+  { value: "wave", label: "Wave", icon: Waves },
+  { value: "glow", label: "Glow", icon: SunMedium },
+  { value: "blink", label: "Blink", icon: Eye },
+  { value: "typing", label: "Typing", icon: Terminal },
+  { value: "slideInLeft", label: "Slide Left", icon: ArrowLeft },
+  { value: "slideInRight", label: "Slide Right", icon: ArrowRight },
+  { value: "slideInUp", label: "Slide Up", icon: ArrowUp },
+  { value: "bounce", label: "Bounce", icon: Activity },
+  { value: "none", label: "None", icon: Pause },
 ];
 
 const speeds = [
-  { value: "slow", label: "Slow", icon: "🐢" },
-  { value: "normal", label: "Normal", icon: "🚶" },
-  { value: "fast", label: "Fast", icon: "🚀" },
+  { value: "slow", label: "Slow", icon: Hourglass },
+  { value: "normal", label: "Normal", icon: Clock },
+  { value: "fast", label: "Fast", icon: Zap },
 ];
 
 const gradientTypes = [
-  { value: "linear", label: "Linear", icon: "↗️" },
-  { value: "radial", label: "Radial", icon: "⭕" },
+  { value: "linear", label: "Linear", icon: MoveUpRight },
+  { value: "radial", label: "Radial", icon: CircleDot },
 ];
 
 const gradientPresets = [
@@ -43,11 +47,11 @@ const gradientPresets = [
   { name: "Night Sky", start: "#0f0c29", end: "#302b63" },
 ];
 
-const waveStyles: { value: WaveStyle; label: string; icon: string; description: string }[] = [
-  { value: "wave", label: "Wave", icon: "🌊", description: "Smooth flowing waves" },
-  { value: "pulse", label: "Pulse", icon: "💓", description: "Pulsing motion" },
-  { value: "flow", label: "Flow", icon: "〰️", description: "Flowing curves" },
-  { value: "glitch", label: "Glitch", icon: "⚡", description: "Dev-style glitch effect" },
+const waveStyles: { value: WaveStyle; label: string; icon: typeof Waves; description: string }[] = [
+  { value: "wave", label: "Wave", icon: Waves, description: "Smooth flowing waves" },
+  { value: "pulse", label: "Pulse", icon: HeartPulse, description: "Pulsing motion" },
+  { value: "flow", label: "Flow", icon: Wind, description: "Flowing curves" },
+  { value: "glitch", label: "Glitch", icon: Cpu, description: "Dev-style glitch effect" },
 ];
 interface CustomizationPanelProps {
   config: CardConfig;
@@ -138,11 +142,17 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {gradientTypes.map((type) => (
-                            <SelectItem key={type.value} value={type.value}>
-                              {type.icon} {type.label}
-                            </SelectItem>
-                          ))}
+                          {gradientTypes.map((type) => {
+                            const TypeIcon = type.icon;
+                            return (
+                              <SelectItem key={type.value} value={type.value}>
+                                <div className="flex items-center gap-2">
+                                  <TypeIcon className="w-3.5 h-3.5 text-primary" />
+                                  <span>{type.label}</span>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
@@ -477,11 +487,17 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {animations.map((anim) => (
-                            <SelectItem key={anim.value} value={anim.value}>
-                              {anim.icon} {anim.label}
-                            </SelectItem>
-                          ))}
+                          {animations.map((anim) => {
+                            const AnimIcon = anim.icon;
+                            return (
+                              <SelectItem key={anim.value} value={anim.value}>
+                                <div className="flex items-center gap-2">
+                                  <AnimIcon className="w-3.5 h-3.5 text-primary" />
+                                  <span>{anim.label}</span>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
@@ -496,11 +512,17 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {speeds.map((speed) => (
-                            <SelectItem key={speed.value} value={speed.value}>
-                              {speed.icon} {speed.label}
-                            </SelectItem>
-                          ))}
+                          {speeds.map((speed) => {
+                            const SpeedIcon = speed.icon;
+                            return (
+                              <SelectItem key={speed.value} value={speed.value}>
+                                <div className="flex items-center gap-2">
+                                  <SpeedIcon className="w-3.5 h-3.5 text-secondary" />
+                                  <span>{speed.label}</span>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
@@ -536,21 +558,24 @@ export function CustomizationPanel({ config, updateConfig }: CustomizationPanelP
                   <div className="p-4 rounded-lg bg-background/20 border border-border/20">
                     <Label className="text-sm mb-3 block">Wave Animation Style</Label>
                     <div className="grid grid-cols-2 gap-2">
-                       {waveStyles.map((style) => (
-                         <button
-                           key={style.value}
-                           onClick={() => updateConfig({ waveStyle: style.value })}
-                           className={`flex items-center gap-2 p-2 rounded-md border text-sm transition-all ${config.waveStyle === style.value ? 'border-primary bg-primary/10 text-primary' : 'border-transparent hover:bg-white/5'}`}
-                         >
-                           <span>{style.icon}</span>
-                           <span>{style.label}</span>
-                         </button>
-                       ))}
+                       {waveStyles.map((style) => {
+                         const StyleIcon = style.icon;
+                         return (
+                           <button
+                             key={style.value}
+                             onClick={() => updateConfig({ waveStyle: style.value })}
+                             className={`flex items-center gap-2 p-2 rounded-md border text-sm transition-all ${config.waveStyle === style.value ? 'border-primary bg-primary/10 text-primary' : 'border-transparent hover:bg-white/5'}`}
+                           >
+                             <StyleIcon className="w-4 h-4 shrink-0" />
+                             <span>{style.label}</span>
+                           </button>
+                         );
+                       })}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md text-blue-200 text-xs">
-                    <span className="text-lg">💡</span>
+                    <Lightbulb className="w-4 h-4 text-primary shrink-0" />
                     <p>
                       Create an animated header/footer banner for your GitHub profile
                     </p>

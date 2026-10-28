@@ -6,7 +6,7 @@ import {
   Share2, 
   Code2, 
   Layout,
-  Quote,
+  Quote, 
   Image
 } from "lucide-react";
 
@@ -14,48 +14,48 @@ const features = [
   {
     icon: Palette,
     title: "Custom Themes",
-    description: "Choose from pre-built themes or create your own with full color customization",
-    accent: "green" as const,
+    description: "Choose from 20+ pre-built developer themes or craft your own with granular color and gradient controls",
+    accent: "blue" as const,
     iconBg: "bg-primary/20",
     iconColor: "text-primary",
   },
   {
     icon: Zap,
     title: "Instant Generation",
-    description: "Generate beautiful stats cards in seconds, no authentication required",
+    description: "Generate production-ready stats cards in milliseconds with zero tokens or sign-ups required",
     accent: "teal" as const,
     iconBg: "bg-secondary/20",
     iconColor: "text-secondary",
   },
   {
     icon: Share2,
-    title: "Easy Sharing",
-    description: "Get markdown-ready links to embed in your README or anywhere",
+    title: "Seamless Markdown",
+    description: "Get markdown-ready embed links or high-res SVGs to drop right into your GitHub README",
     accent: "purple" as const,
     iconBg: "bg-chart-3/20",
     iconColor: "text-chart-3",
   },
   {
     icon: Code2,
-    title: "API Access",
-    description: "Full API documentation with endpoints for programmatic access",
+    title: "Open REST API",
+    description: "Full API surface with query parameters for automation, CI/CD pipelines, and dynamic cards",
     accent: "teal" as const,
     iconBg: "bg-secondary/20",
     iconColor: "text-secondary",
   },
   {
     icon: Quote,
-    title: "Dev Quotes",
-    description: "Random motivational quotes for developers to spice up your profile",
+    title: "Dev Wisdom Quotes",
+    description: "AI-curated inspirational quotes and programming humor to add personality to your profile",
     accent: "purple" as const,
     iconBg: "bg-chart-3/20",
     iconColor: "text-chart-3",
   },
   {
     icon: Image,
-    title: "Custom Images",
-    description: "Generate custom images with your own text, backgrounds, and dimensions",
-    accent: "green" as const,
+    title: "Custom Image Cards",
+    description: "Generate branded SVG cards with your custom text, gradients, stats, and custom dimensions",
+    accent: "blue" as const,
     iconBg: "bg-primary/20",
     iconColor: "text-primary",
   },
@@ -84,15 +84,13 @@ export function FeaturesSection() {
             return (
               <SpotlightCard
                 key={index}
-                className="h-full rounded-2xl group cursor-pointer hover:scale-[1.02] hover:shadow-[0_8px_40px_-8px_rgba(255,255,255,0.1)] transition-all duration-300"
-                spotlightColor="rgba(255, 255, 255, 0.15)"
+                className="h-full rounded-2xl group cursor-pointer hover:scale-[1.02] hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.5)] transition-all duration-300"
+                spotlightColor="rgba(59, 130, 246, 0.12)"
               >
                 <GlassPanel accent={feature.accent} className="h-full border-0 bg-opacity-50">
                   <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+                    className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform bg-white/5 border border-white/10"
                     style={{
-                      background: 'transparent',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
                       boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
                     }}
                   >
@@ -101,7 +99,7 @@ export function FeaturesSection() {
                   <h3 className="text-xl font-semibold mb-2 text-white">
                     {feature.title}
                   </h3>
-                  <p className="text-white/60">
+                  <p className="text-white/60 text-sm leading-relaxed">
                     {feature.description}
                   </p>
                 </GlassPanel>

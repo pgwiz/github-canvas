@@ -18,7 +18,8 @@ const footerLinks = [
     title: "Product",
     links: [
       { label: "Generator", href: "/generator" },
-      { label: "Features", href: "/#features" },
+      { label: "Themes Directory", href: "/themes" },
+      { label: "AI Profile Customizer", href: "/profile-customizer" },
       { label: "Card Types", href: "/#card-types" },
       { label: "API Docs", href: "/docs" },
     ],
@@ -27,7 +28,7 @@ const footerLinks = [
     title: "Resources",
     links: [
       { label: "GitHub API", href: "https://docs.github.com/en/rest" },
-      { label: "Themes", href: "/docs#themes" },
+      { label: "Color Palettes", href: "/themes" },
       { label: "Animations", href: "/docs#animations" },
       { label: "Examples", href: "/docs#examples" },
     ],
@@ -75,7 +76,7 @@ export function Footer() {
           <div className="lg:col-span-5 space-y-6">
             <Link to="/" className="inline-block group">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:border-primary/50 group-hover:shadow-[0_0_20px_rgba(12,247,9,0.3)] transition-all duration-500">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:border-primary/50 group-hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-all duration-500">
                   <Github className="w-5 h-5 text-primary transition-transform group-hover:scale-110 group-hover:rotate-12" />
                 </div>
                 <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70 group-hover:from-primary group-hover:to-secondary transition-all duration-500">
