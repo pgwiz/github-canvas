@@ -70,7 +70,7 @@ export interface CardConfig {
   showOwner: boolean;
   skills: string;
   stacks: string[];
-  skillsLayout: "matrix" | "stacks" | "compact" | "icons";
+  skillsLayout: "matrix" | "stacks" | "compact" | "icons" | "matrix-icons";
 }
 
 const GRADIENT_PRESETS = [
@@ -1345,12 +1345,13 @@ export default function Generator() {
                       </div>
                       <select
                         value={config.skillsLayout}
-                        onChange={(e) => setConfig((prev) => ({ ...prev, skillsLayout: e.target.value as "matrix" | "stacks" | "icons" }))}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, skillsLayout: e.target.value as CardConfig['skillsLayout'] }))}
                         className="w-full h-8 rounded-md bg-black/40 border border-white/10 px-2 text-xs text-slate-200 focus:outline-none focus:border-primary/50 cursor-pointer"
                       >
-                        <option value="icons">Minimalist Icon Grid (Icons only · Name on hover)</option>
-                        <option value="matrix">Categorized Matrix (Clean & Deduplicated)</option>
-                        <option value="stacks">Stack Clusters (FARM, PERN, LEMP, Django)</option>
+                        <option value="icons">Minimalist Icon Grid (Unified icons only · Name on hover)</option>
+                        <option value="matrix">Categorized Matrix (Icons with Labels · Clean & Deduplicated)</option>
+                        <option value="matrix-icons">Categorized Icons (Icons only grouped by category)</option>
+                        <option value="stacks">Stack Clusters (FARM, PERN, LEMP, Django, Flutter...)</option>
                       </select>
 
                       {/* Customize in Popup Modal Button */}

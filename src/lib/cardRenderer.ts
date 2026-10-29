@@ -69,7 +69,10 @@ export interface CardParams {
   quote?: { quote: string; author: string };
   skills?: string | string[];
   stacks?: string | string[];
-  skillsLayout?: 'matrix' | 'stacks' | 'compact' | 'icons';
+  skillsLayout?: 'matrix' | 'stacks' | 'compact' | 'icons' | 'matrix-icons';
+  showLabels?: boolean | string;
+  style?: string;
+  iconsOnly?: boolean | string;
 }
 
 export const PRESET_STACKS: Record<string, { label: string; skills: string[] }> = {
@@ -1037,6 +1040,15 @@ export function generateCardSVG(rawParams: CardParams): string {
       let contentSvg = '';
       let currentY = 66;
 
+      const isIconsOnly = (
+        skillsLayout === 'matrix-icons' ||
+        rawParams.style === 'icons' ||
+        rawParams.showLabels === false ||
+        rawParams.showLabels === 'false' ||
+        rawParams.iconsOnly === true ||
+        rawParams.iconsOnly === 'true'
+      );
+
       groups.forEach((grp, gIdx) => {
         const rowDelay = (gIdx + 1) * 0.05 * m;
         contentSvg += `
@@ -1049,33 +1061,73 @@ export function generateCardSVG(rawParams: CardParams): string {
         let rowYOffset = 0;
         const maxRowWidth = width - 50;
 
-        grp.skills.forEach((skill) => {
-          const approxCharWidth = 6.4;
-          const textWidth = Math.round(skill.length * approxCharWidth);
-          const pillWidth = textWidth + 24;
+        if (isIconsOnly) {
+          const tileSize = 36;
+          const tileGap = 8;
+          grp.skills.forEach((skill) => {
+            if (curX + tileSize > maxRowWidth && curX > 0) {
+              curX = 0;
+              rowYOffset += tileSize + tileGap;
+            }
 
-          if (curX + pillWidth > maxRowWidth && curX > 0) {
-            curX = 0;
-            rowYOffset += 26;
-          }
+            const iconDef = getTechIcon(skill);
+            const dotColor = iconDef?.color || LANGUAGE_COLORS[skill] || primaryColor;
 
-          const dotColor = getTechIcon(skill)?.color || LANGUAGE_COLORS[skill] || primaryColor;
+            contentSvg += `
+              <g transform="translate(${curX}, ${rowYOffset})">
+                <title>${escapeXml(skill)}</title>
+                <rect width="${tileSize}" height="${tileSize}" rx="7" fill="${primaryColor}14" stroke="${primaryColor}35" stroke-width="1" />
+                <g transform="translate(7, 7) scale(0.88)">
+                  <path d="${iconDef.svgPath}" fill="${dotColor}" />
+                </g>
+              </g>
+            `;
+            curX += tileSize + tileGap;
+          });
 
           contentSvg += `
-            <g transform="translate(${curX}, ${rowYOffset})">
-              <rect width="${pillWidth}" height="22" rx="5" fill="${primaryColor}14" stroke="${primaryColor}35" stroke-width="1" />
-              <circle cx="10" cy="11" r="3" fill="${dotColor}" />
-              <text x="18" y="14.5" font-size="10" font-weight="600" fill="${textColor}">${escapeXml(skill)}</text>
+              </g>
             </g>
           `;
-          curX += pillWidth + 6;
-        });
+          currentY += 24 + rowYOffset + tileSize + 10;
+        } else {
+          grp.skills.forEach((skill) => {
+            const iconDef = getTechIcon(skill);
+            const dotColor = iconDef?.color || LANGUAGE_COLORS[skill] || primaryColor;
+            const hasIcon = Boolean(iconDef?.svgPath);
+            const approxCharWidth = 6.4;
+            const textWidth = Math.round(skill.length * approxCharWidth);
+            const pillWidth = hasIcon ? textWidth + 30 : textWidth + 24;
+            const textX = hasIcon ? 23 : 18;
 
-        contentSvg += `
+            if (curX + pillWidth > maxRowWidth && curX > 0) {
+              curX = 0;
+              rowYOffset += 28;
+            }
+
+            contentSvg += `
+              <g transform="translate(${curX}, ${rowYOffset})">
+                <title>${escapeXml(skill)}</title>
+                <rect width="${pillWidth}" height="24" rx="6" fill="${primaryColor}14" stroke="${primaryColor}35" stroke-width="1" />
+                ${hasIcon ? `
+                  <g transform="translate(6, 4.5) scale(0.62)">
+                    <path d="${iconDef.svgPath}" fill="${dotColor}" />
+                  </g>
+                ` : `
+                  <circle cx="10" cy="12" r="3.5" fill="${dotColor}" />
+                `}
+                <text x="${textX}" y="15.5" font-size="10.5" font-weight="600" fill="${textColor}">${escapeXml(skill)}</text>
+              </g>
+            `;
+            curX += pillWidth + 6;
+          });
+
+          contentSvg += `
+              </g>
             </g>
-          </g>
-        `;
-        currentY += 42 + rowYOffset;
+          `;
+          currentY += 24 + rowYOffset + 24 + 10;
+        }
       });
 
       const actualHeight = Math.max(height, currentY + 15);
