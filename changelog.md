@@ -2,6 +2,28 @@
 
 All notable changes to the GitHub Canvas / GitStats project are documented in this file.
 
+## [2.3.9] - 2026-10-29
+
+### Official Vector Brand Icons Overhaul & Crisp Cutout Rendering
+- **80+ Official Simple Icons Replacement (`src/lib/techIcons.ts`)**:
+  - Replaced all circular placeholders, letters, and crude shapes with official vector brand icons from Simple Icons:
+    - `PHP`: Official PHP oval lettering (replacing circular "PP" placeholder).
+    - `Rust`: Official gear cog with inscribed 'R' (replacing circular "T" placeholder).
+    - `C#`: Official C# hexagon logo (replacing circular "C" placeholder).
+    - `Linux`: Official Tux penguin silhouette (replacing generic circle with dot).
+    - `Express`: Official Express.js cursive mark (replacing circular "X" placeholder).
+    - `Django`: Official `dj` ligature (replacing circular letter placeholder).
+    - `MySQL` & `MariaDB`: Official Dolphin and Sea Lion brand glyphs.
+    - `Docker` & `PostgreSQL`: Official whale with container stacks and Slonik elephant silhouette.
+    - `JavaScript` & `TypeScript`: Official brand vectors with contrast-preserved cutouts.
+    - `Bash` & `Shell`: Official GNU Bash terminal prompt symbol.
+    - `Hugging Face`, `LangChain`, `OAuth`, `SSL/TLS`, `Postman`, `VS Code`, `AWS`, `Azure`, `Google Cloud`, `Oracle Cloud`, `Android`, `Firebase`, `Flutter`, `DigitalOcean`, `GitHub Actions`.
+- **Winding & Cutout Rule Fix (`src/lib/cardRenderer.ts`, `api/card.ts`)**:
+  - Added `fill-rule="evenodd" clip-rule="evenodd"` to all icon `<path>` rendering blocks across both `layout=icons` and `layout=matrix`.
+  - Fixed issue where subpaths (like the `JS` in JavaScript or inner holes in letters) were being filled solidly by SVG nonzero winding.
+- **High-Contrast Dark Theme Brand Palette**:
+  - Fine-tuned brand colors so dark marks (Express, Next.js, Rust, Django) remain vibrant and readable against dark and neon backgrounds.
+
 ## [2.3.8] - 2026-10-29
 
 ### Expanded Tech Icon Catalog & Universal Full-Stack Stack Engines
