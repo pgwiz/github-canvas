@@ -475,6 +475,102 @@ export const TECH_CATALOG: TechIconDef[] = [
     color: '#326ce5',
     svgPath: 'M12 2L3 7v10l9 5 9-5V7l-9-5zm0 2.2l6.8 3.8v7.6L12 19.4 5.2 15.6V8L12 4.2zm0 3.3a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zm0 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z'
   },
+  {
+    name: 'Android',
+    category: 'Frontend',
+    color: '#3ddc84',
+    svgPath: 'M17.5 9.2l1.6-2.8c.2-.3.1-.7-.2-.9s-.7-.1-.9.2L16.3 8.6C15 8 13.5 7.7 12 7.7s-3 .3-4.3.9L6 5.7c-.2-.3-.6-.4-.9-.2s-.4.6-.2.9l1.6 2.8C3.9 10.9 2 13.8 2 17.2h20c0-3.4-1.9-6.3-4.5-8zm-8.5 4.3c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm6 0c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1z'
+  },
+  {
+    name: 'Firebase',
+    category: 'Databases',
+    color: '#ffca28',
+    svgPath: 'M3.9 14.5L6.3 3.4c.1-.4.6-.5.8-.2l3.4 6.3-6.6 5zm14.6 2.4L16.2 4.2c-.1-.4-.6-.5-.8-.1l-4.2 8 7.3 4.8zm-14.8-1.4l7.8 4.4c.3.2.7.2 1 0l7.8-4.4-4.8-9.1-11.8 9.1z'
+  },
+  {
+    name: 'GitHub',
+    category: 'DevOps & Tools',
+    color: '#ffffff',
+    svgPath: 'M12 2C6.5 2 2 6.5 2 12c0 4.4 2.9 8.2 6.8 9.5.5.1.7-.2.7-.5v-1.8c-2.8.6-3.4-1.3-3.4-1.3-.5-1.1-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.3-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-4.9 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1 .8-.2 1.7-.3 2.5-.3.8 0 1.7.1 2.5.3 2-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.8-2.4 4.6-4.6 4.9.4.3.7.9.7 1.8v2.7c0 .3.2.6.7.5 4-1.3 6.8-5.1 6.8-9.5 0-5.5-4.5-10-10-10z'
+  },
+  {
+    name: 'GitHub Actions',
+    category: 'DevOps & Tools',
+    color: '#2088ff',
+    svgPath: 'M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm1 14.8v-3.3l3.2-3.2-1.4-1.4-2.8 2.8V6.5h-2v4.8L7.2 8.5 5.8 9.9l3.2 3.2v3.7h4z'
+  },
+  {
+    name: 'DigitalOcean',
+    category: 'DevOps & Tools',
+    color: '#0080ff',
+    svgPath: 'M12 2C6.5 2 2 6.5 2 12c0 4.6 3.1 8.5 7.4 9.6v-3.7H7.7V16H9.4v-2.2h2V16h2.2v1.9h-2.2v3.9c5-.7 8.8-5 8.8-10 0-5.5-4.5-10-10-10z'
+  },
+  {
+    name: 'JWT',
+    category: 'Backend',
+    color: '#d63aff',
+    svgPath: 'M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.5h-2v-5h2zm-1-6.5a1.2 1.2 0 1 1 1.2-1.2A1.2 1.2 0 0 1 12 10z'
+  },
+  {
+    name: 'OAuth',
+    category: 'Backend',
+    color: '#eb5424',
+    svgPath: 'M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 4a3.5 3.5 0 1 1-3.5 3.5A3.5 3.5 0 0 1 12 6zm4.5 11h-9v-1.5c0-2 3-3.1 4.5-3.1s4.5 1.1 4.5 3.1z'
+  },
+  {
+    name: 'SSL/TLS',
+    category: 'DevOps & Tools',
+    color: '#0095d5',
+    svgPath: 'M12 2L4 5.5v6.2c0 5.2 3.4 10.1 8 11.3 4.6-1.2 8-6.1 8-11.3V5.5L12 2zm3 11h-1.5v1.8c0 .8-.7 1.4-1.5 1.4s-1.5-.6-1.5-1.4V13H9v-3.5h6V13zm-2-1.5h-2V10c0-.6.4-1 1-1s1 .4 1 1v1.5z'
+  },
+  {
+    name: 'Postman',
+    category: 'DevOps & Tools',
+    color: '#ff6c37',
+    svgPath: 'M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm4.5 11.2l-3.3 1.8a2.5 2.5 0 0 1-3.6-2.2 2.5 2.5 0 0 1 1.3-2.2l3.3-1.8a2.5 2.5 0 0 1 3.6 2.2 2.5 2.5 0 0 1-1.3 2.2z'
+  },
+  {
+    name: 'VS Code',
+    category: 'DevOps & Tools',
+    color: '#007acc',
+    svgPath: 'M17.5 2L7 11.5l3.5 3L17.5 2zm-13 8.3L2 12l2.5 1.7 4-3.7-4-3.7zm13 11.7l-7-9.5 3.5-3 7 12.5h-3.5zM22 6.5v11l-3.5-2.5V9L22 6.5z'
+  },
+  {
+    name: 'Hugging Face',
+    category: 'Backend',
+    color: '#ffd21e',
+    svgPath: 'M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm-3.5 7.5a1.5 1.5 0 1 1-1.5 1.5 1.5 1.5 0 0 1 1.5-1.5zm7 0a1.5 1.5 0 1 1-1.5 1.5 1.5 1.5 0 0 1 1.5-1.5zM12 17.5c-2.3 0-4.2-1.6-4.7-3.8h9.4c-.5 2.2-2.4 3.8-4.7 3.8z'
+  },
+  {
+    name: 'LangChain',
+    category: 'Backend',
+    color: '#00a67e',
+    svgPath: 'M12 2L4 6v12l8 4 8-4V6l-8-4zm-1 14.5l-4-2V8.5l4 2v6zm6-2l-4 2V10.5l4-2v6z'
+  },
+  {
+    name: 'AWS',
+    category: 'DevOps & Tools',
+    color: '#ff9900',
+    svgPath: 'M18.8 14.2c-2.8 1.9-6.9 2.9-10.4 1.8-1.5-.5-2.8-1.3-3.9-2.3-.3-.3-.3-.7 0-1 .3-.3.8-.3 1.1 0 .9.8 2.1 1.5 3.3 1.9 2.9.9 6.4 0 8.7-1.5.3-.2.8-.2 1.1.1.3.3.3.8.1 1zm-10-4.8l-1.6 4.7H5.6L8 5.7h2.1l2.4 8.4h-1.6l-.7-2.1H8.8zm.5-1.5h1.7l-.8-2.6-.9 2.6zm6.8 6.2h-1.6V5.7h1.6v8.4z'
+  },
+  {
+    name: 'Azure',
+    category: 'DevOps & Tools',
+    color: '#0078d4',
+    svgPath: 'M13.2 2.5L5.8 16.2h5.5l1.9-4.2 3.8 9.5H22L13.2 2.5zM3 18.5h6.2L7.3 21.5H2l1-3z'
+  },
+  {
+    name: 'Google Cloud',
+    category: 'DevOps & Tools',
+    color: '#4285f4',
+    svgPath: 'M19.4 10.5c-.3-2.6-2.5-4.5-5.2-4.5-2 0-3.8 1.1-4.7 2.8-1.8.2-3.2 1.8-3.2 3.7 0 2.1 1.7 3.8 3.8 3.8h9.1c1.9 0 3.5-1.6 3.5-3.5 0-1.8-1.4-3.3-3.3-3.3z'
+  },
+  {
+    name: 'Oracle Cloud',
+    category: 'DevOps & Tools',
+    color: '#f80000',
+    svgPath: 'M16.5 6H7.5C4.5 6 2 8.5 2 11.5S4.5 17 7.5 17h9c3 0 5.5-2.5 5.5-5.5S19.5 6 16.5 6zm0 8.5h-9c-1.7 0-3-1.3-3-3s1.3-3 3-3h9c1.7 0 3 1.3 3 3s-1.3 3-3 3z'
+  },
 ];
 
 // Common language & technology aliases
@@ -489,6 +585,7 @@ const TECH_ALIASES: Record<string, string> = {
   'c#': 'c#',
   cs: 'c#',
   csharp: 'c#',
+  'c-sharp': 'c#',
   rb: 'ruby',
   kt: 'kotlin',
   sh: 'bash',
@@ -508,8 +605,39 @@ const TECH_ALIASES: Record<string, string> = {
   next: 'next.js',
   nextjs: 'next.js',
   node: 'node.js',
+  nodejs: 'node.js',
   tailwind: 'tailwind',
   tailwindcss: 'tailwind',
+  android: 'android',
+  firebase: 'firebase',
+  github: 'github',
+  'github actions': 'github actions',
+  actions: 'github actions',
+  'gh-actions': 'github actions',
+  digitalocean: 'digitalocean',
+  do: 'digitalocean',
+  jwt: 'jwt',
+  oauth: 'oauth',
+  auth0: 'oauth',
+  'ssl/tls': 'ssl/tls',
+  ssl: 'ssl/tls',
+  tls: 'ssl/tls',
+  postman: 'postman',
+  'vs code': 'vs code',
+  vscode: 'vs code',
+  'visual studio code': 'vs code',
+  'hugging face': 'hugging face',
+  huggingface: 'hugging face',
+  hf: 'hugging face',
+  langchain: 'langchain',
+  aws: 'aws',
+  azure: 'azure',
+  'google cloud': 'google cloud',
+  googlecloud: 'google cloud',
+  gcp: 'google cloud',
+  'oracle cloud': 'oracle cloud',
+  oracle: 'oracle cloud',
+  oci: 'oracle cloud',
 };
 
 export const TECH_ICON_MAP: Record<string, TechIconDef> = TECH_CATALOG.reduce((acc, icon) => {

@@ -74,43 +74,65 @@ export interface CardParams {
 }
 
 export const PRESET_STACKS: Record<string, { label: string; skills: string[] }> = {
-  farm: {
-    label: 'FastAPI · FARM Stack',
-    skills: ['Python', 'FastAPI', 'React', 'MongoDB', 'Redis', 'Docker'],
-  },
-  pern: {
-    label: 'PERN · Node Stack',
-    skills: ['PostgreSQL', 'Express', 'React', 'Node.js'],
+  languages: {
+    label: 'Core Languages',
+    skills: ['PHP', 'Python', 'JavaScript', 'TypeScript', 'C#', 'Bash', 'Rust'],
   },
   lemp: {
     label: 'LEMP · Laravel Stack',
     skills: ['Linux', 'Nginx', 'MySQL', 'MariaDB', 'PHP', 'Laravel'],
   },
+  farm: {
+    label: 'FastAPI · FARM Stack',
+    skills: ['Python', 'FastAPI', 'PostgreSQL', 'MongoDB', 'Redis', 'Docker'],
+  },
+  pern: {
+    label: 'PERN · Node Stack',
+    skills: ['Node.js', 'Express', 'React', 'PostgreSQL'],
+  },
   django: {
     label: 'Django Stack',
     skills: ['Python', 'Django', 'PostgreSQL', 'Nginx'],
   },
-  languages: {
-    label: 'Core Languages',
-    skills: ['TypeScript', 'Python', 'JavaScript', 'PHP', 'Rust', 'C#', 'Bash'],
+  flutter: {
+    label: 'Flutter Mobile Stack',
+    skills: ['Flutter', 'Android', 'Firebase'],
   },
   devops: {
-    label: 'DevOps & Systems',
-    skills: ['Docker', 'Linux', 'Nginx', 'Git', 'Cloudflare'],
+    label: 'Infra · DevOps',
+    skills: ['Docker', 'Linux', 'Nginx', 'GitHub Actions', 'DigitalOcean'],
+  },
+  security: {
+    label: 'Auth · Security',
+    skills: ['JWT', 'OAuth', 'SSL/TLS'],
+  },
+  tools: {
+    label: 'Tools & VCS',
+    skills: ['Git', 'GitHub', 'Postman', 'VS Code'],
+  },
+  ai: {
+    label: 'AI · ML · RAG',
+    skills: ['Python', 'FastAPI', 'PostgreSQL', 'Hugging Face', 'LangChain'],
+  },
+  cloud: {
+    label: 'Cloud Platforms',
+    skills: ['AWS', 'Azure', 'Google Cloud', 'Oracle Cloud'],
   },
 };
 
 export function getSkillCategory(skill: string): string {
   const s = skill.toLowerCase();
-  const languages = ['typescript', 'javascript', 'python', 'php', 'rust', 'c#', 'c++', 'c', 'bash', 'shell', 'go', 'golang', 'ruby', 'swift', 'kotlin', 'dart', 'html', 'css', 'scss', 'sql', 'r', 'lua', 'solidity'];
-  const frameworks = ['react', 'vue', 'angular', 'svelte', 'next.js', 'nextjs', 'fastapi', 'django', 'flask', 'laravel', 'express', 'node.js', 'nodejs', 'spring', 'asp.net', 'tailwind', 'bootstrap'];
+  const languages = ['typescript', 'javascript', 'python', 'php', 'rust', 'c#', 'c++', 'c', 'bash', 'shell', 'go', 'golang', 'ruby', 'swift', 'kotlin', 'dart', 'html', 'css', 'scss', 'sql', 'r', 'lua', 'solidity', 'zig', 'julia', 'assembly', 'webassembly'];
+  const frameworks = ['react', 'vue', 'angular', 'svelte', 'next.js', 'nextjs', 'fastapi', 'django', 'flask', 'laravel', 'express', 'node.js', 'nodejs', 'spring', 'asp.net', 'tailwind', 'bootstrap', 'flutter', 'android'];
   const databases = ['postgresql', 'postgres', 'mysql', 'mariadb', 'mongodb', 'redis', 'sqlite', 'supabase', 'firebase', 'cassandra', 'elasticsearch'];
-  const devops = ['docker', 'kubernetes', 'linux', 'nginx', 'apache', 'git', 'github', 'gitlab', 'aws', 'gcp', 'cloudflare', 'vercel', 'terraform', 'ansible'];
+  const devops = ['docker', 'kubernetes', 'linux', 'nginx', 'apache', 'git', 'github', 'gitlab', 'github actions', 'actions', 'digitalocean', 'aws', 'azure', 'google cloud', 'gcp', 'oracle cloud', 'oracle', 'cloudflare', 'vercel', 'terraform', 'ansible'];
+  const aiAndTools = ['hugging face', 'langchain', 'postman', 'vs code', 'vscode', 'jwt', 'oauth', 'ssl/tls', 'ssl', 'tls'];
 
   if (languages.includes(s)) return 'Languages';
   if (frameworks.includes(s)) return 'Frameworks & Runtimes';
   if (databases.includes(s)) return 'Databases & Storage';
   if (devops.includes(s)) return 'DevOps & Systems';
+  if (aiAndTools.includes(s)) return 'AI, Security & Tools';
   return 'Languages';
 }
 
@@ -1011,6 +1033,7 @@ export function generateCardSVG(rawParams: CardParams): string {
           'Frameworks & Runtimes': [],
           'Databases & Storage': [],
           'DevOps & Systems': [],
+          'AI, Security & Tools': [],
         };
 
         uniqueSkills.forEach((skill) => {
@@ -1052,7 +1075,7 @@ export function generateCardSVG(rawParams: CardParams): string {
             rowYOffset += 26;
           }
 
-          const dotColor = LANGUAGE_COLORS[skill] || primaryColor;
+          const dotColor = getTechIcon(skill)?.color || LANGUAGE_COLORS[skill] || primaryColor;
 
           contentSvg += `
             <g transform="translate(${curX}, ${rowYOffset})">

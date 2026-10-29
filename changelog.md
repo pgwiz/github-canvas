@@ -2,6 +2,19 @@
 
 All notable changes to the GitHub Canvas / GitStats project are documented in this file.
 
+## [2.3.8] - 2026-10-29
+
+### Expanded Tech Icon Catalog & Universal Full-Stack Stack Engines
+- **Comprehensive Vector Icon Suite (`src/lib/techIcons.ts`)**:
+  - Integrated 16 new official brand vector icons with exact brand hex colors:
+    - `Android` (`#3DDC84`), `Firebase` (`#FFCA28`), `GitHub` (`#FFFFFF`), `GitHub Actions` (`#2088FF`), `DigitalOcean` (`#0080FF`), `JWT` (`#D63AFF`), `OAuth` (`#EB5424`), `SSL/TLS` (`#0095D5`), `Postman` (`#FF6C37`), `VS Code` (`#007ACC`), `Hugging Face` (`#FFD21E`), `LangChain` (`#00A67E`), `AWS` (`#FF9900`), `Azure` (`#0078D4`), `Google Cloud` (`#4285F4`), and `Oracle Cloud` (`#F80000`).
+  - Added comprehensive alias map entries (`actions`, `gh-actions`, `do`, `jwt`, `oauth`, `auth0`, `ssl`, `tls`, `postman`, `vscode`, `hf`, `huggingface`, `langchain`, `aws`, `azure`, `gcp`, `googlecloud`, `oracle`, `oci`, `c#`, `csharp`).
+- **Expanded Preset Stacks Engine (`src/lib/cardRenderer.ts`, `api/card.ts`)**:
+  - Added new 1-click preset stacks: `flutter` (Flutter, Android, Firebase), `security` (JWT, OAuth, SSL/TLS), `tools` (Git, GitHub, Postman, VS Code), `ai` (Python, FastAPI, PostgreSQL, Hugging Face, LangChain), and `cloud` (AWS, Azure, Google Cloud, Oracle Cloud).
+  - Categorized Matrix layout now groups into 5 structured tiers including `AI, Security & Tools`, rendering official brand color dots for all skills.
+- **Dynamic URL Query Support (`skills=...` & `stacks=...`)**:
+  - Allows linking any combination of programming languages, tools, frameworks, and cloud platforms directly via URL query parameters in `layout=matrix`, `layout=icons`, and `layout=stacks`.
+
 ## [2.3.7] - 2026-10-29
 
 ### Mobile-Responsive Navbar & Ultra-Thin Screen Optimization
