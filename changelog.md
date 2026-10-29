@@ -2,7 +2,37 @@
 
 All notable changes to the GitHub Canvas / GitStats project are documented in this file.
 
-## [2.3.1] - 2026-10-29
+## [2.3.2] - 2026-10-29
+
+### 3-Column Studio Workspace for Profile Customizer (`/profile-customizer`)
+- **Full 3-Column Workspace Architecture**:
+  - **Left Column**: Collapsible Resume / CV Uploader (`<details>` accordion) with drag-and-drop extraction (.pdf, .txt, .md, .json), document removal, target role / headline input, tone selector, card inclusion checkboxes, and "Generate AI Profile README" action with loading feedback.
+  - **Center Column (Core Stage)**: Dynamic canvas with view mode tabs:
+    - `Preview`: Full rendered GitHub README in a backdrop-blurred container with real dynamic SVG cards.
+    - `Code`: Monospace Markdown editor with character & word counts.
+    - `Split`: Side-by-side split screen with synced editing and live rendering.
+    - Bottom Dock with one-click `Copy Markdown` and `Download README.md`.
+  - **Right Column (Card Library & Quick Injector)**: 1-click chips to append cards (`Hero Banner`, `GitHub Stats`, `Streak Tracker`, `Top Languages`, `Tech Stack Matrix`, `Weekly Activity`, `Dev Quote`, `Pinned Repo`) and README section templates (`About Me Bio`, `Featured Projects Table`, `Social Badges`, `GitHub Trophies`).
+
+### Bug Fixes: 404 Errors on Cards & API Rewrites
+- **Resolved 6x 404 Console Errors**:
+  - Replaced hardcoded dead domain `https://github-canvas.vercel.app/api/card` in `src/pages/ProfileCustomizer.tsx` and `api/ai.ts` with dynamic `getCardApiBase()` resolving to `https://github-canvas.pgwiz.cloud` and active browser origin.
+  - Updated `vercel.json` with explicit rewrites for `/card` -> `/api/card` and `/pin` -> `/api/pin`.
+
+### Tech Stack "+ Add" Language Fix (`TechStackModal.tsx`)
+- **Fixed State Wiping on Keystrokes & Add**:
+  - Replaced buggy `useMemo` reset with an isolated `useEffect([isOpen])` hook, ensuring user selections and added custom languages are never cleared while the modal is open.
+  - Wrapped custom input and "+ Add" button in a native form submit handler to support both button clicks and Enter key submissions.
+  - Added direct 1-click addition when typing unmatched languages in the search bar.
+
+### Share Popup Modal & Link Scrollbar Elimination
+- **Interactive Share Modal (`src/components/generator/ShareModal.tsx`)**:
+  - Added popup modal with direct SVG URLs, README Markdown embed, HTML tag, and clickable badge.
+  - Integrated 1-click social sharing to Twitter/X, LinkedIn, Reddit, WhatsApp, and Telegram.
+  - Added "Share" button to `/generator` and `/profile-customizer`.
+- **Global Link & Textarea Scrollbar Removal**:
+  - Replaced link textarea with sleek readonly input eliminating horizontal/vertical scrollbars on Windows Chrome/Edge.
+  - Enhanced global CSS rules for `input`, `textarea`, `pre`, and `code` with `scrollbar-width: none !important` and `::-webkit-scrollbar { display: none !important }`.
 
 ### Scrollbar Removal & Minimalist Tech Stack Modal
 - **Global Scrollbar Removal**:

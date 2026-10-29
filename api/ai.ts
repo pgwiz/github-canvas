@@ -3,23 +3,25 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const DOCS_CONTEXT = `
 # GitHub Stats Card Generator Documentation
-Base URL: https://github-canvas.vercel.app/api/card
+Base URL: https://github-canvas.pgwiz.cloud/api/card
 
 Available Card Types:
 - stats: Total stars, forks, repos, followers.
-  URL: https://github-canvas.vercel.app/api/card?type=stats&username={username}&theme={theme}&animation=fadeIn
+  URL: https://github-canvas.pgwiz.cloud/api/card?type=stats&username={username}&theme={theme}&animation=fadeIn
 - languages: Top programming languages with percentage bars.
-  URL: https://github-canvas.vercel.app/api/card?type=languages&username={username}&theme={theme}&animation=fadeIn
+  URL: https://github-canvas.pgwiz.cloud/api/card?type=languages&username={username}&theme={theme}&animation=fadeIn
 - streak: Contribution streak and current active days.
-  URL: https://github-canvas.vercel.app/api/card?type=streak&username={username}&theme={theme}&animation=fadeIn
+  URL: https://github-canvas.pgwiz.cloud/api/card?type=streak&username={username}&theme={theme}&animation=fadeIn
 - activity: Weekly commit and activity sparkline.
-  URL: https://github-canvas.vercel.app/api/card?type=activity&username={username}&theme={theme}&animation=fadeIn
+  URL: https://github-canvas.pgwiz.cloud/api/card?type=activity&username={username}&theme={theme}&animation=fadeIn
 - quote: Inspiring developer quote.
-  URL: https://github-canvas.vercel.app/api/card?type=quote&theme={theme}&animation=fadeIn
+  URL: https://github-canvas.pgwiz.cloud/api/card?type=quote&theme={theme}&animation=fadeIn
 - banner: High-impact hero banner with name, title, and wave animation.
-  URL: https://github-canvas.vercel.app/api/card?type=banner&username={username}&bannerName={name}&bannerDescription={tagline}&theme={theme}&animation=wave
+  URL: https://github-canvas.pgwiz.cloud/api/card?type=banner&username={username}&bannerName={name}&bannerDescription={tagline}&theme={theme}&animation=wave
+- skills: Vector icon matrix of languages and developer tech stacks.
+  URL: https://github-canvas.pgwiz.cloud/api/card?type=skills&skills=TypeScript,React,Node.js,Python&theme={theme}&layout=matrix
 
-Themes: electric-blue, midnight, tokyo-night, dracula, ocean, sunset, cyberpunk, nord, catppuccin, matrix.
+Themes: electric-blue, midnight, tokyo-night, dracula, ocean, sunset, cyberpunk, nord, catppuccin, matrix, cyber-neon.
 Animations: fadeIn, wave, glow, float, typewriter, pulse.
 `;
 
@@ -43,10 +45,11 @@ function generateDeterministicProfile(params: {
   sourceContent: string;
   theme: string;
   selectedCards: string[];
+  baseUrl?: string;
 }): string {
   const { username, sourceContent, theme, selectedCards } = params;
   const safeName = username || 'Developer';
-  const baseUrl = 'https://github-canvas.vercel.app/api/card';
+  const baseUrl = params.baseUrl || 'https://github-canvas.pgwiz.cloud/api/card';
 
   // Extract potential keywords/skills from source text
   const skillsList = [
@@ -168,7 +171,7 @@ Selected Cards to Include: ${selectedCards.join(', ')}
 Theme: ${theme}
 
 Strict Guidelines:
-1. Top Banner: Include the SVG banner card using <img src="https://github-canvas.vercel.app/api/card?type=banner&username=${encodeURIComponent(username)}&bannerName=${encodeURIComponent(username)}&bannerDescription=Software%20Engineer&theme=${theme}&animation=wave" width="100%" />.
+1. Top Banner: Include the SVG banner card using <img src="https://github-canvas.pgwiz.cloud/api/card?type=banner&username=${encodeURIComponent(username)}&bannerName=${encodeURIComponent(username)}&bannerDescription=Software%20Engineer&theme=${theme}&animation=wave" width="100%" />.
 2. Bio: Engaging 2-3 paragraph intro highlighting skills, passions, and background extracted from the CV/Portfolio.
 3. Tech Stack / Skills: Categorized using clean Markdown badges or styled tables (Languages, Frameworks, Cloud, Tools).
 4. Live GitStats Cards: Embed the selected cards using standard HTML or Markdown img tags with URLs from the documentation.

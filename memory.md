@@ -2,7 +2,7 @@
 
 ## Project Identification
 - **Repository**: `pgwiz/github-canvas`
-- **Hosted Domain**: `https://github-canvas.vercel.app`
+- **Hosted Domain**: `https://github-canvas.pgwiz.cloud` (Vercel alias: `github-canvas-chi.vercel.app`)
 - **Vercel Project**: `pgwizs-projects/github-canvas`
 - **Active Git Branch**: `main`
 

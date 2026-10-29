@@ -2,7 +2,15 @@
   "buildCommand": "pnpm run build",
   "rewrites": [
     {
-      "source": "/((?!api/|assets/|favicon.ico).*)",
+      "source": "/card",
+      "destination": "/api/card"
+    },
+    {
+      "source": "/pin",
+      "destination": "/api/pin"
+    },
+    {
+      "source": "/((?!api/|card|pin|assets/|favicon.ico).*)",
       "destination": "/index.html"
     }
   ],

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { TECH_CATALOG, TechIconDef } from "@/lib/techIcons";
 import { PRESET_STACKS } from "@/lib/cardRenderer";
 import { 
@@ -22,10 +22,15 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>("All");
   const [customInput, setCustomInput] = useState("");
 
-  // Keep activeSkills synced when modal opens
-  useMemo(() => {
-    setActiveSkills(selectedSkills);
-  }, [selectedSkills, isOpen]);
+  // Keep activeSkills synced strictly when modal opens, preventing wiping on keystrokes
+  useEffect(() => {
+    if (isOpen) {
+      setActiveSkills(selectedSkills);
+      setCustomInput("");
+      setSearchQuery("");
+      setActiveCategory("All");
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -256,11 +261,15 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
             <div className="text-center py-10">
               <p className="text-xs text-slate-400 mb-2">No predefined tools found matching "{searchQuery}".</p>
               <button
+                type="button"
                 onClick={() => {
-                  setCustomInput(searchQuery);
+                  const trimmed = searchQuery.trim();
+                  if (trimmed && !activeSkills.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
+                    setActiveSkills((prev) => [...prev, trimmed]);
+                  }
                   setSearchQuery("");
                 }}
-                className="text-xs text-primary hover:underline font-medium"
+                className="text-xs text-primary hover:underline font-medium cursor-pointer"
               >
                 + Add "{searchQuery}" as a custom language?
               </button>
@@ -270,23 +279,28 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
 
         {/* Custom Language Adder & Footer */}
         <div className="p-4 border-t border-white/10 bg-black/40 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-2 w-full sm:w-auto flex-1 max-w-md">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleAddCustom();
+            }}
+            className="flex items-center gap-2 w-full sm:w-auto flex-1 max-w-md"
+          >
             <input
               type="text"
               value={customInput}
               onChange={(e) => setCustomInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAddCustom()}
               placeholder="Add any custom language (e.g. Mojo, Zig, Solidity)..."
               className="w-full bg-black/60 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50"
             />
             <button
-              onClick={handleAddCustom}
+              type="submit"
               disabled={!customInput.trim()}
-              className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 disabled:opacity-40 text-xs font-semibold text-white shrink-0 transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 disabled:opacity-40 text-xs font-semibold text-white shrink-0 transition-colors cursor-pointer"
             >
               + Add
             </button>
-          </div>
+          </form>
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             <button

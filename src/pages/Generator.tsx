@@ -5,10 +5,11 @@ import { PageTransition } from "@/components/layout/PageTransition";
 import { templates } from "@/lib/templates";
 import { generateCardSVG, CardParams, PRESET_STACKS } from "@/lib/cardRenderer";
 import { TechStackModal } from "@/components/generator/TechStackModal";
+import { ShareModal } from "@/components/generator/ShareModal";
 import { 
   BarChart3, Code2, Flame, Activity, Quote, Sparkles, Grid3X3, Bookmark, 
   Layers, SlidersHorizontal, RotateCcw, ChevronDown, AtSign, RefreshCw, 
-  Wand2, Blend, Download, Copy, Check, Monitor, Layers3, CheckCircle2, Sliders 
+  Wand2, Blend, Download, Copy, Check, Monitor, Layers3, CheckCircle2, Sliders, Share2 
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGitHubStats, GitHubStats } from "@/hooks/useGitHubStats";
@@ -119,6 +120,7 @@ export default function Generator() {
   const [viewMode, setViewMode] = useState<ViewMode>("single");
   const [exportFormat, setExportFormat] = useState<ExportFormat>("url");
   const [isCopied, setIsCopied] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [githubData, setGithubData] = useState<GitHubStats | null>(null);
   const [currentQuote, setCurrentQuote] = useState<DevQuote | null>(null);
   const [isStackModalOpen, setIsStackModalOpen] = useState(false);
@@ -589,6 +591,13 @@ export default function Generator() {
                 {/* Actions */}
                 <div className="flex items-center gap-2">
                   <button
+                    onClick={() => setIsShareModalOpen(true)}
+                    className="px-3 py-1.5 rounded-lg border border-primary/30 bg-primary/10 hover:bg-primary/20 text-xs font-medium text-primary transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                    title="Share card & get social links"
+                  >
+                    <Share2 className="w-3.5 h-3.5" /> Share
+                  </button>
+                  <button
                     onClick={handleDownloadSvg}
                     className="px-3.5 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-medium text-white transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
                   >
@@ -611,14 +620,16 @@ export default function Generator() {
                 </div>
               </div>
 
-              {/* Output Readonly Field */}
-              <textarea
-                readOnly
-                rows={1}
-                value={snippetOutput}
-                onClick={(e) => (e.target as HTMLTextAreaElement).select()}
-                className="block w-full resize-none overflow-x-auto overflow-y-hidden whitespace-pre bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-slate-300 focus:outline-none focus:ring-1 focus:ring-primary/50"
-              />
+              {/* Output Readonly Field - No Scrollbars */}
+              <div className="relative group">
+                <input
+                  type="text"
+                  readOnly
+                  value={snippetOutput}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  className="block w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-slate-300 focus:outline-none focus:ring-1 focus:ring-primary/50 overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer selection:bg-primary/30"
+                />
+              </div>
             </div>
           </section>
 
@@ -1057,6 +1068,15 @@ export default function Generator() {
               description: `${skills.length} technologies saved to your card.`,
             });
           }}
+        />
+
+        {/* Share & Embed Modal */}
+        <ShareModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          url={liveUrl}
+          title={`${config.username || "Developer"}'s ${config.type.toUpperCase()} Card`}
+          username={config.username}
         />
       </PageTransition>
     </Layout>
