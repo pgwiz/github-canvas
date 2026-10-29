@@ -68,7 +68,7 @@ export interface CardParams {
   quote?: { quote: string; author: string };
   skills?: string | string[];
   stacks?: string | string[];
-  skillsLayout?: 'matrix' | 'stacks' | 'compact';
+  skillsLayout?: 'matrix' | 'stacks' | 'compact' | 'icons';
 }
 
 export const PRESET_STACKS: Record<string, { label: string; skills: string[] }> = {

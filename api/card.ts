@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getTechIcon } from '../src/lib/techIcons';
+import { getTechIcon } from '../src/lib/techIcons.js';
 
 export interface CardParams {
   type: string;
@@ -69,7 +69,7 @@ export interface CardParams {
   quote?: { quote: string; author: string };
   skills?: string | string[];
   stacks?: string | string[];
-  skillsLayout?: 'matrix' | 'stacks' | 'compact';
+  skillsLayout?: 'matrix' | 'stacks' | 'compact' | 'icons';
 }
 
 export const PRESET_STACKS: Record<string, { label: string; skills: string[] }> = {
@@ -1201,8 +1201,8 @@ async function fetchContributions(username: string): Promise<FetchedContribution
     });
     if (res.ok) {
       const html = await res.text();
-      const dayMatches = [...html.matchAll(/<td[^>]*data-date="(\d{4}-\d{2}-\d{2})"[^>]*data-level="(\d+)"[^>]*>/g)];
-      const tooltipMatches = [...html.matchAll(/<tool-tip[^>]*for="([^"]+)"[^>]*>([^<]+)<\/tool-tip>/g)];
+      const dayMatches = Array.from(html.matchAll(/<td[^>]*data-date="(\d{4}-\d{2}-\d{2})"[^>]*data-level="(\d+)"[^>]*>/g));
+      const tooltipMatches = Array.from(html.matchAll(/<tool-tip[^>]*for="([^"]+)"[^>]*>([^<]+)<\/tool-tip>/g));
       const tooltipMap: Record<string, number> = {};
       for (const tm of tooltipMatches) {
         const text = tm[2].trim();
@@ -1347,7 +1347,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       quoteTopic: (q.quoteTopic as string) || undefined,
       skills: (q.skills as string) || undefined,
       stacks: (q.stacks as string) || undefined,
-      skillsLayout: (q.skillsLayout as 'matrix' | 'stacks' | 'compact') || (q.layout as 'matrix' | 'stacks' | 'compact') || undefined,
+      skillsLayout: (q.skillsLayout as 'matrix' | 'stacks' | 'compact' | 'icons') || (q.layout as 'matrix' | 'stacks' | 'compact' | 'icons') || undefined,
     };
 
     // If type is pin or repo, fetch repo info
