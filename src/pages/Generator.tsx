@@ -380,7 +380,9 @@ export default function Generator() {
         followers: githubData.stats.followers,
         totalForks: githubData.stats.totalForks,
       };
-      p.languages = githubData.languages;
+      if (!config.skills || config.skills.trim().length === 0) {
+        p.languages = githubData.languages;
+      }
       p.streak = githubData.streak;
       p.activity = githubData.activity;
     }
@@ -1276,6 +1278,36 @@ export default function Generator() {
                   </div>
 
                   {/* Quote-specific options */}
+                  {config.type === "languages" && (
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] text-slate-400">Language Source</label>
+                        <span className="text-[9px] text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">
+                          {config.skills ? "Custom Stack" : "GitHub Repos"}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsStackModalOpen(true)}
+                        className="w-full h-8 rounded-md bg-primary/15 hover:bg-primary/25 border border-primary/40 text-xs font-semibold text-primary flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
+                      >
+                        <Code2 className="w-3.5 h-3.5" /> Customize Languages in Popup
+                      </button>
+                      {config.skills && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setConfig((prev) => ({ ...prev, skills: "" }));
+                            toast({ title: "Source Reset", description: "Restored live GitHub repo language statistics." });
+                          }}
+                          className="w-full h-7 rounded bg-white/5 hover:bg-white/10 text-[11px] text-slate-400 hover:text-white transition-colors cursor-pointer"
+                        >
+                          Reset to Auto GitHub Languages
+                        </button>
+                      )}
+                    </div>
+                  )}
+
                   {config.type === "quote" && (
                     <div className="space-y-1.5 pt-1">
                       <div className="flex items-center justify-between">

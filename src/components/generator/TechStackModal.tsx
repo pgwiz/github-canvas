@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { TECH_CATALOG, TechIconDef } from "@/lib/techIcons";
+import { TECH_CATALOG, TechIconDef, getTechIcon } from "@/lib/techIcons";
 import { PRESET_STACKS } from "@/lib/cardRenderer";
 import { 
   Search, X, Plus, Check, Sparkles, Layers, Code2, 
-  Database, Server, Cpu, Trash2, RotateCcw 
+  Database, Server, Cpu, Trash2, RotateCcw, CornerDownLeft 
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { useToast } from "@/hooks/use-toast";
 
 interface TechStackModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>("All");
   const [customInput, setCustomInput] = useState("");
+  const { toast } = useToast();
 
   // Keep activeSkills synced strictly when modal opens, preventing wiping on keystrokes
   useEffect(() => {
@@ -30,17 +32,11 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
       setSearchQuery("");
       setActiveCategory("All");
     }
-  }, [isOpen]);
+  }, [isOpen, selectedSkills]);
 
   if (!isOpen) return null;
 
   const categories: CategoryFilter[] = ["All", "Languages", "Frontend", "Backend", "Databases", "DevOps & Tools"];
-
-  const filteredCatalog = TECH_CATALOG.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCat = activeCategory === "All" || item.category === activeCategory;
-    return matchesSearch && matchesCat;
-  });
 
   const isSelected = (name: string) => {
     return activeSkills.some((s) => s.toLowerCase() === name.toLowerCase());
@@ -58,13 +54,45 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
     setActiveSkills((prev) => prev.filter((s) => s.toLowerCase() !== name.toLowerCase()));
   };
 
-  const handleAddCustom = () => {
-    const trimmed = customInput.trim();
+  const addSkillDirect = (rawName: string) => {
+    const trimmed = rawName.trim();
     if (!trimmed) return;
-    if (!isSelected(trimmed)) {
-      setActiveSkills((prev) => [...prev, trimmed]);
+    if (isSelected(trimmed)) {
+      toast({
+        title: "Already in Stack",
+        description: `"${trimmed}" is already included in your active stack.`,
+      });
+      return;
     }
+
+    setActiveSkills((prev) => [...prev, trimmed]);
+    toast({
+      title: "Language Added",
+      description: `Added "${trimmed}" to your tech stack.`,
+    });
+  };
+
+  const handleAddCustom = () => {
+    if (!customInput.trim()) return;
+    addSkillDirect(customInput);
     setCustomInput("");
+  };
+
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const query = searchQuery.trim();
+    if (!query) return;
+
+    // If exactly one match in catalog, toggle it
+    const exactMatch = TECH_CATALOG.find((t) => t.name.toLowerCase() === query.toLowerCase());
+    if (exactMatch) {
+      if (!isSelected(exactMatch.name)) {
+        addSkillDirect(exactMatch.name);
+      }
+    } else {
+      addSkillDirect(query);
+    }
+    setSearchQuery("");
   };
 
   const handleApplyPreset = (presetKey: string) => {
@@ -77,6 +105,10 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
       }
     });
     setActiveSkills(combined);
+    toast({
+      title: "Preset Loaded",
+      description: `Loaded ${preset.label.split("·")[0]} stack.`,
+    });
   };
 
   const handleClear = () => {
@@ -94,6 +126,19 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
     onClose();
   };
 
+  // Build the catalog list, including any custom user-added skills that aren't in TECH_CATALOG
+  const customItems: TechIconDef[] = activeSkills
+    .filter((skill) => !TECH_CATALOG.some((c) => c.name.toLowerCase() === skill.toLowerCase()))
+    .map((skill) => getTechIcon(skill));
+
+  const allAvailableItems = [...customItems, ...TECH_CATALOG];
+
+  const filteredCatalog = allAvailableItems.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCat = activeCategory === "All" || item.category === activeCategory;
+    return matchesSearch && matchesCat;
+  });
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div 
@@ -108,12 +153,12 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-bold text-white">Customize Tech Stack & Languages</h2>
-              <p className="text-xs text-slate-400">Select technologies, load stack presets, or add custom languages</p>
+              <p className="text-xs text-slate-400">Select technologies, load stack presets, or type any language in the world</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors"
+            className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -131,7 +176,7 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
             {activeSkills.length > 0 && (
               <button
                 onClick={handleClear}
-                className="text-[11px] text-slate-400 hover:text-red-400 flex items-center gap-1 transition-colors"
+                className="text-[11px] text-slate-400 hover:text-red-400 flex items-center gap-1 transition-colors cursor-pointer"
               >
                 <Trash2 className="w-3 h-3" /> Clear All
               </button>
@@ -141,7 +186,7 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
           {/* Active Chips */}
           <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto no-scrollbar py-1">
             {activeSkills.length === 0 ? (
-              <span className="text-xs text-slate-500 italic py-1">No technologies selected yet. Click any tool below or add a custom one.</span>
+              <span className="text-xs text-slate-500 italic py-1">No technologies selected yet. Click any language below or use the search bar.</span>
             ) : (
               activeSkills.map((skill) => (
                 <span
@@ -151,7 +196,7 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
                   <span>{skill}</span>
                   <button
                     onClick={() => removeSkill(skill)}
-                    className="text-slate-400 group-hover:text-red-400 transition-colors ml-0.5"
+                    className="text-slate-400 group-hover:text-red-400 transition-colors ml-0.5 cursor-pointer"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -167,7 +212,7 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
               <button
                 key={key}
                 onClick={() => handleApplyPreset(key)}
-                className="px-2 py-0.5 rounded text-[10px] font-medium bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white shrink-0 transition-colors"
+                className="px-2 py-0.5 rounded text-[10px] font-medium bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white shrink-0 transition-colors cursor-pointer"
               >
                 + {p.label.split("·")[0]}
               </button>
@@ -177,16 +222,27 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
 
         {/* Controls: Search & Category Filter */}
         <div className="p-4 border-b border-white/10 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between shrink-0 bg-surface/50">
-          <div className="relative flex-1">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <form 
+            onSubmit={handleSearchSubmit}
+            className="relative flex-1 flex items-center"
+          >
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search 150+ programming languages & frameworks..."
-              className="w-full bg-black/40 border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50"
+              placeholder="Search or type any language (e.g. Solidity, Zig, Mojo, Julia)..."
+              className="w-full bg-black/40 border border-white/10 rounded-lg pl-8 pr-20 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50"
             />
-          </div>
+            {searchQuery.trim().length > 0 && (
+              <button
+                type="submit"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded bg-primary hover:bg-primary/90 text-[11px] font-bold text-white flex items-center gap-1 transition-all shadow-sm cursor-pointer"
+              >
+                <Plus className="w-3 h-3 stroke-[3]" /> Add
+              </button>
+            )}
+          </form>
 
           {/* Category Tabs */}
           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar bg-black/40 p-1 rounded-lg border border-white/10 shrink-0">
@@ -194,7 +250,7 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors shrink-0 ${
+                className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors shrink-0 cursor-pointer ${
                   activeCategory === cat
                     ? "bg-primary/20 text-primary border border-primary/30"
                     : "text-slate-400 hover:text-slate-200"
@@ -215,7 +271,7 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
                 <button
                   key={item.name}
                   onClick={() => toggleSkill(item.name)}
-                  className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all text-left group ${
+                  className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all text-left group cursor-pointer ${
                     active
                       ? "bg-primary/15 border-primary/50 text-white shadow-sm ring-1 ring-primary/40"
                       : "bg-black/30 border-white/5 hover:border-white/15 text-slate-300 hover:text-white"
@@ -259,19 +315,13 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
 
           {filteredCatalog.length === 0 && (
             <div className="text-center py-10">
-              <p className="text-xs text-slate-400 mb-2">No predefined tools found matching "{searchQuery}".</p>
+              <p className="text-xs text-slate-400 mb-2">No matching predefined tool found for "{searchQuery}".</p>
               <button
                 type="button"
-                onClick={() => {
-                  const trimmed = searchQuery.trim();
-                  if (trimmed && !activeSkills.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
-                    setActiveSkills((prev) => [...prev, trimmed]);
-                  }
-                  setSearchQuery("");
-                }}
-                className="text-xs text-primary hover:underline font-medium cursor-pointer"
+                onClick={() => handleSearchSubmit()}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/20 hover:bg-primary/30 border border-primary/40 text-xs text-primary font-semibold transition-all cursor-pointer"
               >
-                + Add "{searchQuery}" as a custom language?
+                <Plus className="w-3.5 h-3.5 stroke-[3]" /> Add "{searchQuery}" to Active Stack
               </button>
             </div>
           )}
@@ -290,28 +340,28 @@ export function TechStackModal({ isOpen, onClose, selectedSkills, onSave }: Tech
               type="text"
               value={customInput}
               onChange={(e) => setCustomInput(e.target.value)}
-              placeholder="Add any custom language (e.g. Mojo, Zig, Solidity)..."
+              placeholder="Add custom language (e.g. Mojo, Cairo, OCaml)..."
               className="w-full bg-black/60 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50"
             />
             <button
               type="submit"
               disabled={!customInput.trim()}
-              className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 disabled:opacity-40 text-xs font-semibold text-white shrink-0 transition-colors cursor-pointer"
+              className="px-3.5 py-1.5 rounded-lg bg-primary/20 hover:bg-primary/30 border border-primary/40 disabled:opacity-40 text-xs font-semibold text-primary shrink-0 transition-colors cursor-pointer flex items-center gap-1"
             >
-              + Add
+              <Plus className="w-3 h-3 stroke-[3]" /> Add
             </button>
           </form>
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             <button
               onClick={onClose}
-              className="px-4 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-xs font-medium text-slate-300 transition-colors"
+              className="px-4 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-xs font-medium text-slate-300 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="px-5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-xs font-bold text-white transition-all shadow-md active:scale-95"
+              className="px-5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-xs font-bold text-white transition-all shadow-md active:scale-95 cursor-pointer"
             >
               Apply Tech Stack ({activeSkills.length})
             </button>

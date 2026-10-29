@@ -2,6 +2,22 @@
 
 All notable changes to the GitHub Canvas / GitStats project are documented in this file.
 
+## [2.3.4] - 2026-10-29
+
+### Universal Language Library & Tech Stack "+ Add" Engine
+- **Universal Programming Language Library (`src/lib/techIcons.ts`)**:
+  - Expanded technology catalog to 70+ programming languages modeled after Devicon, Simple Icons, and GitHub Linguist specs:
+    - Added full SVG paths, official brand hex colors, and aliases for: Solidity, Zig, Julia, R, Scala, Elixir, Erlang, Clojure, Haskell, Lua, Perl, Groovy, F#, OCaml, Nim, Mojo, Crystal, V, D, Fortran, COBOL, Pascal, Delphi, Ada, Prolog, Lisp, Assembly, WebAssembly, Dart, Kotlin, Swift, HTML5, CSS3, SQL, GraphQL, and more.
+  - Added universal fallback vector generator: any custom language typed in the world automatically generates a clean vector code-bracket tile with deterministic color hashing.
+  - Added comprehensive alias mapping (`js`, `ts`, `py`, `rs`, `golang`, `cpp`, `c#`, `cs`, `rb`, `kt`, `sh`, `bash`, `ps`, `wasm`, `asm`, `sol`, `postgres`, `mongo`, `k8s`, `tailwind`, `node`).
+- **Tech Stack Modal "+ Add" Fix (`src/components/generator/TechStackModal.tsx`)**:
+  - **Inline Search Bar "+ Add" Action**: Embedded an instant `+ Add` button directly inside the search bar and added `Enter` key form submission. Typing any language and hitting Enter or clicking Add immediately appends it to the active stack.
+  - **Bottom "+ Add" Action**: Fixed bottom form handler with visual button state, active chip creation, and instant toast confirmation.
+  - **Live Dynamic Grid Tiles**: Synthesizes and displays custom user-added skills directly in the catalog grid with active state indicators so they can be toggled visually.
+- **Custom Language Stacks & Langs Card Support**:
+  - **Cluster Retention in Stacks Layout (`skillsLayout === 'stacks'`)**: Fixed bug where custom skills were omitted in stacks layout; now automatically preserves them in a dynamic "Custom & Active Stack" row.
+  - **Top Languages Customization (`type="languages"`)**: Added "Customize Languages in Popup" button to the Generator sidebar, allowing users to override GitHub's auto-detected languages with their custom tech stack.
+
 ## [2.3.3] - 2026-10-29
 
 ### Palette Themes, Transparent Background & Border Thinness

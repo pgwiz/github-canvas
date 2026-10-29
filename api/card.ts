@@ -656,15 +656,33 @@ export function generateCardSVG(rawParams: CardParams): string {
     }
 
     case 'languages': {
+      let customLangs: Array<{ name: string; percentage: number; color?: string }> = [];
+      if (rawParams.skills) {
+        const skillList = typeof rawParams.skills === 'string' ? rawParams.skills.split(',') : rawParams.skills;
+        const trimmed = skillList.map((s) => s.trim()).filter(Boolean);
+        if (trimmed.length > 0) {
+          const count = Math.min(6, trimmed.length);
+          const basePct = Math.floor(100 / count);
+          customLangs = trimmed.slice(0, count).map((name, i) => {
+            const pct = i === 0 ? 100 - basePct * (count - 1) : basePct;
+            return {
+              name,
+              percentage: pct,
+              color: LANGUAGE_COLORS[name] || getTechIcon(name)?.color || primaryColor,
+            };
+          });
+        }
+      }
+
       const langs = (rawParams.languages && rawParams.languages.length > 0)
         ? rawParams.languages.slice(0, 5)
-        : [
+        : (customLangs.length > 0 ? customLangs : [
             { name: 'TypeScript', percentage: 46, color: '#3178c6' },
             { name: 'Python', percentage: 24, color: '#3572a5' },
             { name: 'Rust', percentage: 14, color: '#dea584' },
             { name: 'Go', percentage: 10, color: '#00add8' },
             { name: 'HTML/CSS', percentage: 6, color: '#e34c26' },
-          ];
+          ]);
 
       const barWidth = width - 48;
       let progressOffset = 0;
@@ -946,9 +964,25 @@ export function generateCardSVG(rawParams: CardParams): string {
   ${tilesSvg}
 </svg>`;
       } else if (skillsLayout === 'stacks') {
+        let customList: string[] = [];
+        if (rawParams.skills) {
+          const list = typeof rawParams.skills === 'string' ? rawParams.skills.split(',') : rawParams.skills;
+          customList = list.map((s) => s.trim()).filter(Boolean);
+        }
+
         groups = userStacks
           .map((stk) => PRESET_STACKS[stk] || { label: stk.toUpperCase(), skills: [stk] })
           .filter(Boolean);
+
+        const presetSkillsLower = new Set(groups.flatMap((g) => g.skills.map((s) => s.toLowerCase())));
+        const extraSkills = customList.filter((s) => !presetSkillsLower.has(s.toLowerCase()));
+
+        if (extraSkills.length > 0) {
+          groups.unshift({
+            label: 'Custom & Active Stack',
+            skills: extraSkills,
+          });
+        }
       } else {
         let allSkills: string[] = [];
         if (rawParams.skills) {
@@ -1478,7 +1512,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           };
 
           const totalLangRepos = Object.values(langMap).reduce((a, b) => a + b, 0);
-          if (totalLangRepos > 0) {
+          if (totalLangRepos > 0 && (!cardParams.skills || (typeof cardParams.skills === 'string' && cardParams.skills.trim().length === 0))) {
             cardParams.languages = Object.entries(langMap)
               .sort((a, b) => b[1] - a[1])
               .slice(0, 5)
