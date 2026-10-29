@@ -34,6 +34,8 @@
    - Use `useMotionValue` and `useMotionTemplate` for mouse-tracking UI elements (e.g. `SpotlightCard`, `SpotlightGrid`) to prevent React state re-renders on mousemove.
 6. **No Glowing Blobs or Green Dots/Indicators**:
    - Never use ambient blur glowing blobs (`rounded-full blur-[120px]`), pulsing green dots, or neon glow blobs. Always ask the user first before introducing any glow or blob effects.
+7. **Responsive Mobile Navigation**:
+   - Desktop floating pill nav displays on `md`+ (768px+). On mobile (<768px down to 320px), header uses a compact top bar with mobile search icon, ThemeToggle, and a slide-out `Sheet` navigation drawer with zero horizontal overflow.
 
 ## Routing Reference
 - `/`: Home landing page with live interactive card showcases.

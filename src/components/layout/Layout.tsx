@@ -14,13 +14,13 @@ interface LayoutProps {
 
 export function Layout({ children, hideFooter = false }: LayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background overflow-x-hidden w-full">
       <ScrollProgress />
       <CustomCursor />
       <NoiseOverlay />
       <CommandMenu />
       <Header />
-      <main className="flex-1 pt-16 flex flex-col min-h-0">
+      <main className="flex-1 pt-14 sm:pt-16 flex flex-col min-h-0 w-full overflow-x-hidden">
         {children}
       </main>
       {!hideFooter && <Footer />}

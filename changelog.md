@@ -2,6 +2,27 @@
 
 All notable changes to the GitHub Canvas / GitStats project are documented in this file.
 
+## [2.3.7] - 2026-10-29
+
+### Mobile-Responsive Navbar & Ultra-Thin Screen Optimization
+- **Ultra-Thin Screen Architecture (`src/components/layout/Header.tsx`)**:
+  - Eliminated horizontal screen overflow and clipping on mobile devices (<480px, down to 320px).
+  - Scaled logo badge (`w-8 h-8 sm:w-9 sm:h-9`) with truncated brand text and tight gap spacing (`gap-2 sm:gap-2.5`), ensuring comfortable fit even on 320px screens with over 80px margin remaining.
+  - Kept desktop & tablet floating pill navigation for `md` (768px) and above with smooth spring pill animations (`layoutId="nav-pill"`).
+  - Added dedicated mobile search icon button (`Search`) and theme toggle on the mobile bar.
+- **Mobile Navigation Drawer (`Sheet`)**:
+  - Integrated Radix-powered slide-out drawer (`SheetContent side="right"`) on mobile screens (`md:hidden`).
+  - Automatically auto-closes on route change (`location.pathname`).
+  - Drawer contents:
+    - Branded studio header with title and subtitle.
+    - 1-click command search trigger button with `⌘K` keyboard badge.
+    - Primary navigation links with large touch targets, vector icons, active highlight badges, and descriptions.
+    - Quick Studio Jumps grid linking directly to User Stats, Streak, Tech Stack, and Pinned Repo card generators.
+    - Bottom action bar with direct ThemeToggle and external GitHub repository link.
+- **Global Overflow & Scrollbar Guardrails (`src/components/layout/Layout.tsx`, `src/index.css`)**:
+  - Applied `overflow-x: hidden` and `max-width: 100vw` across `html`, `body`, and `<Layout>` root containers, permanently preventing mobile horizontal wobble.
+  - Updated `<main>` vertical clearance to `pt-14 sm:pt-16` to seamlessly match the responsive header height (`h-14 sm:h-16`).
+
 ## [2.3.6] - 2026-10-29
 
 ### General Code Cleanliness & Architecture Hygiene
