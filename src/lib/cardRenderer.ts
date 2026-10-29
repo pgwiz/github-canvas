@@ -933,7 +933,7 @@ export function generateCardSVG(rawParams: CardParams): string {
 
           const innerIcon = iconDef ? `
             <g transform="translate(8, 8) scale(0.92)">
-              <path d="${iconDef.svgPath}" fill="${dotColor}" />
+              <path fill-rule="evenodd" clip-rule="evenodd" d="${iconDef.svgPath}" fill="${dotColor}" />
             </g>
           ` : `
             <text x="19" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="${primaryColor}">${escapeXml(skill.slice(0, 2).toUpperCase())}</text>
@@ -1078,7 +1078,7 @@ export function generateCardSVG(rawParams: CardParams): string {
                 <title>${escapeXml(skill)}</title>
                 <rect width="${tileSize}" height="${tileSize}" rx="7" fill="${primaryColor}14" stroke="${primaryColor}35" stroke-width="1" />
                 <g transform="translate(7, 7) scale(0.88)">
-                  <path d="${iconDef.svgPath}" fill="${dotColor}" />
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="${iconDef.svgPath}" fill="${dotColor}" />
                 </g>
               </g>
             `;
@@ -1111,7 +1111,7 @@ export function generateCardSVG(rawParams: CardParams): string {
                 <rect width="${pillWidth}" height="24" rx="6" fill="${primaryColor}14" stroke="${primaryColor}35" stroke-width="1" />
                 ${hasIcon ? `
                   <g transform="translate(6, 4.5) scale(0.62)">
-                    <path d="${iconDef.svgPath}" fill="${dotColor}" />
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="${iconDef.svgPath}" fill="${dotColor}" />
                   </g>
                 ` : `
                   <circle cx="10" cy="12" r="3.5" fill="${dotColor}" />
