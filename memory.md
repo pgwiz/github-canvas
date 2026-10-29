@@ -39,6 +39,6 @@
 - `/`: Home landing page with live interactive card showcases.
 - `/generator`: Interactive SVG card generator with URL searchParams synchronization (`?theme=...&type=...&username=...`).
 - `/themes`: Dedicated theme gallery with swatches, category filters, and live card previews.
-- `/profile-customizer` (and `/ai`): CV upload, AI README architect, and split Markdown previewer.
+- `/profile-customizer` (and `/ai`): CV upload, AI README architect, split Markdown previewer, and Section & Card Rearrange Order engine (drag-and-drop, up/down arrows, visibility toggling, inline snippet editor, and bidirectional state synchronization).
 - `/docs`: REST API documentation and parameter specs.
 - `/setup`: Supabase and Vercel deployment setup guide.

@@ -2,6 +2,23 @@
 
 All notable changes to the GitHub Canvas / GitStats project are documented in this file.
 
+## [2.3.5] - 2026-10-29
+
+### Profile Customizer Section & Card Rearranging Engine
+- **Visual Section & Card Reordering (`src/pages/ProfileCustomizer.tsx`)**:
+  - Added dedicated **"Rearrange Order"** tab in the Right Column workspace with active section counter badge.
+  - Added deterministic **Move Up** (`ChevronUp`) and **Move Down** (`ChevronDown`) arrow controls with boundary disabling and accessible labels.
+  - Implemented smooth drag-and-drop reordering with dedicated drag handle (`GripVertical`), drop target highlight indicators, and flicker-free transition behavior.
+  - Added section visibility toggling (`Eye` / `EyeOff`) to omit sections without deleting them.
+  - Added inline markdown snippet editor (`Code2`) to customize section content in place.
+  - Added quick 1-click layout reset (`RotateCcw`) restoring standard section ordering.
+  - Center Stage workspace header includes quick-access "Rearrange Order" button linking directly to the order management tab.
+- **Robust Markdown-to-Section Round-Trip Parsing**:
+  - Fixed heading detachment bug where regex lookahead split headings away from their child SVG cards.
+  - Unified section boundary detection that keeps headings and image card bodies together.
+  - Preserves section IDs and previously disabled sections across re-parses.
+  - Atomic state synchronization (`getFreshSections`) on textarea blur, tab switch, and stage button clicks, preventing stale closure races and manual edit regressions.
+
 ## [2.3.4] - 2026-10-29
 
 ### Universal Language Library & Tech Stack "+ Add" Engine
