@@ -185,7 +185,7 @@ export default function Generator() {
     } else {
       fetchStats("pgwiz").then((res) => { if (res) setGithubData(res); });
     }
-  }, [searchParams]);
+  }, [searchParams, fetchStats]);
 
   // Handle Card Type change
   const handleSelectType = (type: CardType) => {

@@ -2,6 +2,22 @@
 
 All notable changes to the GitHub Canvas / GitStats project are documented in this file.
 
+## [2.3.6] - 2026-10-29
+
+### General Code Cleanliness & Architecture Hygiene
+- **Zero ESLint Warnings Across Entire Codebase**:
+  - Eliminated all 16 ESLint warnings down to a clean 0 errors and 0 warnings.
+  - Wrapped `fetchStats` in `useCallback` inside `src/hooks/useGitHubStats.ts` and added it to the dependency array of `useEffect` in `src/pages/Generator.tsx`, preventing unnecessary re-subscriptions and satisfying `react-hooks/exhaustive-deps`.
+  - Scoped exported constants and helper functions in `src/pages/ProfileCustomizer.tsx` (`createDefaultSections`, `compileSectionsToMarkdown`, `parseMarkdownToSections`, `getCardApiBase`, `SECTION_ICONS`, `CARD_TEMPLATES`) to module-internal to comply with Vite Fast Refresh (`react-refresh/only-export-components`).
+  - Configured `eslint.config.js` to handle shadcn/ui variant exports cleanly.
+- **Type Safety & Build Verification**:
+  - `npx tsc --noEmit`: 100% clean check, 0 TypeScript compilation errors.
+  - `pnpm build`: Production build passes cleanly with tree-shaking and optimized bundles.
+- **Strict User Global Rules Verification**:
+  - Confirmed 0 rogue `.md` files; strictly maintaining only `readme.md`, `changelog.md`, `memory.md`, and `agent.md`.
+  - Confirmed 0 glowing blobs, ambient blur background circles, or glowing green dots/indicators.
+  - Confirmed 0 orphan scratch scripts or residual `console.log` statements in source files.
+
 ## [2.3.5] - 2026-10-29
 
 ### Profile Customizer Section & Card Rearranging Engine

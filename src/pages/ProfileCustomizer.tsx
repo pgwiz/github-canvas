@@ -23,14 +23,14 @@ import {
   GripVertical, RotateCcw, ListOrdered, ArrowUpDown
 } from "lucide-react";
 
-export const getCardApiBase = () => {
+const getCardApiBase = () => {
   if (typeof window !== "undefined" && window.location.origin) {
     return window.location.origin;
   }
   return "https://github-canvas.pgwiz.cloud";
 };
 
-export interface ProfileSection {
+interface ProfileSection {
   id: string;
   type: string;
   title: string;
@@ -39,7 +39,7 @@ export interface ProfileSection {
   enabled: boolean;
 }
 
-export const SECTION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const SECTION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   header: Sparkles,
   banner: Layers,
   about: FileText,
@@ -56,7 +56,7 @@ export const SECTION_ICONS: Record<string, React.ComponentType<{ className?: str
   custom: Code2,
 };
 
-export const CARD_TEMPLATES: Record<
+const CARD_TEMPLATES: Record<
   string,
   {
     title: string;
@@ -172,7 +172,7 @@ const AVAILABLE_CARDS = [
   { id: "pin", label: "Pinned Repo", description: "Repository showcase badge", icon: Bookmark },
 ];
 
-export const createDefaultSections = (
+const createDefaultSections = (
   username: string,
   theme: string,
   base: string = getCardApiBase()
@@ -256,7 +256,7 @@ export const createDefaultSections = (
   ];
 };
 
-export const compileSectionsToMarkdown = (sections: ProfileSection[]): string => {
+const compileSectionsToMarkdown = (sections: ProfileSection[]): string => {
   return (
     sections
       .filter((sec) => sec.enabled && sec.content.trim().length > 0)
@@ -265,7 +265,7 @@ export const compileSectionsToMarkdown = (sections: ProfileSection[]): string =>
   );
 };
 
-export const createInitialMarkdown = (
+const createInitialMarkdown = (
   username: string,
   theme: string,
   base: string = getCardApiBase()
@@ -273,7 +273,7 @@ export const createInitialMarkdown = (
   return compileSectionsToMarkdown(createDefaultSections(username, theme, base));
 };
 
-export const parseMarkdownToSections = (
+const parseMarkdownToSections = (
   markdown: string,
   defaultUsername: string = "pgwiz",
   defaultTheme: string = "electric-blue",

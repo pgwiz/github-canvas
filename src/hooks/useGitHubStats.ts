@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface GitHubStats {
@@ -37,7 +37,7 @@ export function useGitHubStats() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStats = async (username: string) => {
+  const fetchStats = useCallback(async (username: string) => {
     if (!username) {
       setError("Username is required");
       return null;
@@ -71,7 +71,7 @@ export function useGitHubStats() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return { data, loading, error, fetchStats };
 }
