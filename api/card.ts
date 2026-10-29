@@ -66,6 +66,50 @@ export interface CardParams {
   };
   activity?: number[];
   quote?: { quote: string; author: string };
+  skills?: string | string[];
+  stacks?: string | string[];
+  skillsLayout?: 'matrix' | 'stacks' | 'compact';
+}
+
+export const PRESET_STACKS: Record<string, { label: string; skills: string[] }> = {
+  farm: {
+    label: 'FastAPI · FARM Stack',
+    skills: ['Python', 'FastAPI', 'React', 'MongoDB', 'Redis', 'Docker'],
+  },
+  pern: {
+    label: 'PERN · Node Stack',
+    skills: ['PostgreSQL', 'Express', 'React', 'Node.js'],
+  },
+  lemp: {
+    label: 'LEMP · Laravel Stack',
+    skills: ['Linux', 'Nginx', 'MySQL', 'MariaDB', 'PHP', 'Laravel'],
+  },
+  django: {
+    label: 'Django Stack',
+    skills: ['Python', 'Django', 'PostgreSQL', 'Nginx'],
+  },
+  languages: {
+    label: 'Core Languages',
+    skills: ['TypeScript', 'Python', 'JavaScript', 'PHP', 'Rust', 'C#', 'Bash'],
+  },
+  devops: {
+    label: 'DevOps & Systems',
+    skills: ['Docker', 'Linux', 'Nginx', 'Git', 'Cloudflare'],
+  },
+};
+
+export function getSkillCategory(skill: string): string {
+  const s = skill.toLowerCase();
+  const languages = ['typescript', 'javascript', 'python', 'php', 'rust', 'c#', 'c++', 'c', 'bash', 'shell', 'go', 'golang', 'ruby', 'swift', 'kotlin', 'dart', 'html', 'css', 'scss', 'sql', 'r', 'lua', 'solidity'];
+  const frameworks = ['react', 'vue', 'angular', 'svelte', 'next.js', 'nextjs', 'fastapi', 'django', 'flask', 'laravel', 'express', 'node.js', 'nodejs', 'spring', 'asp.net', 'tailwind', 'bootstrap'];
+  const databases = ['postgresql', 'postgres', 'mysql', 'mariadb', 'mongodb', 'redis', 'sqlite', 'supabase', 'firebase', 'cassandra', 'elasticsearch'];
+  const devops = ['docker', 'kubernetes', 'linux', 'nginx', 'apache', 'git', 'github', 'gitlab', 'aws', 'gcp', 'cloudflare', 'vercel', 'terraform', 'ansible'];
+
+  if (languages.includes(s)) return 'Languages';
+  if (frameworks.includes(s)) return 'Frameworks & Runtimes';
+  if (databases.includes(s)) return 'Databases & Storage';
+  if (devops.includes(s)) return 'DevOps & Systems';
+  return 'Languages';
 }
 
 export const THEMES: Record<string, { bg: string; primary: string; secondary: string; text: string; border: string }> = {
@@ -109,6 +153,22 @@ export const LANGUAGE_COLORS: Record<string, string> = {
   SCSS: '#c6538c',
   Vue: '#41b883',
   Shell: '#89e051',
+  Bash: '#89e051',
+  Docker: '#2496ed',
+  Linux: '#fcc624',
+  Nginx: '#009639',
+  PostgreSQL: '#4169e1',
+  MySQL: '#4479a1',
+  MariaDB: '#003545',
+  MongoDB: '#47a248',
+  Redis: '#dc382d',
+  React: '#61dafb',
+  FastAPI: '#009688',
+  Django: '#092e20',
+  Laravel: '#ff2d20',
+  'Node.js': '#339933',
+  Express: '#e0e0e0',
+  Git: '#f05032',
   PowerShell: '#012456',
   Solidity: '#AA6746',
   Svelte: '#ff3e00',
@@ -191,6 +251,8 @@ export function generateCardSVG(rawParams: CardParams): string {
     quote: { width: 495, height: 195 },
     banner: { width: 600, height: 200 },
     custom: { width: 495, height: 195 },
+    skills: { width: 500, height: 260 },
+    stack: { width: 500, height: 260 },
   };
 
   const dims = defaultDimensions[type] || { width: 495, height: 195 };
@@ -777,6 +839,139 @@ export function generateCardSVG(rawParams: CardParams): string {
 </svg>`;
     }
 
+    case 'skills':
+    case 'stack': {
+      const skillsLayout = rawParams.skillsLayout || 'matrix';
+      const title = rawParams.customText || `${username}'s Tech Stack`;
+      const subtitle = rawParams.customDescription || '#fullstack · ecosystem';
+
+      let userStacks: string[] = [];
+      if (Array.isArray(rawParams.stacks)) {
+        userStacks = rawParams.stacks;
+      } else if (typeof rawParams.stacks === 'string' && rawParams.stacks.trim().length > 0) {
+        userStacks = rawParams.stacks.split(',').map((s) => s.trim().toLowerCase());
+      } else {
+        userStacks = ['languages', 'farm', 'pern', 'lemp', 'django'];
+      }
+
+      let groups: Array<{ label: string; skills: string[] }> = [];
+
+      if (skillsLayout === 'stacks') {
+        groups = userStacks
+          .map((stk) => PRESET_STACKS[stk] || { label: stk.toUpperCase(), skills: [stk] })
+          .filter(Boolean);
+      } else {
+        let allSkills: string[] = [];
+        if (rawParams.skills) {
+          const list = typeof rawParams.skills === 'string' ? rawParams.skills.split(',') : rawParams.skills;
+          allSkills = list.map((s) => s.trim()).filter(Boolean);
+        } else {
+          userStacks.forEach((stk) => {
+            if (PRESET_STACKS[stk]) {
+              allSkills.push(...PRESET_STACKS[stk].skills);
+            }
+          });
+        }
+
+        const seen = new Set<string>();
+        const uniqueSkills: string[] = [];
+        allSkills.forEach((s) => {
+          const key = s.toLowerCase();
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueSkills.push(s);
+          }
+        });
+
+        const categorized: Record<string, string[]> = {
+          'Languages': [],
+          'Frameworks & Runtimes': [],
+          'Databases & Storage': [],
+          'DevOps & Systems': [],
+        };
+
+        uniqueSkills.forEach((skill) => {
+          const cat = getSkillCategory(skill);
+          if (categorized[cat]) {
+            categorized[cat].push(skill);
+          } else {
+            categorized['Languages'].push(skill);
+          }
+        });
+
+        groups = Object.entries(categorized)
+          .filter(([_, list]) => list.length > 0)
+          .map(([label, skills]) => ({ label, skills }));
+      }
+
+      let contentSvg = '';
+      let currentY = 66;
+
+      groups.forEach((grp, gIdx) => {
+        const rowDelay = (gIdx + 1) * 0.05 * m;
+        contentSvg += `
+          <g class="${animate ? 'card-anim' : ''}" style="animation-delay: ${rowDelay}s" transform="translate(25, ${currentY})">
+            <text x="0" y="11" font-size="10" font-weight="700" fill="${secondaryColor}" letter-spacing="0.05em">${escapeXml(grp.label.toUpperCase())}</text>
+            <g transform="translate(0, 16)">
+        `;
+
+        let curX = 0;
+        let rowYOffset = 0;
+        const maxRowWidth = width - 50;
+
+        grp.skills.forEach((skill) => {
+          const approxCharWidth = 6.4;
+          const textWidth = Math.round(skill.length * approxCharWidth);
+          const pillWidth = textWidth + 24;
+
+          if (curX + pillWidth > maxRowWidth && curX > 0) {
+            curX = 0;
+            rowYOffset += 26;
+          }
+
+          const dotColor = LANGUAGE_COLORS[skill] || primaryColor;
+
+          contentSvg += `
+            <g transform="translate(${curX}, ${rowYOffset})">
+              <rect width="${pillWidth}" height="22" rx="5" fill="${primaryColor}14" stroke="${primaryColor}35" stroke-width="1" />
+              <circle cx="10" cy="11" r="3" fill="${dotColor}" />
+              <text x="18" y="14.5" font-size="10" font-weight="600" fill="${textColor}">${escapeXml(skill)}</text>
+            </g>
+          `;
+          curX += pillWidth + 6;
+        });
+
+        contentSvg += `
+            </g>
+          </g>
+        `;
+        currentY += 42 + rowYOffset;
+      });
+
+      const actualHeight = Math.max(height, currentY + 15);
+
+      return `<svg width="${width}" height="${actualHeight}" viewBox="0 0 ${width} ${actualHeight}" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>${gradientDef}</defs>
+  ${baseStyles}
+  <rect x="1" y="1" width="${width - 2}" height="${actualHeight - 2}" rx="${borderRadius}" fill="${bgFill}" ${borderStyle} />
+  
+  <g transform="translate(25, 24)">
+    <g class="${animate ? 'card-anim d-1' : ''}">
+      <rect width="22" height="22" rx="5" fill="${primaryColor}" fill-opacity="0.2" />
+      <path d="M11 6L5 9L11 12L17 9L11 6Z" stroke="${primaryColor}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M5 12L11 15L17 12" stroke="${primaryColor}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M5 15L11 18L17 15" stroke="${primaryColor}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      
+      <text x="32" y="15" class="header-title">${escapeXml(title)}</text>
+      <text x="${width - 50}" y="15" text-anchor="end" class="header-sub">${escapeXml(subtitle)}</text>
+      <line x1="0" y1="26" x2="${width - 50}" y2="26" stroke="${textColor}" stroke-opacity="0.1" stroke-width="1" />
+    </g>
+  </g>
+  
+  ${contentSvg}
+</svg>`;
+    }
+
     default: {
       return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
   <defs>${gradientDef}</defs>
@@ -1067,6 +1262,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       bannerDescription: q.bannerDescription ? decodeURIComponent(q.bannerDescription as string) : undefined,
       waveStyle: (q.waveStyle as string) || 'wave',
       quoteTopic: (q.quoteTopic as string) || undefined,
+      skills: (q.skills as string) || undefined,
+      stacks: (q.stacks as string) || undefined,
+      skillsLayout: (q.skillsLayout as 'matrix' | 'stacks' | 'compact') || (q.layout as 'matrix' | 'stacks' | 'compact') || undefined,
     };
 
     // If type is pin or repo, fetch repo info

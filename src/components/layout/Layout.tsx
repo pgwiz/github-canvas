@@ -9,9 +9,10 @@ import { ScrollProgress } from "@/components/ui/ScrollProgress";
 
 interface LayoutProps {
   children: ReactNode;
+  hideFooter?: boolean;
 }
 
-export function Layout({ children }: LayoutProps) {
+export function Layout({ children, hideFooter = false }: LayoutProps) {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <ScrollProgress />
@@ -19,10 +20,10 @@ export function Layout({ children }: LayoutProps) {
       <NoiseOverlay />
       <CommandMenu />
       <Header />
-      <main className="flex-1 pt-16">
+      <main className="flex-1 pt-16 flex flex-col min-h-0">
         {children}
       </main>
-      <Footer />
+      {!hideFooter && <Footer />}
       <ScrollToTop />
     </div>
   );

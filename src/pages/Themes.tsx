@@ -66,10 +66,6 @@ export default function Themes() {
     <Layout>
       <PageTransition>
         <div className="min-h-screen py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-          {/* Background Ambient Glow */}
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-primary/10 rounded-full blur-[140px] pointer-events-none" />
-          <div className="absolute top-1/3 right-1/4 w-[400px] h-[300px] bg-secondary/10 rounded-full blur-[120px] pointer-events-none" />
-
           <div className="max-w-7xl mx-auto space-y-12">
             {/* Header Section */}
             <div className="text-center space-y-4 max-w-3xl mx-auto">

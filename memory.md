@@ -16,7 +16,8 @@
 3. **Card Generation Engine**:
    - Resides in `src/lib/cardRenderer.ts`, `api/card.ts`, and `api/pin.ts`.
    - Runs natively on Vercel Serverless (Node.js) and in client `CardPreview.tsx`.
-   - Supports: `stats`, `languages`, `streak`, `activity`, `quote`, `banner`, `contribution`, `pin`/`repo`, and `custom`.
+   - Supports: `stats`, `languages`, `streak`, `activity`, `quote`, `banner`, `contribution`, `pin`/`repo`, `skills`/`stack`, and `custom`.
+   - Skills & Stack Matrix Card Engine (`type=skills` / `type=stack`): Replaces repetitive, ugly shields.io badge walls with clean, theme-coordinated vector cards. Supports categorized deduplication (`matrix` layout: Languages, Frameworks, Databases, DevOps) and stack cluster rows (`stacks` layout: FARM, PERN, LEMP, Django, Core Languages, DevOps).
    - Fetches live GitHub API metrics (`stars`, `repos`, `followers`, `forks`, `languages`).
    - Contribution & Streak Engine: Multi-tier fallback (GraphQL -> jogruber all-time API -> GitHub profile scrape) with in-memory 30m cache, accurately computing real longest streak (e.g. 97d for pgwiz), real current streak (e.g. 58d continuing today), real total contributions (16,691), and 53-week heatmap cells.
    - Pinned Repo Card Engine (`/api/pin`): Supports `github-readme-stats` parameter aliases (`border_color`, `title_color`, `text_color`, `icon_color`, `bg_color`), hex normalizer (handles missing `#` and `0d11` typos), and graceful fallback for private or custom domain repos (e.g. `pgwiz.cloud`).

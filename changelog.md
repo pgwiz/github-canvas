@@ -2,7 +2,43 @@
 
 All notable changes to the GitHub Canvas / GitStats project are documented in this file.
 
-## [2.2.1] - 2026-10-28
+## [2.3.0] - 2026-10-29
+
+### Studio Workspace Overhaul (`src/pages/Generator.tsx`)
+- **Ported 3-Pane Studio Workspace Philosophy**:
+  - **Far Left Icon Rail**: Dedicated vertical toolbar with crisp Lucide icons and uppercase indicators for all 10 card engines (`Stats`, `Langs`, `Streak`, `Active`, `Quote`, `Banner`, `Grid`, `Pinned`, `Skills`, `Custom`).
+  - **Center Live Stage**:
+    - Top status bar displaying real-time dimensions (`495 × 195 px`, `500 × 260 px`, `720 × 250 px`), `Single` vs `Stack` view toggle, and quick `@username` input with live data synchronization.
+    - Centered preview container with subtle `.canvas-grid` dot matrix background and responsive SVG scaling.
+    - Integrated **Stack Mode**: Vertical gallery rendering all profile cards concurrently (Stats, Languages, Streak, Tech Stack, Contribution Graph, Quote, Pinned Repo) so developers can preview their entire README layout at a glance.
+  - **Seamless Bottom Export Dock**:
+    - Format switcher tabs for `URL`, `Markdown`, and `HTML`.
+    - One-click `Download SVG` button delivering raw SVG files directly.
+    - One-click `Copy Snippet` button with interactive 2-second "Copied!" feedback state.
+    - Monospace readonly snippet box with instant select-on-click.
+  - **Right Properties Sidebar**:
+    - Native/styled accordions for `General` (user sync, card-specific options, theme selector with random magic button), `Appearance & Colors` (gradient toggle, individual color pickers with hex text inputs for bg, primary, secondary, text, border, and border visibility), `Layout & Sizing` (border radius slider, animation mode), and `Content Overrides` (custom header title and tag).
+
+### Skills & Tech Stack Matrix Card Engine (`type=skills` & `type=stack`)
+- **Resolved Redundant Shields.io Badge Wall (`media_1793230479955_acd3790a.png`)**:
+  - Solved user problem where developer README profiles contained sprawling, disjointed walls of shields.io badges repeating identical technologies multiple times (e.g., Python 3x, PostgreSQL 3x, Nginx 2x, PHP 2x across FARM, PERN, LEMP, Django stacks).
+  - Implemented cohesive **Skills & Stack Matrix Card** in `src/lib/cardRenderer.ts` and `api/card.ts`.
+  - Added two viewing modes:
+    1. **Categorized Matrix (`layout=matrix`)**: Automatically de-duplicates all skills across selected stacks and groups them into clean rows: `Core Languages`, `Frameworks & Runtimes`, `Databases & Storage`, and `DevOps & Systems`.
+    2. **Stack Clusters (`layout=stacks`)**: Displays organized stack rows (e.g. `FastAPI · FARM`, `PERN · Node`, `LEMP · Laravel`, `Django Stack`, `Core Languages`).
+  - Sleek pill badges with subtle theme borders (`${primaryColor}35`), soft fills, canonical technology dot accents, and unified typography.
+  - Dynamic line wrapping so cards scale smoothly regardless of stack combinations.
+
+### Template Engine & Color Synchronization Fix
+- **Root Cause Identified**: Selecting a template in `ThemeSelector.tsx` or `Generator.tsx` only updated the `theme` string identifier while leaving `bgColor`, `primaryColor`, `secondaryColor`, `textColor`, and `borderColor` populated with previous values. In `CardPreview.tsx` and `api/card.ts`, explicit color parameters took precedence over the theme's colors, causing selected templates to appear completely non-functional.
+- **Resolution**:
+  - Bound theme selection to simultaneously update all five core palette colors in state.
+  - Updated Magic Theme randomizer to assign matching palette colors, gradients, and angles.
+  - Optimized `LinkGenerator.tsx` and `/generator` code output to omit redundant color parameters when they match the active template's defaults, keeping URLs minimal and clean.
+
+### Visual Rule Compliance
+- Removed residual background blur orbs (`blur-[140px]`, `blur-[120px]`) from `src/pages/Themes.tsx`.
+- Removed `TiltCard` wobble and glare artifacts from `CardPreview.tsx` to prevent card jitter.
 
 ### Visual Stabilization (Removed Card Bouncing & Floating)
 - **Eliminated Hero Card Floating / Bouncing**:

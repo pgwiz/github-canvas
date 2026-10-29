@@ -115,6 +115,12 @@ export function LinkGenerator({ config }: LinkGeneratorProps) {
       if (config.customDescription) params.set('description', config.customDescription);
       if (config.showOwner) params.set('show_owner', 'true');
     }
+    if (config.type === 'skills') {
+      if (config.stacks && config.stacks.length > 0) params.set('stacks', config.stacks.join(','));
+      if (config.skills) params.set('skills', config.skills);
+      if (config.skillsLayout) params.set('skillsLayout', config.skillsLayout);
+    }
+    if (config.customDescription && config.type !== 'pin') params.set('description', config.customDescription);
     if (config.customText) params.set('customText', config.customText);
 
     return `${apiEndpoint}?${params.toString()}`;

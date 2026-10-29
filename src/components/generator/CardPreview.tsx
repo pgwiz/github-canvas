@@ -18,7 +18,7 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   // Check if we need a username
-  const needsUsername = !config.username && config.type !== "quote" && config.type !== "custom" && config.type !== "banner";
+  const needsUsername = !config.username && config.type !== "quote" && config.type !== "custom" && config.type !== "banner" && config.type !== "skills";
 
   useEffect(() => {
     if (needsUsername) {
@@ -58,6 +58,9 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
         repo: config.repo,
         customDescription: config.customDescription,
         showOwner: config.showOwner,
+        skills: config.skills,
+        stacks: config.stacks,
+        skillsLayout: config.skillsLayout,
       };
 
       if (githubData) {
@@ -108,21 +111,15 @@ export function CardPreview({ config, githubData, quote }: CardPreviewProps) {
       {isLoading ? (
         <CreativeLoader />
       ) : imageSrc ? (
-        <div className="animate-in fade-in zoom-in slide-in-from-bottom-4 duration-500 ease-out-back">
-          <TiltCard
-            maxTilt={5}
-            scale={1.02}
-            glareMaxOpacity={0.12}
-            className="rounded-lg shadow-2xl relative group"
-          >
-            <div className="absolute -inset-4 bg-gradient-to-r from-primary/15 via-secondary/15 to-primary/15 rounded-xl opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500 -z-10" />
+        <div className="animate-in fade-in zoom-in duration-300 w-full flex justify-center">
+          <div className="rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10 bg-background max-w-full">
             <img
               src={imageSrc}
               alt={`${config.type} card preview`}
               style={{ maxWidth: `${config.width}px` }}
-              className="max-w-full h-auto rounded-lg shadow-md"
+              className="max-w-full h-auto block"
             />
-          </TiltCard>
+          </div>
         </div>
       ) : (
         <div className="flex flex-col items-center gap-3 text-muted-foreground">

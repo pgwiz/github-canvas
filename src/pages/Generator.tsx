@@ -1,33 +1,35 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { PageTransition } from "@/components/layout/PageTransition";
-import { GlassPanel } from "@/components/ui/GlassPanel";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { CardPreview } from "@/components/generator/CardPreview";
-import { ThemeSelector } from "@/components/generator/ThemeSelector";
 import { templates } from "@/lib/templates";
-import { CustomizationPanel } from "@/components/generator/CustomizationPanel";
-import { LinkGenerator } from "@/components/generator/LinkGenerator";
+import { generateCardSVG, CardParams, PRESET_STACKS } from "@/lib/cardRenderer";
 import { 
-  Search, Sparkles, RefreshCw, BarChart3, Code2, Flame, Activity, Quote, 
-  SlidersHorizontal, Grid3X3, Dices, Bug, Coffee, Clock, Eye, FlaskConical, CheckCircle2, Bookmark 
+  BarChart3, Code2, Flame, Activity, Quote, Sparkles, Grid3X3, Bookmark, 
+  Layers, SlidersHorizontal, RotateCcw, ChevronDown, AtSign, RefreshCw, 
+  Wand2, Blend, Download, Copy, Check, Monitor, Layers3, CheckCircle2 
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGitHubStats, GitHubStats } from "@/hooks/useGitHubStats";
 import { useDevQuote, DevQuote } from "@/hooks/useDevQuote";
-import { useQuoteOfTheDay } from "@/hooks/useQuoteOfTheDay";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import confetti from "canvas-confetti";
 
-export type CardType = "stats" | "languages" | "streak" | "activity" | "quote" | "custom" | "banner" | "contribution" | "pin";
+export type CardType = 
+  | "stats" 
+  | "languages" 
+  | "streak" 
+  | "activity" 
+  | "quote" 
+  | "custom" 
+  | "banner" 
+  | "contribution" 
+  | "pin" 
+  | "skills";
 
-export type QuoteTopic = "random" | "debugging" | "coffee" | "deadlines" | "code-reviews" | "testing";
-
+export type QuoteTopic = "random" | "debugging" | "architecture" | "coffee" | "deadlines" | "testing";
 export type WaveStyle = "wave" | "pulse" | "flow" | "glitch";
+export type ExportFormat = "url" | "markdown" | "html";
+export type ViewMode = "single" | "stack";
 
 export interface CardConfig {
   username: string;
@@ -39,12 +41,10 @@ export interface CardConfig {
   textColor: string;
   borderColor: string;
   borderRadius: number;
+  strokeWidth: number;
   showBorder: boolean;
-  paddingTop: number;
-  paddingRight: number;
-  paddingBottom: number;
-  paddingLeft: number;
   customText: string;
+  customDescription: string;
   width: number;
   height: number;
   animation: string;
@@ -54,34 +54,31 @@ export interface CardConfig {
   gradientAngle: number;
   gradientStart: string;
   gradientEnd: string;
-  previewFormat: "svg" | "img";
   quoteTopic: QuoteTopic;
-  // Banner fields
   bannerName: string;
   bannerDescription: string;
   waveStyle: WaveStyle;
-  // Pinned Repo fields
-  repo?: string;
-  customDescription?: string;
-  showOwner?: boolean;
+  repo: string;
+  showOwner: boolean;
+  skills: string;
+  stacks: string[];
+  skillsLayout: "matrix" | "stacks" | "compact";
 }
 
 const defaultConfig: CardConfig = {
-  username: "",
+  username: "pgwiz",
   type: "stats",
-  theme: "midnight",
-  bgColor: "#090d16",
+  theme: "electric-blue",
+  bgColor: "#0b1220",
   primaryColor: "#3B82F6",
-  secondaryColor: "#0EA5E9",
-  textColor: "#e2e8f0",
+  secondaryColor: "#06B6D4",
+  textColor: "#f1f5f9",
   borderColor: "#3B82F6",
   borderRadius: 12,
+  strokeWidth: 1.5,
   showBorder: true,
-  paddingTop: 25,
-  paddingRight: 25,
-  paddingBottom: 25,
-  paddingLeft: 25,
   customText: "",
+  customDescription: "",
   width: 495,
   height: 195,
   animation: "fadeIn",
@@ -90,43 +87,49 @@ const defaultConfig: CardConfig = {
   gradientType: "linear",
   gradientAngle: 135,
   gradientStart: "#3b82f6",
-  gradientEnd: "#0ea5e9",
-  previewFormat: "img",
+  gradientEnd: "#06b6d4",
   quoteTopic: "random",
-  bannerName: "Your Name",
-  bannerDescription: "Developer | Creator | Builder",
+  bannerName: "Developer Portfolio",
+  bannerDescription: "Full Stack Architect & Open-Source Builder",
   waveStyle: "wave",
   repo: "pgwiz.cloud",
-  customDescription: "",
   showOwner: false,
+  skills: "",
+  stacks: ["languages", "farm", "pern", "lemp", "django"],
+  skillsLayout: "matrix",
 };
 
-const quoteTopics: { value: QuoteTopic; label: string; icon: typeof Dices }[] = [
-  { value: "random", label: "Random", icon: Dices },
-  { value: "debugging", label: "Debugging", icon: Bug },
-  { value: "coffee", label: "Coffee & Code", icon: Coffee },
-  { value: "deadlines", label: "Deadlines", icon: Clock },
-  { value: "code-reviews", label: "Code Reviews", icon: Eye },
-  { value: "testing", label: "Testing", icon: FlaskConical },
-];
+const TYPE_CONFIGS: Record<CardType, { label: string; icon: typeof BarChart3; dims: { width: number; height: number } }> = {
+  stats: { label: "Stats", icon: BarChart3, dims: { width: 495, height: 195 } },
+  languages: { label: "Langs", icon: Code2, dims: { width: 340, height: 320 } },
+  streak: { label: "Streak", icon: Flame, dims: { width: 495, height: 195 } },
+  activity: { label: "Active", icon: Activity, dims: { width: 495, height: 195 } },
+  quote: { label: "Quote", icon: Quote, dims: { width: 495, height: 195 } },
+  banner: { label: "Banner", icon: Sparkles, dims: { width: 600, height: 200 } },
+  contribution: { label: "Grid", icon: Grid3X3, dims: { width: 720, height: 250 } },
+  pin: { label: "Pinned", icon: Bookmark, dims: { width: 400, height: 120 } },
+  skills: { label: "Skills", icon: Layers, dims: { width: 500, height: 260 } },
+  custom: { label: "Custom", icon: SlidersHorizontal, dims: { width: 495, height: 195 } },
+};
 
 export default function Generator() {
   const [searchParams] = useSearchParams();
   const [config, setConfig] = useState<CardConfig>(defaultConfig);
+  const [viewMode, setViewMode] = useState<ViewMode>("single");
+  const [exportFormat, setExportFormat] = useState<ExportFormat>("url");
+  const [isCopied, setIsCopied] = useState(false);
   const [githubData, setGithubData] = useState<GitHubStats | null>(null);
   const [currentQuote, setCurrentQuote] = useState<DevQuote | null>(null);
   const { toast } = useToast();
 
-  const { loading: statsLoading, error: statsError, fetchStats } = useGitHubStats();
+  const { loading: statsLoading, fetchStats } = useGitHubStats();
   const { loading: quoteLoading, generateQuote } = useDevQuote();
-  const { qotd } = useQuoteOfTheDay();
 
-  const isGenerating = statsLoading || quoteLoading;
-
+  // Sync from URL search params on mount
   useEffect(() => {
     const themeParam = searchParams.get("theme");
     const typeParam = searchParams.get("type");
-    const userParam = searchParams.get("username");
+    const userParam = searchParams.get("username") || searchParams.get("user");
 
     if (themeParam) {
       const found = templates.find((t) => t.id === themeParam);
@@ -142,371 +145,886 @@ export default function Generator() {
         }));
       }
     }
-    if (typeParam) {
-      setConfig((prev) => ({ ...prev, type: typeParam as CardType }));
+    if (typeParam && (typeParam in TYPE_CONFIGS)) {
+      const cType = typeParam as CardType;
+      setConfig((prev) => ({ 
+        ...prev, 
+        type: cType, 
+        width: TYPE_CONFIGS[cType].dims.width, 
+        height: TYPE_CONFIGS[cType].dims.height 
+      }));
     }
     if (userParam) {
       setConfig((prev) => ({ ...prev, username: userParam }));
+      fetchStats(userParam).then((res) => { if (res) setGithubData(res); });
+    } else {
+      fetchStats("pgwiz").then((res) => { if (res) setGithubData(res); });
     }
   }, [searchParams]);
 
-  const triggerConfetti = () => {
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ['#3b82f6', '#06b6d4', '#60a5fa'],
+  // Handle Card Type change
+  const handleSelectType = (type: CardType) => {
+    const dims = TYPE_CONFIGS[type]?.dims || { width: 495, height: 195 };
+    setConfig((prev) => ({
+      ...prev,
+      type,
+      width: dims.width,
+      height: dims.height,
+    }));
+  };
+
+  // Handle Theme Change with Synchronized Colors
+  const handleSelectTheme = (themeId: string) => {
+    const tmpl = templates.find((t) => t.id === themeId);
+    if (!tmpl) return;
+
+    setConfig((prev) => ({
+      ...prev,
+      theme: tmpl.id,
+      bgColor: tmpl.colors.bg,
+      primaryColor: tmpl.colors.primary,
+      secondaryColor: tmpl.colors.secondary,
+      textColor: tmpl.colors.text,
+      borderColor: tmpl.colors.border,
+      gradientStart: tmpl.colors.primary,
+      gradientEnd: tmpl.colors.secondary,
+    }));
+
+    toast({
+      title: "Theme Applied",
+      description: `Active palette set to ${tmpl.name}`,
     });
   };
 
-  const handleGenerate = async () => {
-    if (!config.username && config.type !== "quote" && config.type !== "custom") {
-      toast({
-        title: "Username required",
-        description: "Please enter a GitHub username to generate stats",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (config.type === "quote") {
-      const topic = config.quoteTopic === "random" ? undefined : config.quoteTopic;
-      const quote = await generateQuote(topic);
-      if (quote) {
-        setCurrentQuote(quote);
-        triggerConfetti();
-        toast({
-          title: "Quote generated!",
-          description: "A unique dev quote has been created.",
-        });
-      }
-      return;
-    }
-
-    if (config.type === "custom") {
-      toast({
-        title: "Card ready!",
-        description: "Your custom card is ready. Copy the link below.",
-      });
-      return;
-    }
-
-    const result = await fetchStats(config.username);
-
-    if (result) {
-      setGithubData(result);
-      triggerConfetti();
-      toast({
-        title: "Stats fetched!",
-        description: `Successfully fetched data for ${config.username}`,
-      });
-    } else if (statsError) {
-      toast({
-        title: "Error fetching stats",
-        description: statsError,
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Generate a quote when switching to quote type
-  useEffect(() => {
-    if (config.type === "quote" && !currentQuote) {
-      const topic = config.quoteTopic === "random" ? undefined : config.quoteTopic;
-      generateQuote(topic).then(setCurrentQuote);
-    }
-  }, [config.type, config.quoteTopic, currentQuote, generateQuote]);
-
-  // Update dimensions when card type changes
-  useEffect(() => {
-    const typeDimensions: Record<string, { width: number; height: number }> = {
-      languages: { width: 340, height: 320 },
-      contribution: { width: 720, height: 250 },
-      pin: { width: 400, height: 120 },
-      stats: { width: 495, height: 195 },
-      streak: { width: 495, height: 195 },
-      activity: { width: 495, height: 195 },
-      quote: { width: 495, height: 195 },
-      banner: { width: 600, height: 200 },
-      custom: { width: 495, height: 195 },
-    };
-    const dims = typeDimensions[config.type] || { width: 495, height: 195 };
-    setConfig((prev) => ({ ...prev, width: dims.width, height: dims.height }));
-  }, [config.type]);
-
-  const handleRefreshQuote = async () => {
-    const topic = config.quoteTopic === "random" ? undefined : config.quoteTopic;
-    const quote = await generateQuote(topic);
-    if (quote) {
-      setCurrentQuote(quote);
-      triggerConfetti(); // Also trigger confetti on manual refresh
-    }
-  };
-
-  const updateConfig = (updates: Partial<CardConfig>) => {
-    setConfig((prev) => ({ ...prev, ...updates }));
-  };
-
+  // Magic Theme Randomizer
   const handleMagicTheme = () => {
-    // 1. Pick a random template
     const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
-
-    // 2. Decide if we want gradients (70% chance)
-    const enableGradient = Math.random() > 0.3;
-
-    // 3. Setup gradient colors based on template
-    // We can swap primary/secondary or use them as is for gradients
-    const gradientStart = Math.random() > 0.5 ? randomTemplate.colors.primary : randomTemplate.colors.secondary;
-    const gradientEnd = Math.random() > 0.5 ? randomTemplate.colors.secondary : randomTemplate.colors.primary;
-
-    // 4. Random angle
+    const enableGradient = Math.random() > 0.4;
     const angle = Math.floor(Math.random() * 360);
 
-    setConfig(prev => ({
+    setConfig((prev) => ({
       ...prev,
       theme: randomTemplate.id,
+      bgColor: randomTemplate.colors.bg,
+      primaryColor: randomTemplate.colors.primary,
+      secondaryColor: randomTemplate.colors.secondary,
+      textColor: randomTemplate.colors.text,
+      borderColor: randomTemplate.colors.border,
       gradientEnabled: enableGradient,
       gradientAngle: angle,
-      gradientStart: gradientStart,
-      gradientEnd: gradientEnd,
-      // Also potentially randomize animation
-      animation: Math.random() > 0.5 ? "fadeIn" : (Math.random() > 0.5 ? "slideIn" : "scaleIn"),
+      gradientStart: randomTemplate.colors.primary,
+      gradientEnd: randomTemplate.colors.secondary,
+      animation: "fadeIn",
     }));
 
-    // 5. Celebrate!
     confetti({
-      particleCount: 150,
-      spread: 100,
+      particleCount: 120,
+      spread: 80,
       origin: { y: 0.6 },
-      colors: [randomTemplate.colors.primary, randomTemplate.colors.secondary, '#ffffff'],
-      ticks: 200,
+      colors: [randomTemplate.colors.primary, randomTemplate.colors.secondary, "#ffffff"],
     });
 
     toast({
-      title: "Magic Theme Applied!",
-      description: `Switched to ${randomTemplate.name} with ${enableGradient ? 'gradient' : 'flat'} style.`,
-      className: "border-primary/50 text-foreground bg-background/80 backdrop-blur-xl",
+      title: "Random Theme Applied",
+      description: `Generated style based on ${randomTemplate.name}`,
     });
   };
 
+  // Reset to Defaults
+  const handleReset = () => {
+    const tmpl = templates.find((t) => t.id === "electric-blue") || templates[0];
+    setConfig({
+      ...defaultConfig,
+      bgColor: tmpl.colors.bg,
+      primaryColor: tmpl.colors.primary,
+      secondaryColor: tmpl.colors.secondary,
+      textColor: tmpl.colors.text,
+      borderColor: tmpl.colors.border,
+    });
+    toast({
+      title: "Settings Reset",
+      description: "Restored default Electric Blue configuration",
+    });
+  };
+
+  // User Sync
+  const handleSyncUser = async () => {
+    if (!config.username) return;
+    const res = await fetchStats(config.username);
+    if (res) {
+      setGithubData(res);
+      toast({
+        title: "Stats Refreshed",
+        description: `Loaded data for @${config.username}`,
+      });
+    }
+  };
+
+  // Generate Quote
+  const handleGenerateQuote = async () => {
+    const topic = config.quoteTopic === "random" ? undefined : config.quoteTopic;
+    const q = await generateQuote(topic);
+    if (q) {
+      setCurrentQuote(q);
+      toast({
+        title: "New Quote Generated",
+        description: `Generated quote by ${q.author}`,
+      });
+    }
+  };
+
+  // Construct Card Parameters
+  const cardParams: CardParams = useMemo(() => {
+    const p: CardParams = {
+      type: config.type,
+      username: config.username || "developer",
+      theme: config.theme,
+      bgColor: config.bgColor,
+      primaryColor: config.primaryColor,
+      secondaryColor: config.secondaryColor,
+      textColor: config.textColor,
+      borderColor: config.borderColor,
+      borderRadius: config.borderRadius,
+      showBorder: config.showBorder,
+      width: config.width,
+      height: config.height,
+      customText: config.customText || undefined,
+      customDescription: config.customDescription || undefined,
+      animate: config.animation !== "none",
+      animation: config.animation,
+      speed: config.animationSpeed,
+      gradient: config.gradientEnabled,
+      gradientType: config.gradientType,
+      gradientAngle: config.gradientAngle,
+      gradientStart: config.gradientStart,
+      gradientEnd: config.gradientEnd,
+      bannerName: config.bannerName,
+      bannerDescription: config.bannerDescription,
+      waveStyle: config.waveStyle,
+      quoteTopic: config.quoteTopic,
+      repo: config.repo,
+      showOwner: config.showOwner,
+      skills: config.skills || undefined,
+      stacks: config.stacks,
+      skillsLayout: config.skillsLayout,
+    };
+
+    if (githubData) {
+      p.stats = {
+        totalStars: githubData.stats.totalStars,
+        publicRepos: githubData.stats.publicRepos,
+        followers: githubData.stats.followers,
+        totalForks: githubData.stats.totalForks,
+      };
+      p.languages = githubData.languages;
+      p.streak = githubData.streak;
+      p.activity = githubData.activity;
+    }
+
+    if (currentQuote) {
+      p.quote = currentQuote;
+    }
+
+    return p;
+  }, [config, githubData, currentQuote]);
+
+  // Live SVG Output
+  const liveSvg = useMemo(() => {
+    try {
+      return generateCardSVG(cardParams);
+    } catch (e) {
+      console.error("SVG generation error:", e);
+      return "";
+    }
+  }, [cardParams]);
+
+  // Generate URL for API
+  const liveUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://github-canvas.pgwiz.cloud";
+    const endpoint = config.type === "pin" ? `${origin}/api/pin` : `${origin}/api/card`;
+    const params = new URLSearchParams();
+
+    if (config.type !== "pin") {
+      params.set("type", config.type);
+    }
+    if (config.username) params.set("username", config.username);
+    if (config.type === "pin" && config.repo) params.set("repo", config.repo);
+    if (config.theme) params.set("theme", config.theme);
+
+    // Only pass custom colors if they deviate from selected template
+    const tmpl = templates.find((t) => t.id === config.theme);
+    if (!tmpl || config.bgColor !== tmpl.colors.bg) params.set("bg", config.bgColor);
+    if (!tmpl || config.primaryColor !== tmpl.colors.primary) params.set("primary", config.primaryColor);
+    if (!tmpl || config.secondaryColor !== tmpl.colors.secondary) params.set("secondary", config.secondaryColor);
+    if (!tmpl || config.textColor !== tmpl.colors.text) params.set("text", config.textColor);
+    if (!tmpl || config.borderColor !== tmpl.colors.border) params.set("border", config.borderColor);
+
+    if (config.borderRadius !== 12) params.set("radius", String(config.borderRadius));
+    if (!config.showBorder) params.set("showBorder", "false");
+    if (config.animation && config.animation !== "fadeIn") params.set("animation", config.animation);
+    if (config.animationSpeed && config.animationSpeed !== "normal") params.set("speed", config.animationSpeed);
+
+    if (config.gradientEnabled) {
+      params.set("gradient", "true");
+      params.set("gradientStart", config.gradientStart);
+      params.set("gradientEnd", config.gradientEnd);
+    }
+
+    if (config.type === "skills") {
+      if (config.stacks && config.stacks.length > 0) params.set("stacks", config.stacks.join(","));
+      if (config.skills) params.set("skills", config.skills);
+      if (config.skillsLayout && config.skillsLayout !== "matrix") params.set("layout", config.skillsLayout);
+    }
+
+    if (config.customText) params.set("customText", config.customText);
+    if (config.customDescription) params.set("description", config.customDescription);
+
+    return `${endpoint}?${params.toString()}`;
+  }, [config]);
+
+  // Code Output based on active export tab
+  const snippetOutput = useMemo(() => {
+    const title = `${config.username || "GitHub"} Stats`;
+    if (exportFormat === "markdown") {
+      return `![${title}](${liveUrl})`;
+    }
+    if (exportFormat === "html") {
+      return `<img src="${liveUrl}" alt="${title}" />`;
+    }
+    return liveUrl;
+  }, [exportFormat, liveUrl, config.username]);
+
+  // Copy Snippet Action
+  const handleCopySnippet = async () => {
+    try {
+      await navigator.clipboard.writeText(snippetOutput);
+      setIsCopied(true);
+      toast({
+        title: "Copied to Clipboard",
+        description: `${exportFormat.toUpperCase()} snippet ready to paste.`,
+      });
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Download SVG Action
+  const handleDownloadSvg = () => {
+    const blob = new Blob([liveSvg], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${config.username || "github"}-${config.type}-card.svg`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({
+      title: "SVG Downloaded",
+      description: `${a.download} saved to your device.`,
+    });
+  };
+
+  // Stack View SVGs
+  const stackCards: Array<{ type: CardType; title: string }> = [
+    { type: "stats", title: "GitHub Stats" },
+    { type: "languages", title: "Top Languages" },
+    { type: "streak", title: "Contribution Streak" },
+    { type: "skills", title: "Tech Stack & Skills" },
+    { type: "contribution", title: "Contribution Heatmap" },
+    { type: "quote", title: "Dev Wisdom Quote" },
+    { type: "pin", title: "Pinned Repository" },
+  ];
+
   return (
-    <Layout>
+    <Layout hideFooter={true}>
       <PageTransition>
-        <div className="min-h-screen py-12">
-          <div className="container mx-auto px-4">
-            {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              <span className="gradient-text">Stats Generator</span>
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Create beautiful GitHub stats cards with full customization
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Panel - Configuration */}
-            <div className="space-y-6">
-              {/* Username Input */}
-              <GlassPanel accent="blue">
-                <Label htmlFor="username" className="text-lg font-semibold mb-4 block">
-                  GitHub Username
-                </Label>
-                <div className="flex gap-3">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="username"
-                      placeholder="Enter GitHub username..."
-                      value={config.username}
-                      onChange={(e) => updateConfig({ username: e.target.value })}
-                      onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-                      className="pl-10 h-12 bg-background/30 backdrop-blur-sm border-border/30"
-                      disabled={config.type === "quote" || config.type === "custom" || config.type === "banner"}
-                    />
-                  </div>
-                  <Button
-                    onClick={handleGenerate}
-                    disabled={isGenerating}
-                    className="group relative h-12 px-6 overflow-hidden bg-primary hover:bg-primary/90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(59,130,246,0.35)] hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out" />
-                    <span className="relative flex items-center">
-                      {isGenerating ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
-                          {config.type === "quote" ? "Generating..." : "Fetching..."}
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
-                          {config.type === "quote" ? "Generate Quote" : "Fetch Stats"}
-                        </>
-                      )}
-                    </span>
-                  </Button>
-                </div>
-                {config.type !== "quote" && config.type !== "custom" && config.type !== "banner" && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Fetches real data from GitHub API
-                  </p>
-                )}
-              </GlassPanel>
-
-              {/* Card Type Selection */}
-              <GlassPanel accent="teal">
-                <Label className="text-lg font-semibold mb-4 block">
-                  Card Type
-                </Label>
-                <Tabs
-                  value={config.type}
-                  onValueChange={(v) => updateConfig({ type: v as CardType })}
+        <div className="flex-1 flex flex-col sm:flex-row sm:min-h-0 sm:h-[calc(100vh-4rem)] sm:overflow-hidden select-none bg-background text-slate-100">
+          
+          {/* FAR LEFT ICON TOOLBAR */}
+          <aside className="sticky top-0 sm:static w-full sm:w-16 shrink-0 border-b sm:border-b-0 sm:border-r border-white/10 bg-surface/90 backdrop-blur-md flex flex-row sm:flex-col items-center py-2 sm:py-4 px-3 sm:px-0 gap-2 sm:gap-3 z-30 sm:h-full overflow-x-auto sm:overflow-x-hidden sm:overflow-y-auto">
+            {(Object.keys(TYPE_CONFIGS) as CardType[]).map((cType) => {
+              const item = TYPE_CONFIGS[cType];
+              const Icon = item.icon;
+              const isActive = config.type === cType;
+              return (
+                <button
+                  key={cType}
+                  onClick={() => handleSelectType(cType)}
+                  className={`shrink-0 flex flex-col items-center justify-center gap-1 w-12 py-2 rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? "bg-primary/20 text-primary border border-primary/40 shadow-sm"
+                      : "text-slate-400 hover:text-white hover:bg-white/5"
+                  }`}
+                  title={`${item.label} Card`}
                 >
-                  <TabsList className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 w-full h-auto bg-background/30 backdrop-blur-sm p-1.5 gap-1">
-                    <TabsTrigger value="stats" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
-                      <BarChart3 className="w-3.5 h-3.5" /> Stats
-                    </TabsTrigger>
-                    <TabsTrigger value="languages" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
-                      <Code2 className="w-3.5 h-3.5" /> Languages
-                    </TabsTrigger>
-                    <TabsTrigger value="streak" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
-                      <Flame className="w-3.5 h-3.5" /> Streak
-                    </TabsTrigger>
-                    <TabsTrigger value="activity" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
-                      <Activity className="w-3.5 h-3.5" /> Activity
-                    </TabsTrigger>
-                    <TabsTrigger value="quote" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
-                      <Quote className="w-3.5 h-3.5" /> Quote
-                    </TabsTrigger>
-                    <TabsTrigger value="banner" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
-                      <Sparkles className="w-3.5 h-3.5" /> Banner
-                    </TabsTrigger>
-                    <TabsTrigger value="contribution" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
-                      <Grid3X3 className="w-3.5 h-3.5" /> Contribution
-                    </TabsTrigger>
-                    <TabsTrigger value="pin" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
-                      <Bookmark className="w-3.5 h-3.5" /> Pinned
-                    </TabsTrigger>
-                    <TabsTrigger value="custom" className="py-2.5 flex items-center justify-center gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs">
-                      <SlidersHorizontal className="w-3.5 h-3.5" /> Custom
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </GlassPanel>
+                  <Icon className="w-4 h-4" />
+                  <span className="text-[9px] font-semibold uppercase tracking-wider">{item.label}</span>
+                </button>
+              );
+            })}
+          </aside>
 
-              {/* Quote Options */}
-              {config.type === "quote" && (
-                <GlassPanel accent="purple">
-                  <Label className="text-lg font-semibold mb-4 block">Quote Options</Label>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <Label className="text-sm text-muted-foreground mb-2 block">Topic</Label>
-                        <Select
-                          value={config.quoteTopic}
-                          onValueChange={(v) => updateConfig({ quoteTopic: v as QuoteTopic })}
-                        >
-                          <SelectTrigger className="bg-background/30 backdrop-blur-sm border-border/30">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {quoteTopics.map((topic) => {
-                              const TopicIcon = topic.icon;
-                              return (
-                                <SelectItem key={topic.value} value={topic.value}>
-                                  <div className="flex items-center gap-2">
-                                    <TopicIcon className="w-3.5 h-3.5 text-primary" />
-                                    <span>{topic.label}</span>
-                                  </div>
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <Button
-                        variant="outline"
-                        onClick={handleRefreshQuote}
-                        disabled={quoteLoading}
-                        className="bg-background/30 backdrop-blur-sm border-border/30 mt-6"
-                      >
-                        <RefreshCw className={`w-4 h-4 mr-2 ${quoteLoading ? 'animate-spin' : ''}`} />
-                        New Quote
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Generate unique developer quotes powered by AI
-                    </p>
-                  </div>
-                </GlassPanel>
-              )}
+          {/* CENTER CANVAS & EXPORT DOCK */}
+          <section className="flex-1 min-w-0 flex flex-col bg-background relative sm:min-h-0 sm:overflow-hidden">
+            {/* Top Status Bar */}
+            <div className="min-h-10 py-1.5 px-4 gap-2 border-b border-white/10 flex items-center justify-between text-xs text-slate-400 bg-surface/40 shrink-0 z-20">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Monitor className="w-3.5 h-3.5 text-primary" />
+                  <span className="font-medium text-slate-200">Studio Stage</span>
+                  <span className="text-slate-600">•</span>
+                  <span className="font-mono text-[11px] text-slate-400">
+                    {config.width} × {config.height} px
+                  </span>
+                </div>
+              </div>
 
-              {/* Template Gallery */}
-              <GlassPanel accent="purple">
-                <ThemeSelector
-                  selectedTheme={config.theme}
-                  onSelectTheme={(t) => updateConfig({ theme: t })}
-                  onMagicTheme={handleMagicTheme}
-                />
-              </GlassPanel>
+              <div className="flex items-center gap-3">
+                {/* Single vs Stack switcher */}
+                <div className="flex items-center bg-black/40 p-0.5 rounded-md border border-white/10">
+                  <button
+                    onClick={() => setViewMode("single")}
+                    className={`px-2.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                      viewMode === "single" ? "bg-primary/20 text-primary" : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    Single
+                  </button>
+                  <button
+                    onClick={() => setViewMode("stack")}
+                    className={`px-2.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                      viewMode === "stack" ? "bg-primary/20 text-primary" : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    Stack
+                  </button>
+                </div>
 
-              {/* Customization Panel */}
-              <GlassPanel accent="blue">
-                <Label className="text-lg font-semibold mb-4 block">
-                  Customize
-                </Label>
-                <CustomizationPanel
-                  config={config}
-                  updateConfig={updateConfig}
-                />
-              </GlassPanel>
+                {/* Quick Username Input */}
+                <div className="flex items-center bg-black/40 border border-white/10 rounded-md px-2 h-7 focus-within:border-primary/50 transition-colors">
+                  <AtSign className="w-3 h-3 text-slate-500 mr-1 shrink-0" />
+                  <input
+                    type="text"
+                    value={config.username}
+                    onChange={(e) => setConfig((prev) => ({ ...prev, username: e.target.value }))}
+                    onKeyDown={(e) => e.key === "Enter" && handleSyncUser()}
+                    placeholder="Username..."
+                    className="bg-transparent text-[11px] font-mono text-white focus:outline-none w-24 sm:w-28"
+                  />
+                  <button
+                    onClick={handleSyncUser}
+                    disabled={statsLoading}
+                    title="Sync GitHub User Stats"
+                    className="text-slate-400 hover:text-primary transition-colors pl-1 shrink-0"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${statsLoading ? "animate-spin text-primary" : ""}`} />
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* Right Panel - Preview & Links */}
-            <div className="space-y-6">
-              {/* Preview */}
-              <GlassPanel accent="teal" active>
-                <Label className="text-lg font-semibold mb-4 block">
-                  Live Preview
-                </Label>
-                {/* Nested frosted glass inner panel */}
-                <div className="relative rounded-lg overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 to-transparent backdrop-blur-md" />
-                  <div className="relative p-4 rounded-lg border border-secondary/10 bg-background/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
-                    <CardPreview
-                      config={config}
-                      githubData={githubData}
-                      quote={currentQuote}
+            {/* Interactive Preview Canvas */}
+            <div className="canvas-grid flex-1 relative p-4 sm:p-8 min-h-[300px] sm:min-h-0 overflow-y-auto overflow-x-hidden flex items-center justify-center">
+              {viewMode === "single" ? (
+                <div className="relative z-10 m-auto max-w-full flex justify-center">
+                  <div
+                    className="rounded-xl shadow-2xl overflow-hidden ring-1 ring-white/10 bg-background max-w-full"
+                    dangerouslySetInnerHTML={{ __html: liveSvg }}
+                  />
+                </div>
+              ) : (
+                <div className="relative z-10 m-auto w-full max-w-2xl py-6 flex flex-col gap-6">
+                  <div className="flex items-center justify-between pb-2 border-b border-white/10 text-xs text-slate-400">
+                    <span className="flex items-center gap-1.5 font-semibold text-slate-200">
+                      <Layers3 className="w-4 h-4 text-primary" /> Full Stack Readme Gallery
+                    </span>
+                    <span>Ready for GitHub Profile</span>
+                  </div>
+                  {stackCards.map((sc) => {
+                    const stackParams: CardParams = {
+                      ...cardParams,
+                      type: sc.type,
+                      width: TYPE_CONFIGS[sc.type]?.dims.width || 495,
+                      height: TYPE_CONFIGS[sc.type]?.dims.height || 195,
+                    };
+                    const svgMarkup = generateCardSVG(stackParams);
+                    return (
+                      <div key={sc.type} className="flex flex-col gap-1.5">
+                        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider pl-1">
+                          {sc.title}
+                        </span>
+                        <div
+                          className="rounded-xl shadow-lg overflow-hidden ring-1 ring-white/10 bg-background"
+                          dangerouslySetInnerHTML={{ __html: svgMarkup }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* BOTTOM EXPORT DOCK */}
+            <div className="w-full bg-surface/95 border-t border-white/10 shrink-0 z-30 px-4 sm:px-6 py-3 flex flex-col justify-center">
+              <div className="w-full flex flex-wrap items-center justify-between gap-2 mb-2">
+                {/* Format Tabs */}
+                <div className="flex items-center bg-black/40 p-0.5 rounded-lg border border-white/10">
+                  {(["url", "markdown", "html"] as ExportFormat[]).map((fmt) => (
+                    <button
+                      key={fmt}
+                      onClick={() => setExportFormat(fmt)}
+                      className={`px-3 py-1 rounded-md text-xs font-medium uppercase tracking-wider transition-all ${
+                        exportFormat === fmt
+                          ? "bg-primary/20 text-primary border border-primary/30"
+                          : "text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      {fmt}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleDownloadSvg}
+                    className="px-3.5 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-medium text-white transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                  >
+                    <Download className="w-3.5 h-3.5" /> SVG
+                  </button>
+                  <button
+                    onClick={handleCopySnippet}
+                    className="px-4 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-xs font-semibold text-white transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                  >
+                    {isCopied ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" /> Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" /> Copy {exportFormat.toUpperCase()}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Output Readonly Field */}
+              <textarea
+                readOnly
+                rows={1}
+                value={snippetOutput}
+                onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+                className="block w-full resize-none overflow-x-auto overflow-y-hidden whitespace-pre bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-slate-300 focus:outline-none focus:ring-1 focus:ring-primary/50"
+              />
+            </div>
+          </section>
+
+          {/* RIGHT PROPERTIES SIDEBAR */}
+          <aside className="w-full sm:w-[280px] md:w-[320px] shrink-0 border-t sm:border-t-0 sm:border-l border-white/10 bg-surface/80 flex flex-col sm:h-full sm:min-h-0 z-20">
+            {/* Header */}
+            <div className="h-10 px-4 border-b border-white/10 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-400 shrink-0 bg-surface/50">
+              <span>Card Settings</span>
+              <button
+                onClick={handleReset}
+                title="Reset to defaults"
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Scrollable Settings Accordions */}
+            <div className="sm:flex-1 sm:min-h-0 flex flex-col pb-6 sm:overflow-y-auto">
+              
+              {/* ACCORDION 1: General */}
+              <details className="group border-b border-white/10" open>
+                <summary className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-white/5 select-none text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <span>General</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-500 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="px-3.5 pb-4 space-y-3.5 text-xs">
+                  {/* GitHub Username */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400">GitHub Username</label>
+                    <div className="flex items-center bg-black/40 border border-white/10 rounded-md px-2 focus-within:border-primary/50 transition-colors h-8">
+                      <AtSign className="w-3.5 h-3.5 text-slate-500 mr-1.5 shrink-0" />
+                      <input
+                        type="text"
+                        value={config.username}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, username: e.target.value }))}
+                        onKeyDown={(e) => e.key === "Enter" && handleSyncUser()}
+                        placeholder="GitHub Username..."
+                        className="bg-transparent text-xs font-mono text-white focus:outline-none w-full h-full"
+                      />
+                      <button
+                        onClick={handleSyncUser}
+                        disabled={statsLoading}
+                        title="Sync User Data"
+                        className="text-slate-400 hover:text-primary transition-colors pl-1 shrink-0"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${statsLoading ? "animate-spin text-primary" : ""}`} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Quote-specific options */}
+                  {config.type === "quote" && (
+                    <div className="space-y-1.5 pt-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] text-slate-400">Topic</label>
+                        <span className="text-[9px] text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">AI Generated</span>
+                      </div>
+                      <select
+                        value={config.quoteTopic}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, quoteTopic: e.target.value as QuoteTopic }))}
+                        className="w-full h-8 rounded-md bg-black/40 border border-white/10 px-2 text-xs text-slate-200 focus:outline-none focus:border-primary/50"
+                      >
+                        <option value="random">Topic: Random Wisdom</option>
+                        <option value="debugging">Topic: Debugging & Bugs</option>
+                        <option value="architecture">Topic: Architecture</option>
+                        <option value="coffee">Topic: Coffee & Late Nights</option>
+                        <option value="deadlines">Topic: Deadlines</option>
+                        <option value="testing">Topic: Testing Code</option>
+                      </select>
+                      <button
+                        onClick={handleGenerateQuote}
+                        disabled={quoteLoading}
+                        className="w-full h-8 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium flex items-center justify-center gap-1.5 transition-all active:scale-95 mt-2"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${quoteLoading ? "animate-spin text-primary" : ""}`} /> New Quote
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Skills & Stacks Options */}
+                  {config.type === "skills" && (
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] text-slate-400">Skills Display Style</label>
+                        <span className="text-[9px] text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">De-duplicated</span>
+                      </div>
+                      <select
+                        value={config.skillsLayout}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, skillsLayout: e.target.value as "matrix" | "stacks" }))}
+                        className="w-full h-8 rounded-md bg-black/40 border border-white/10 px-2 text-xs text-slate-200 focus:outline-none focus:border-primary/50"
+                      >
+                        <option value="matrix">Categorized Matrix (Clean & Deduplicated)</option>
+                        <option value="stacks">Stack Clusters (FARM, PERN, LEMP, Django)</option>
+                      </select>
+
+                      <label className="text-[10px] text-slate-400 block pt-1">Included Tech Stacks</label>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {Object.entries(PRESET_STACKS).map(([stkKey, stk]) => {
+                          const isChecked = config.stacks.includes(stkKey);
+                          return (
+                            <label
+                              key={stkKey}
+                              className={`flex items-center gap-1.5 p-1.5 rounded-md border text-[11px] cursor-pointer transition-colors ${
+                                isChecked
+                                  ? "bg-primary/10 border-primary/40 text-primary"
+                                  : "bg-black/30 border-white/5 text-slate-400 hover:text-slate-200"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  const next = e.target.checked
+                                    ? [...config.stacks, stkKey]
+                                    : config.stacks.filter((s) => s !== stkKey);
+                                  setConfig((prev) => ({ ...prev, stacks: next }));
+                                }}
+                                className="accent-primary w-3 h-3"
+                              />
+                              <span className="truncate">{stk.label.split("·")[0]}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pinned Repo Options */}
+                  {config.type === "pin" && (
+                    <div className="space-y-2 pt-1">
+                      <div>
+                        <label className="text-[10px] text-slate-400 block mb-1">Repository Name</label>
+                        <input
+                          type="text"
+                          value={config.repo}
+                          onChange={(e) => setConfig((prev) => ({ ...prev, repo: e.target.value }))}
+                          placeholder="e.g. pgwiz.cloud"
+                          className="w-full h-8 rounded bg-black/40 border border-white/10 px-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
+                        />
+                      </div>
+                      <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer pt-1">
+                        <input
+                          type="checkbox"
+                          checked={config.showOwner}
+                          onChange={(e) => setConfig((prev) => ({ ...prev, showOwner: e.target.checked }))}
+                          className="accent-primary w-3.5 h-3.5"
+                        />
+                        Show Repository Owner
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Banner Options */}
+                  {config.type === "banner" && (
+                    <div className="space-y-2 pt-1">
+                      <div>
+                        <label className="text-[10px] text-slate-400 block mb-1">Banner Title</label>
+                        <input
+                          type="text"
+                          value={config.bannerName}
+                          onChange={(e) => setConfig((prev) => ({ ...prev, bannerName: e.target.value }))}
+                          className="w-full h-8 rounded bg-black/40 border border-white/10 px-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-slate-400 block mb-1">Banner Subtitle</label>
+                        <input
+                          type="text"
+                          value={config.bannerDescription}
+                          onChange={(e) => setConfig((prev) => ({ ...prev, bannerDescription: e.target.value }))}
+                          className="w-full h-8 rounded bg-black/40 border border-white/10 px-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Theme Presets Dropdown */}
+                  <div className="pt-2 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] text-slate-400 font-medium">Theme Preset</label>
+                      <button
+                        onClick={handleMagicTheme}
+                        className="text-[10px] text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
+                      >
+                        <Wand2 className="w-3 h-3" /> Random
+                      </button>
+                    </div>
+                    <select
+                      value={config.theme}
+                      onChange={(e) => handleSelectTheme(e.target.value)}
+                      className="w-full h-8 rounded-md bg-black/40 border border-white/10 px-2 text-xs text-slate-200 focus:outline-none focus:border-primary/50 cursor-pointer"
+                    >
+                      {templates.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name} ({t.category})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </details>
+
+              {/* ACCORDION 2: Colors */}
+              <details className="group border-b border-white/10" open>
+                <summary className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-white/5 select-none text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <span>Appearance & Colors</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-500 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="px-3.5 pb-4 space-y-3 text-xs">
+                  {/* Gradient Background Toggle */}
+                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-md bg-black/40 border border-white/10">
+                    <div className="flex items-center gap-2">
+                      <Blend className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="text-xs text-slate-300">Gradient Background</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={config.gradientEnabled}
+                      onChange={(e) => setConfig((prev) => ({ ...prev, gradientEnabled: e.target.checked }))}
+                      className="accent-primary w-3.5 h-3.5 cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Color Pickers & Hex */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Background */}
+                    <div className="bg-black/30 border border-white/10 rounded-md p-1.5 flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={config.bgColor}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, bgColor: e.target.value }))}
+                        className="w-6 h-6 rounded cursor-pointer bg-transparent shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <label className="block text-[9px] text-slate-400 leading-none">Background</label>
+                        <input
+                          type="text"
+                          value={config.bgColor}
+                          onChange={(e) => setConfig((prev) => ({ ...prev, bgColor: e.target.value }))}
+                          className="w-full bg-transparent text-[11px] font-mono text-white focus:outline-none mt-0.5"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Primary */}
+                    <div className="bg-black/30 border border-white/10 rounded-md p-1.5 flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={config.primaryColor}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, primaryColor: e.target.value }))}
+                        className="w-6 h-6 rounded cursor-pointer bg-transparent shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <label className="block text-[9px] text-slate-400 leading-none">Primary</label>
+                        <input
+                          type="text"
+                          value={config.primaryColor}
+                          onChange={(e) => setConfig((prev) => ({ ...prev, primaryColor: e.target.value }))}
+                          className="w-full bg-transparent text-[11px] font-mono text-white focus:outline-none mt-0.5"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Secondary */}
+                    <div className="bg-black/30 border border-white/10 rounded-md p-1.5 flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={config.secondaryColor}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, secondaryColor: e.target.value }))}
+                        className="w-6 h-6 rounded cursor-pointer bg-transparent shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <label className="block text-[9px] text-slate-400 leading-none">Secondary</label>
+                        <input
+                          type="text"
+                          value={config.secondaryColor}
+                          onChange={(e) => setConfig((prev) => ({ ...prev, secondaryColor: e.target.value }))}
+                          className="w-full bg-transparent text-[11px] font-mono text-white focus:outline-none mt-0.5"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Text */}
+                    <div className="bg-black/30 border border-white/10 rounded-md p-1.5 flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={config.textColor}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, textColor: e.target.value }))}
+                        className="w-6 h-6 rounded cursor-pointer bg-transparent shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <label className="block text-[9px] text-slate-400 leading-none">Text</label>
+                        <input
+                          type="text"
+                          value={config.textColor}
+                          onChange={(e) => setConfig((prev) => ({ ...prev, textColor: e.target.value }))}
+                          className="w-full bg-transparent text-[11px] font-mono text-white focus:outline-none mt-0.5"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Border Color & Toggle */}
+                    <div className="bg-black/30 border border-white/10 rounded-md p-1.5 flex items-center gap-2 col-span-2">
+                      <input
+                        type="color"
+                        value={config.borderColor}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, borderColor: e.target.value }))}
+                        className="w-6 h-6 rounded cursor-pointer bg-transparent shrink-0"
+                      />
+                      <div className="min-w-0 flex-1 flex items-center justify-between">
+                        <div>
+                          <label className="block text-[9px] text-slate-400 leading-none">Border</label>
+                          <input
+                            type="text"
+                            value={config.borderColor}
+                            onChange={(e) => setConfig((prev) => ({ ...prev, borderColor: e.target.value }))}
+                            className="w-24 bg-transparent text-[11px] font-mono text-white focus:outline-none mt-0.5"
+                          />
+                        </div>
+                        <label className="flex items-center gap-1.5 text-[11px] text-slate-400 pr-1 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={config.showBorder}
+                            onChange={(e) => setConfig((prev) => ({ ...prev, showBorder: e.target.checked }))}
+                            className="accent-primary w-3.5 h-3.5"
+                          />
+                          Show Border
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              {/* ACCORDION 3: Layout */}
+              <details className="group border-b border-white/10">
+                <summary className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-white/5 select-none text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <span>Layout & Sizing</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-500 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="px-3.5 pb-4 space-y-3.5 text-xs">
+                  {/* Border Radius */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-400">Border Radius</span>
+                      <span className="font-mono text-slate-200">{config.borderRadius}px</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="28"
+                      value={config.borderRadius}
+                      onChange={(e) => setConfig((prev) => ({ ...prev, borderRadius: parseInt(e.target.value, 10) }))}
+                      className="w-full accent-primary h-1.5 bg-black/50 rounded-lg cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Animation */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400">Animation</label>
+                    <select
+                      value={config.animation}
+                      onChange={(e) => setConfig((prev) => ({ ...prev, animation: e.target.value }))}
+                      className="w-full h-8 rounded-md bg-black/40 border border-white/10 px-2 text-xs text-slate-200 focus:outline-none focus:border-primary/50"
+                    >
+                      <option value="none">None (Static)</option>
+                      <option value="fadeIn">Fade In (Clean)</option>
+                      <option value="slideUp">Slide Up</option>
+                      <option value="pulse">Subtle Pulse</option>
+                    </select>
+                  </div>
+                </div>
+              </details>
+
+              {/* ACCORDION 4: Content Override */}
+              <details className="group border-b border-white/10">
+                <summary className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-white/5 select-none text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <span>Content Overrides</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-500 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="px-3.5 pb-4 space-y-2.5 text-xs">
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">Card Header Title</label>
+                    <input
+                      type="text"
+                      value={config.customText}
+                      onChange={(e) => setConfig((prev) => ({ ...prev, customText: e.target.value }))}
+                      placeholder="Default Title..."
+                      className="w-full h-8 rounded bg-black/40 border border-white/10 px-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">Custom Tag / Subtitle</label>
+                    <input
+                      type="text"
+                      value={config.customDescription}
+                      onChange={(e) => setConfig((prev) => ({ ...prev, customDescription: e.target.value }))}
+                      placeholder="e.g. #developer · architecture"
+                      className="w-full h-8 rounded bg-black/40 border border-white/10 px-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
                     />
                   </div>
                 </div>
-                {githubData && config.type !== "quote" && config.type !== "custom" && (
-                  <p className="text-xs text-muted-foreground mt-4 text-center flex items-center justify-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-primary" /> Showing real data for @{githubData.user.login}
-                  </p>
-                )}
-              </GlassPanel>
+              </details>
 
-              {/* Link Generator */}
-              <GlassPanel accent="blue">
-                <Label className="text-lg font-semibold mb-4 block">
-                  Share Your Card
-                </Label>
-                <LinkGenerator config={config} />
-              </GlassPanel>
-
-              {/* Quote of the Day */}
-              {qotd && (
-                <div className="text-center py-4">
-                  <p className="text-[10px] italic text-muted-foreground/70 leading-relaxed max-w-md mx-auto">
-                    Quote of the Day: "{qotd.quote}" — {qotd.author}
-                  </p>
-                </div>
-              )}
             </div>
-          </div>
+          </aside>
         </div>
-      </div>
       </PageTransition>
     </Layout>
   );
