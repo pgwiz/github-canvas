@@ -13,6 +13,8 @@ import { extractTextFromFile } from "@/lib/cvExtractor";
 import { MarkdownPreview } from "@/components/profile/MarkdownPreview";
 import { templates } from "@/lib/templates";
 import { ShareModal } from "@/components/generator/ShareModal";
+import { MarkerModal } from "@/components/profile/MarkerModal";
+import { AttachImageModal } from "@/components/profile/AttachImageModal";
 import confetti from "canvas-confetti";
 import { 
   Sparkles, UploadCloud, FileText, Copy, Check, Download, 
@@ -20,7 +22,8 @@ import {
   RefreshCw, CheckCircle2, UserCheck, Layers, BarChart3, 
   Flame, Grid3X3, Bookmark, Quote, Activity, Share2, 
   ChevronDown, ChevronUp, Plus, ExternalLink, Terminal, Shield, Zap,
-  GripVertical, RotateCcw, ListOrdered, ArrowUpDown
+  GripVertical, RotateCcw, ListOrdered, ArrowUpDown,
+  Bold, Italic, Link as LinkIcon, Image as ImageIcon, Stamp, Compass
 } from "lucide-react";
 
 const getCardApiBase = () => {
@@ -53,6 +56,7 @@ const SECTION_ICONS: Record<string, React.ComponentType<{ className?: string }>>
   projects: Layers,
   socials: Share2,
   trophies: Zap,
+  competencies: Compass,
   custom: Code2,
 };
 
@@ -102,6 +106,14 @@ const CARD_TEMPLATES: Record<
     icon: Grid3X3,
     getContent: (_username, theme, base) => {
       return `## 🛠️ Tech Stack & Tooling\n\n<div align="center">\n  <img src="${base}/api/card?type=skills&skills=TypeScript,React,Node.js,Python,PostgreSQL,Docker,TailwindCSS,Linux&theme=${theme}&layout=matrix" alt="Tech Stack" width="100%" />\n</div>`;
+    },
+  },
+  competencies: {
+    title: "Core Competencies",
+    icon: Compass,
+    getContent: (username) => {
+      const display = username || "developer";
+      return `## CORE COMPETENCIES\n\n<table>\n  <tr>\n    <td width="50%" valign="top">\n      <a href="https://github.com/${display}?tab=repositories">\n        <img src="https://img.shields.io/badge/ENGINEERING%20EXCELLENCE-090D16?style=for-the-badge&logo=codeforces&logoColor=3B82F6" alt="Engineering Excellence" />\n      </a>\n      <br /><br />\n      <b>Systems & Architecture</b> &bull; Crafting robust, maintainable codebases that scale from MVP to enterprise.\n    </td>\n    <td width="50%" valign="top">\n      <a href="https://github.com/${display}?tab=repositories">\n        <img src="https://img.shields.io/badge/AI%20INTEGRATION-090D16?style=for-the-badge&logo=huggingface&logoColor=3B82F6" alt="AI Integration" />\n      </a>\n      <br /><br />\n      <b>Intelligent Systems</b> &bull; Implementing machine learning models in production environments with real business impact.\n    </td>\n  </tr>\n  <tr>\n    <td width="50%" valign="top">\n      <a href="https://github.com/${display}?tab=repositories">\n        <img src="https://img.shields.io/badge/CLOUD%20ARCHITECTURE-090D16?style=for-the-badge&logo=googlecloud&logoColor=3B82F6" alt="Cloud Architecture" />\n      </a>\n      <br /><br />\n      <b>Distributed Systems</b> &bull; Designing platforms that handle millions of requests with optimal resilience and throughput.\n    </td>\n    <td width="50%" valign="top">\n      <a href="https://github.com/${display}?tab=repositories">\n        <img src="https://img.shields.io/badge/DATA%20INTELLIGENCE-090D16?style=for-the-badge&logo=postgresql&logoColor=3B82F6" alt="Data Intelligence" />\n      </a>\n      <br /><br />\n      <b>Analytics & Pipelines</b> &bull; Extracting actionable insights from complex datasets to drive strategic decisions.\n    </td>\n  </tr>\n  <tr>\n    <td width="50%" valign="top">\n      <a href="https://github.com/${display}?tab=repositories">\n        <img src="https://img.shields.io/badge/DEVOPS%20CULTURE-090D16?style=for-the-badge&logo=docker&logoColor=3B82F6" alt="DevOps Culture" />\n      </a>\n      <br /><br />\n      <b>Continuous Delivery</b> &bull; Automating deployment pipelines and infrastructure for high-velocity releases.\n    </td>\n    <td width="50%" valign="top">\n      <a href="https://github.com/${display}?tab=repositories">\n        <img src="https://img.shields.io/badge/FULL--STACK%20MASTERY-090D16?style=for-the-badge&logo=typescript&logoColor=3B82F6" alt="Full-Stack Mastery" />\n      </a>\n      <br /><br />\n      <b>End-to-End Execution</b> &bull; Seamlessly bridging frontend UX with backend logic and database optimization.\n    </td>\n  </tr>\n</table>`;
     },
   },
   activity: {
@@ -468,6 +480,8 @@ export default function ProfileCustomizer() {
   const [isDragging, setIsDragging] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(true);
+  const [isMarkerModalOpen, setIsMarkerModalOpen] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -501,6 +515,119 @@ export default function ProfileCustomizer() {
     isManualEditRef.current = true;
     setGeneratedMarkdown(e.target.value);
   };
+
+  const insertTextAtCursor = (textToInsert: string) => {
+    isManualEditRef.current = true;
+    const el = textareaRef.current;
+    if (el) {
+      const start = el.selectionStart ?? el.value.length;
+      const end = el.selectionEnd ?? el.value.length;
+      const before = generatedMarkdown.substring(0, start);
+      const after = generatedMarkdown.substring(end);
+      const updated = before + textToInsert + after;
+      setGeneratedMarkdown(updated);
+      setTimeout(() => {
+        el.focus();
+        el.setSelectionRange(start + textToInsert.length, start + textToInsert.length);
+      }, 50);
+    } else {
+      setGeneratedMarkdown((prev) => (prev ? `${prev}\n\n${textToInsert}` : textToInsert));
+    }
+  };
+
+  const wrapSelection = (prefix: string, suffix: string, defaultText = "text") => {
+    isManualEditRef.current = true;
+    const el = textareaRef.current;
+    if (el) {
+      const start = el.selectionStart ?? 0;
+      const end = el.selectionEnd ?? 0;
+      const selected = el.value.substring(start, end) || defaultText;
+      const replacement = `${prefix}${selected}${suffix}`;
+      const before = el.value.substring(0, start);
+      const after = el.value.substring(end);
+      const updated = before + replacement + after;
+      setGeneratedMarkdown(updated);
+      setTimeout(() => {
+        el.focus();
+        el.setSelectionRange(start + prefix.length, start + prefix.length + selected.length);
+      }, 50);
+    }
+  };
+
+  const renderEditorToolbar = () => (
+    <div className="px-3 py-1.5 border-b border-white/10 bg-white/5 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar shrink-0">
+      <div className="flex items-center gap-1.5 shrink-0">
+        <button
+          type="button"
+          onClick={() => setIsMarkerModalOpen(true)}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 text-xs font-semibold transition-all hover:scale-[1.02] shadow-sm"
+          title="Interactive Badge Marker (Logo + Title + Description + Link)"
+        >
+          <Stamp className="w-3.5 h-3.5" /> Badge Marker
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setIsImageModalOpen(true)}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-secondary/20 hover:bg-secondary/30 text-secondary border border-secondary/30 text-xs font-semibold transition-all hover:scale-[1.02] shadow-sm"
+          title="Attach Image or Card URL with Text"
+        >
+          <ImageIcon className="w-3.5 h-3.5" /> Attach Image
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            const snippet = CARD_TEMPLATES.competencies.getContent(username, selectedTheme, apiBase);
+            insertSnippet(snippet, "Core Competencies", "competencies");
+            toast({
+              title: "Core Competencies Added",
+              description: "Added 6-marker interactive table with 0 emojis.",
+            });
+          }}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 text-xs font-medium transition-all"
+          title="Insert 2-Column Core Competencies Grid"
+        >
+          <Compass className="w-3.5 h-3.5 text-cyan-400" /> + Competencies
+        </button>
+      </div>
+
+      <div className="flex items-center gap-1 shrink-0">
+        <button
+          type="button"
+          onClick={() => wrapSelection("**", "**", "bold text")}
+          className="w-7 h-7 rounded hover:bg-white/10 text-slate-300 hover:text-white flex items-center justify-center transition-colors text-xs font-bold"
+          title="Bold (**text**)"
+        >
+          <Bold className="w-3.5 h-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => wrapSelection("*", "*", "italic text")}
+          className="w-7 h-7 rounded hover:bg-white/10 text-slate-300 hover:text-white flex items-center justify-center transition-colors text-xs italic"
+          title="Italic (*text*)"
+        >
+          <Italic className="w-3.5 h-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => wrapSelection("`", "`", "code")}
+          className="w-7 h-7 rounded hover:bg-white/10 text-slate-300 hover:text-white flex items-center justify-center transition-colors text-xs font-mono"
+          title="Inline Code (`code`)"
+        >
+          <Code2 className="w-3.5 h-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => wrapSelection("[", "](https://example.com)", "link text")}
+          className="w-7 h-7 rounded hover:bg-white/10 text-slate-300 hover:text-white flex items-center justify-center transition-colors"
+          title="Insert Link ([text](url))"
+        >
+          <LinkIcon className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  );
 
   // Reorder sections by delta (-1 for up, +1 for down)
   const moveSection = (index: number, direction: -1 | 1) => {
@@ -1158,6 +1285,7 @@ export default function ProfileCustomizer() {
                       <span>README.md Editor</span>
                       <span>Raw GitHub Flavored Markdown</span>
                     </div>
+                    {renderEditorToolbar()}
                     <textarea
                       ref={textareaRef}
                       value={generatedMarkdown}
@@ -1183,6 +1311,7 @@ export default function ProfileCustomizer() {
                       </span>
                       <span>README.md</span>
                     </div>
+                    {renderEditorToolbar()}
                     <textarea
                       ref={textareaRef}
                       value={generatedMarkdown}
@@ -1479,13 +1608,31 @@ export default function ProfileCustomizer() {
                           <div className="p-2.5 border-t border-white/10 bg-black/60">
                             <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1.5">
                               <span>Raw Markdown Snippet</span>
-                              <button
-                                type="button"
-                                onClick={() => setExpandedSectionId(null)}
-                                className="text-primary hover:underline text-[10px]"
-                              >
-                                Done
-                              </button>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setIsMarkerModalOpen(true)}
+                                  className="text-primary hover:underline text-[10px] flex items-center gap-1 font-medium"
+                                  title="Add Badge Marker"
+                                >
+                                  <Stamp className="w-2.5 h-2.5" /> + Marker
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setIsImageModalOpen(true)}
+                                  className="text-secondary hover:underline text-[10px] flex items-center gap-1 font-medium"
+                                  title="Attach Image"
+                                >
+                                  <ImageIcon className="w-2.5 h-2.5" /> + Image
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setExpandedSectionId(null)}
+                                  className="text-slate-400 hover:text-white text-[10px]"
+                                >
+                                  Done
+                                </button>
+                              </div>
                             </div>
                             <textarea
                               value={section.content}
@@ -1677,9 +1824,48 @@ export default function ProfileCustomizer() {
                 {/* Section Blocks */}
                 <div className="space-y-2 pt-2 border-t border-white/10">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 block px-1">
-                    README Section Templates:
+                    README Section Templates & Builders:
                   </span>
                   <div className="flex flex-col gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        insertSnippet(
+                          CARD_TEMPLATES.competencies.getContent(username, selectedTheme, apiBase),
+                          "Core Competencies",
+                          "competencies"
+                        )
+                      }
+                      className="flex items-center justify-between p-2 rounded-lg bg-black/40 hover:bg-white/5 border border-white/5 hover:border-white/15 text-xs text-slate-300 hover:text-white transition-all text-left group"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Compass className="w-3.5 h-3.5 text-cyan-400" /> + Core Competencies (Table Grid)
+                      </span>
+                      <Plus className="w-3 h-3 text-slate-500 group-hover:text-cyan-400 transition-colors" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsMarkerModalOpen(true)}
+                      className="flex items-center justify-between p-2 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/25 hover:border-primary/40 text-xs text-primary transition-all text-left group"
+                    >
+                      <span className="flex items-center gap-2 font-medium">
+                        <Stamp className="w-3.5 h-3.5 text-primary" /> + Badge Marker Builder
+                      </span>
+                      <Plus className="w-3 h-3 text-primary transition-colors" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsImageModalOpen(true)}
+                      className="flex items-center justify-between p-2 rounded-lg bg-secondary/10 hover:bg-secondary/20 border border-secondary/25 hover:border-secondary/40 text-xs text-secondary transition-all text-left group"
+                    >
+                      <span className="flex items-center gap-2 font-medium">
+                        <ImageIcon className="w-3.5 h-3.5 text-secondary" /> + Attach Visual / Image
+                      </span>
+                      <Plus className="w-3 h-3 text-secondary transition-colors" />
+                    </button>
+
                     <button
                       type="button"
                       onClick={() =>
@@ -1771,6 +1957,22 @@ export default function ProfileCustomizer() {
           url={`/api/card?type=banner&username=${safeUser}&theme=${selectedTheme}`}
           title={`${username || "Developer"}'s GitHub Profile`}
           username={username}
+        />
+
+        {/* Interactive Badge Marker Modal */}
+        <MarkerModal
+          isOpen={isMarkerModalOpen}
+          onClose={() => setIsMarkerModalOpen(false)}
+          onInsert={(snippet) => insertTextAtCursor(`\n\n${snippet}\n\n`)}
+          defaultUsername={username}
+        />
+
+        {/* Attach Image Modal */}
+        <AttachImageModal
+          isOpen={isImageModalOpen}
+          onClose={() => setIsImageModalOpen(false)}
+          onInsert={(snippet) => insertTextAtCursor(`\n\n${snippet}\n\n`)}
+          defaultUsername={username}
         />
       </PageTransition>
     </Layout>
