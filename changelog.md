@@ -2,6 +2,23 @@
 
 All notable changes to the GitHub Canvas / GitStats project are documented in this file.
 
+## [2.4.0] - 2026-10-30
+
+### Dual-Mode Skills Card Engine & Crisp Icon Monogram Rendering
+- **Dual Display Styles for Skills Cards (`api/card.ts`, `src/lib/cardRenderer.ts`)**:
+  - **Option A (Icons with Labels / Compact Pill Cloud)**: Activated via `layout=compact` or `layout=icons&labels=true` (or `showLabels=true`). Renders all skills as an auto-wrapping cloud of sleek pill chips (26px height) with authentic brand icon (15x15) and bold skill name.
+  - **Option B (Just Icons Grid)**: Activated via `layout=icons` (without labels). Renders clean 38x38 icon tiles with `<title>${skill}</title>` hover tooltips.
+  - **Dynamic Card Dimensions**: Automatically computes height based on wrapping rows so all skills (tested with 39+ full-stack tools) fit without truncation or overflow.
+- **Brand Vector Overhauls & Cutout Fixes (`src/lib/techIcons.ts`)**:
+  - `JavaScript`: Replaced outer-box cutout with standalone bold `JS` letters in `#F7DF1E` to eliminate solid yellow block bug.
+  - `TypeScript`: Standalone bold `TS` letters in `#3178C6`.
+  - `C#`: Standalone bold hexagon `C#` emblem in `#239120`.
+  - `Bash`: Clean terminal prompt `>_` vector in `#4EAA25`.
+  - `Express`: Clean, centered `EX` monogram vector in `#EEEEEE`.
+  - `Universal Fallback Icon`: Updated from overlapping lines to spaced, unambiguous `< / >` code brackets.
+- **Custom Param Support (`api/card.ts`)**:
+  - Supports `bg=transparent`, `strokeWidth=0`, `radius=3`, `primary`, `secondary`, and `border` across all card types and endpoints.
+
 ## [2.3.9] - 2026-10-29
 
 ### Official Vector Brand Icons Overhaul & Crisp Cutout Rendering

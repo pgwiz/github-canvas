@@ -906,7 +906,99 @@ export function generateCardSVG(rawParams: CardParams): string {
 
       let groups: Array<{ label: string; skills: string[] }> = [];
 
-      if (skillsLayout === 'icons') {
+      const showLabelsExplicit = rawParams.showLabels === true || rawParams.showLabels === 'true';
+      const isCompactPills = skillsLayout === 'compact' || (skillsLayout === 'icons' && showLabelsExplicit);
+
+      if (isCompactPills) {
+        let allSkills: string[] = [];
+        if (rawParams.skills) {
+          const list = typeof rawParams.skills === 'string' ? rawParams.skills.split(',') : rawParams.skills;
+          allSkills = list.map((s) => s.trim()).filter(Boolean);
+        } else {
+          userStacks.forEach((stk) => {
+            if (PRESET_STACKS[stk]) {
+              allSkills.push(...PRESET_STACKS[stk].skills);
+            }
+          });
+        }
+
+        const seen = new Set<string>();
+        const uniqueSkills: string[] = [];
+        allSkills.forEach((s) => {
+          const key = s.toLowerCase();
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueSkills.push(s);
+          }
+        });
+
+        const pillHeight = 26;
+        const gap = 8;
+        const startX = 25;
+        let curX = startX;
+        let curY = 68;
+        const maxRowWidth = width - 25;
+
+        let pillsSvg = '';
+        uniqueSkills.forEach((skill, idx) => {
+          const iconDef = getTechIcon(skill);
+          const dotColor = iconDef?.color || LANGUAGE_COLORS[skill] || primaryColor;
+          const hasIcon = Boolean(iconDef?.svgPath);
+          const approxCharWidth = 6.8;
+          const textWidth = Math.round(skill.length * approxCharWidth);
+          const pillWidth = Math.max(50, hasIcon ? textWidth + 34 : textWidth + 22);
+
+          if (curX + pillWidth > maxRowWidth && curX > startX) {
+            curX = startX;
+            curY += pillHeight + gap;
+          }
+
+          const animDelay = (idx % 20) * 0.02 * m;
+
+          const iconMarkup = hasIcon ? `
+            <g transform="translate(7, 5.5) scale(0.625)">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="${iconDef.svgPath}" fill="${dotColor}" />
+            </g>
+          ` : `
+            <circle cx="12" cy="13" r="3.5" fill="${dotColor}" />
+          `;
+          const textX = hasIcon ? 26 : 18;
+
+          pillsSvg += `
+            <g class="${animate ? 'card-anim' : ''}" style="animation-delay: ${animDelay}s" transform="translate(${curX}, ${curY})">
+              <title>${escapeXml(skill)}</title>
+              <rect width="${pillWidth}" height="${pillHeight}" rx="6" fill="${primaryColor}12" stroke="${primaryColor}30" stroke-width="1" />
+              ${iconMarkup}
+              <text x="${textX}" y="17" font-size="11" font-weight="600" fill="${textColor}">${escapeXml(skill)}</text>
+            </g>
+          `;
+
+          curX += pillWidth + gap;
+        });
+
+        const actualHeight = Math.max(height, curY + pillHeight + 22);
+
+        return `<svg width="${width}" height="${actualHeight}" viewBox="0 0 ${width} ${actualHeight}" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>${gradientDef}</defs>
+  ${baseStyles}
+  <rect x="1" y="1" width="${width - 2}" height="${actualHeight - 2}" rx="${borderRadius}" fill="${bgFill}" ${borderStyle} />
+  
+  <g transform="translate(25, 24)">
+    <g class="${animate ? 'card-anim d-1' : ''}">
+      <rect width="22" height="22" rx="5" fill="${primaryColor}" fill-opacity="0.2" />
+      <path d="M11 6L5 9L11 12L17 9L11 6Z" stroke="${primaryColor}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M5 12L11 15L17 12" stroke="${primaryColor}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M5 15L11 18L17 15" stroke="${primaryColor}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      
+      <text x="32" y="15" class="header-title">${escapeXml(title)}</text>
+      <text x="${width - 50}" y="15" text-anchor="end" class="header-sub">${escapeXml(subtitle)}</text>
+      <line x1="0" y1="26" x2="${width - 50}" y2="26" stroke="${textColor}" stroke-opacity="0.1" stroke-width="1" />
+    </g>
+  </g>
+  
+  ${pillsSvg}
+</svg>`;
+      } else if (skillsLayout === 'icons') {
         let allSkills: string[] = [];
         if (rawParams.skills) {
           const list = typeof rawParams.skills === 'string' ? rawParams.skills.split(',') : rawParams.skills;
