@@ -9,7 +9,8 @@ import { ShareModal } from "@/components/generator/ShareModal";
 import { 
   BarChart3, Code2, Flame, Activity, Quote, Sparkles, Grid3X3, Bookmark, 
   Layers, SlidersHorizontal, RotateCcw, ChevronDown, AtSign, RefreshCw, 
-  Wand2, Blend, Download, Copy, Check, Monitor, Layers3, CheckCircle2, Sliders, Share2 
+  Wand2, Blend, Download, Copy, Check, Monitor, Layers3, CheckCircle2, Sliders, Share2,
+  Palette, Paintbrush, Zap, Maximize2 
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGitHubStats, GitHubStats } from "@/hooks/useGitHubStats";
@@ -45,6 +46,11 @@ export interface CardConfig {
   borderRadius: number;
   strokeWidth: number;
   showBorder: boolean;
+  isTransparentBg: boolean;
+  paddingTop: number;
+  paddingRight: number;
+  paddingBottom: number;
+  paddingLeft: number;
   customText: string;
   customDescription: string;
   width: number;
@@ -67,6 +73,15 @@ export interface CardConfig {
   skillsLayout: "matrix" | "stacks" | "compact" | "icons";
 }
 
+const GRADIENT_PRESETS = [
+  { name: "Purple Haze", start: "#667eea", end: "#764ba2" },
+  { name: "Sunset", start: "#f093fb", end: "#f5576c" },
+  { name: "Ocean", start: "#4facfe", end: "#00f2fe" },
+  { name: "Cyber Glow", start: "#f706cf", end: "#00f0ff" },
+  { name: "Fire", start: "#f12711", end: "#f5af19" },
+  { name: "Night Sky", start: "#0f0c29", end: "#302b63" },
+];
+
 const defaultConfig: CardConfig = {
   username: "pgwiz",
   type: "stats",
@@ -79,6 +94,11 @@ const defaultConfig: CardConfig = {
   borderRadius: 12,
   strokeWidth: 1.5,
   showBorder: true,
+  isTransparentBg: false,
+  paddingTop: 20,
+  paddingRight: 24,
+  paddingBottom: 20,
+  paddingLeft: 24,
   customText: "",
   customDescription: "",
   width: 495,
@@ -124,6 +144,7 @@ export default function Generator() {
   const [githubData, setGithubData] = useState<GitHubStats | null>(null);
   const [currentQuote, setCurrentQuote] = useState<DevQuote | null>(null);
   const [isStackModalOpen, setIsStackModalOpen] = useState(false);
+  const [themeCategory, setThemeCategory] = useState<string>("All");
   const { toast } = useToast();
 
   const { loading: statsLoading, fetchStats } = useGitHubStats();
@@ -182,16 +203,19 @@ export default function Generator() {
     const tmpl = templates.find((t) => t.id === themeId);
     if (!tmpl) return;
 
+    const isTrans = tmpl.id === "transparent" || tmpl.colors.bg === "transparent";
+
     setConfig((prev) => ({
       ...prev,
       theme: tmpl.id,
-      bgColor: tmpl.colors.bg,
+      bgColor: isTrans ? "transparent" : tmpl.colors.bg,
       primaryColor: tmpl.colors.primary,
       secondaryColor: tmpl.colors.secondary,
       textColor: tmpl.colors.text,
       borderColor: tmpl.colors.border,
       gradientStart: tmpl.colors.primary,
       gradientEnd: tmpl.colors.secondary,
+      isTransparentBg: isTrans,
     }));
 
     toast({
@@ -200,16 +224,45 @@ export default function Generator() {
     });
   };
 
+  // Toggle Transparent Background
+  const toggleTransparentBg = (transparent: boolean) => {
+    if (transparent) {
+      setConfig((prev) => ({
+        ...prev,
+        isTransparentBg: true,
+        bgColor: "transparent",
+        gradientEnabled: false,
+      }));
+      toast({
+        title: "Transparent Background Active",
+        description: "Card SVG rendered with fill='none' for seamless GitHub embedding.",
+      });
+    } else {
+      const tmpl = templates.find((t) => t.id === config.theme) || templates[0];
+      const bg = tmpl.colors.bg === "transparent" ? "#0b1220" : tmpl.colors.bg;
+      setConfig((prev) => ({
+        ...prev,
+        isTransparentBg: false,
+        bgColor: bg,
+      }));
+      toast({
+        title: "Theme Background Restored",
+        description: `Restored ${tmpl.name} background color.`,
+      });
+    }
+  };
+
   // Magic Theme Randomizer
   const handleMagicTheme = () => {
     const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
-    const enableGradient = Math.random() > 0.4;
+    const isTrans = randomTemplate.id === "transparent" || randomTemplate.colors.bg === "transparent";
+    const enableGradient = !isTrans && Math.random() > 0.4;
     const angle = Math.floor(Math.random() * 360);
 
     setConfig((prev) => ({
       ...prev,
       theme: randomTemplate.id,
-      bgColor: randomTemplate.colors.bg,
+      bgColor: isTrans ? "transparent" : randomTemplate.colors.bg,
       primaryColor: randomTemplate.colors.primary,
       secondaryColor: randomTemplate.colors.secondary,
       textColor: randomTemplate.colors.text,
@@ -219,6 +272,7 @@ export default function Generator() {
       gradientStart: randomTemplate.colors.primary,
       gradientEnd: randomTemplate.colors.secondary,
       animation: "fadeIn",
+      isTransparentBg: isTrans,
     }));
 
     confetti({
@@ -279,17 +333,23 @@ export default function Generator() {
 
   // Construct Card Parameters
   const cardParams: CardParams = useMemo(() => {
+    const isTrans = config.isTransparentBg || config.bgColor === "transparent" || config.bgColor === "none";
     const p: CardParams = {
       type: config.type,
       username: config.username || "developer",
       theme: config.theme,
-      bgColor: config.bgColor,
+      bgColor: isTrans ? "transparent" : config.bgColor,
       primaryColor: config.primaryColor,
       secondaryColor: config.secondaryColor,
       textColor: config.textColor,
       borderColor: config.borderColor,
       borderRadius: config.borderRadius,
+      strokeWidth: config.strokeWidth,
       showBorder: config.showBorder,
+      paddingTop: config.paddingTop,
+      paddingRight: config.paddingRight,
+      paddingBottom: config.paddingBottom,
+      paddingLeft: config.paddingLeft,
       width: config.width,
       height: config.height,
       customText: config.customText || undefined,
@@ -297,7 +357,7 @@ export default function Generator() {
       animate: config.animation !== "none",
       animation: config.animation,
       speed: config.animationSpeed,
-      gradient: config.gradientEnabled,
+      gradient: !isTrans && config.gradientEnabled,
       gradientType: config.gradientType,
       gradientAngle: config.gradientAngle,
       gradientStart: config.gradientStart,
@@ -357,13 +417,18 @@ export default function Generator() {
 
     // Only pass custom colors if they deviate from selected template
     const tmpl = templates.find((t) => t.id === config.theme);
-    if (!tmpl || config.bgColor !== tmpl.colors.bg) params.set("bg", config.bgColor);
+    if (config.isTransparentBg || config.bgColor === "transparent") {
+      params.set("bg", "transparent");
+    } else if (!tmpl || config.bgColor !== tmpl.colors.bg) {
+      params.set("bg", config.bgColor);
+    }
     if (!tmpl || config.primaryColor !== tmpl.colors.primary) params.set("primary", config.primaryColor);
     if (!tmpl || config.secondaryColor !== tmpl.colors.secondary) params.set("secondary", config.secondaryColor);
     if (!tmpl || config.textColor !== tmpl.colors.text) params.set("text", config.textColor);
     if (!tmpl || config.borderColor !== tmpl.colors.border) params.set("border", config.borderColor);
 
     if (config.borderRadius !== 12) params.set("radius", String(config.borderRadius));
+    if (config.strokeWidth !== 1.5) params.set("strokeWidth", String(config.strokeWidth));
     if (!config.showBorder) params.set("showBorder", "false");
     if (config.animation && config.animation !== "fadeIn") params.set("animation", config.animation);
     if (config.animationSpeed && config.animationSpeed !== "normal") params.set("speed", config.animationSpeed);
@@ -532,7 +597,10 @@ export default function Generator() {
               {viewMode === "single" ? (
                 <div className="relative z-10 m-auto max-w-full flex justify-center">
                   <div
-                    className="rounded-xl shadow-2xl overflow-hidden ring-1 ring-white/10 bg-background max-w-full"
+                    className="rounded-xl shadow-2xl overflow-hidden ring-1 ring-white/10 max-w-full transition-colors"
+                    style={{
+                      backgroundColor: config.isTransparentBg || config.bgColor === "transparent" ? "transparent" : "#0b1220",
+                    }}
                     dangerouslySetInnerHTML={{ __html: liveSvg }}
                   />
                 </div>
@@ -558,7 +626,10 @@ export default function Generator() {
                           {sc.title}
                         </span>
                         <div
-                          className="rounded-xl shadow-lg overflow-hidden ring-1 ring-white/10 bg-background"
+                          className="rounded-xl shadow-lg overflow-hidden ring-1 ring-white/10 transition-colors"
+                          style={{
+                            backgroundColor: config.isTransparentBg || config.bgColor === "transparent" ? "transparent" : "#0b1220",
+                          }}
                           dangerouslySetInnerHTML={{ __html: svgMarkup }}
                         />
                       </div>
@@ -648,18 +719,541 @@ export default function Generator() {
             </div>
 
             {/* Scrollable Settings Accordions */}
-            <div className="sm:flex-1 sm:min-h-0 flex flex-col pb-6 sm:overflow-y-auto">
+            <div className="sm:flex-1 sm:min-h-0 flex flex-col pb-6 sm:overflow-y-auto no-scrollbar">
               
-              {/* ACCORDION 1: General */}
+              {/* ACCORDION 1: Palette Themes */}
               <details className="group border-b border-white/10" open>
-                <summary className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-white/5 select-none text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  <span>General</span>
+                <summary className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-white/5 select-none text-xs font-semibold uppercase tracking-wider text-slate-300">
+                  <span className="flex items-center gap-2 text-white">
+                    <Palette className="w-3.5 h-3.5 text-primary" /> Palette Themes
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMagicTheme();
+                      }}
+                      className="px-2 py-0.5 rounded bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-semibold flex items-center gap-1 transition-colors"
+                      title="Apply random theme"
+                    >
+                      <Wand2 className="w-2.5 h-2.5" /> Random
+                    </button>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-500 transition-transform group-open:rotate-180" />
+                  </div>
+                </summary>
+                <div className="px-3 pb-3 space-y-2.5">
+                  {/* Category filter pills */}
+                  <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1">
+                    {["All", "Modern", "Cyber", "Minimal", "Popular", "Vibrant"].map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setThemeCategory(cat)}
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-medium transition-colors shrink-0 ${
+                          themeCategory === cat
+                            ? "bg-primary text-white shadow-sm"
+                            : "bg-white/5 text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Visual Swatch Grid */}
+                  <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto no-scrollbar p-0.5">
+                    {templates
+                      .filter((t) => themeCategory === "All" || t.category === themeCategory)
+                      .map((t) => {
+                        const isSelected = config.theme === t.id && (!config.isTransparentBg || t.id === "transparent");
+                        const isTrans = t.id === "transparent" || t.colors.bg === "transparent";
+                        return (
+                          <button
+                            key={t.id}
+                            type="button"
+                            onClick={() => handleSelectTheme(t.id)}
+                            className={`flex items-center gap-2 p-2 rounded-xl border text-left transition-all relative ${
+                              isSelected
+                                ? "border-primary bg-primary/15 shadow-sm ring-1 ring-primary/40 text-white"
+                                : "border-white/10 bg-black/40 hover:bg-white/5 text-slate-300 hover:text-white"
+                            }`}
+                          >
+                            <div
+                              className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 border border-white/20 shadow-sm relative overflow-hidden"
+                              style={{
+                                backgroundColor: isTrans ? "transparent" : t.colors.bg,
+                                backgroundImage: isTrans ? "radial-gradient(circle, #3b82f6 1px, transparent 1px)" : "none",
+                                backgroundSize: "6px 6px",
+                              }}
+                            >
+                              <span
+                                className="w-2 h-2 rounded-full"
+                                style={{ backgroundColor: t.colors.primary }}
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <span className="block text-[11px] font-semibold truncate leading-tight">{t.name}</span>
+                              <span className="block text-[9px] text-slate-500 font-mono truncate">{t.category}</span>
+                            </div>
+                            {isSelected && (
+                              <Check className="w-3 h-3 text-primary shrink-0 stroke-[2.5]" />
+                            )}
+                          </button>
+                        );
+                      })}
+                  </div>
+                </div>
+              </details>
+
+              {/* ACCORDION 2: Appearance & Colors */}
+              <details className="group border-b border-white/10" open>
+                <summary className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-white/5 select-none text-xs font-semibold uppercase tracking-wider text-slate-300">
+                  <span className="flex items-center gap-2 text-white">
+                    <Paintbrush className="w-3.5 h-3.5 text-secondary" /> Appearance & Colors
+                  </span>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-500 transition-transform group-open:rotate-180" />
                 </summary>
-                <div className="px-3.5 pb-4 space-y-3.5 text-xs">
+                <div className="px-3.5 pb-4 space-y-3 text-xs">
+                  {/* Transparent Background Toggle Button */}
+                  <div className={`p-2.5 rounded-xl border transition-all flex items-center justify-between ${
+                    config.isTransparentBg || config.bgColor === "transparent"
+                      ? "bg-primary/15 border-primary/50 text-white ring-1 ring-primary/30"
+                      : "bg-black/40 border-white/10 text-slate-300"
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center border ${
+                        config.isTransparentBg || config.bgColor === "transparent"
+                          ? "bg-primary/20 border-primary text-primary"
+                          : "bg-white/5 border-white/10 text-slate-400"
+                      }`}>
+                        <Zap className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <span className="block text-xs font-semibold">Transparent Background</span>
+                        <span className="block text-[10px] text-slate-400">Zero fill (fill="none") for GitHub READMEs</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toggleTransparentBg(!config.isTransparentBg)}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                        config.isTransparentBg || config.bgColor === "transparent"
+                          ? "bg-primary text-white shadow-sm"
+                          : "bg-white/10 hover:bg-white/15 text-slate-300"
+                      }`}
+                    >
+                      {config.isTransparentBg || config.bgColor === "transparent" ? "Active" : "Enable"}
+                    </button>
+                  </div>
+
+                  {/* Gradient Background Toggle */}
+                  <div className="space-y-2 p-2.5 rounded-xl bg-black/40 border border-white/10">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Blend className="w-3.5 h-3.5 text-slate-400" />
+                        <span className="text-xs font-semibold text-slate-200">Gradient Fill</span>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={config.gradientEnabled}
+                        disabled={config.isTransparentBg}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, gradientEnabled: e.target.checked }))}
+                        className="accent-primary w-3.5 h-3.5 cursor-pointer disabled:opacity-40"
+                      />
+                    </div>
+
+                    {config.gradientEnabled && !config.isTransparentBg && (
+                      <div className="space-y-2.5 pt-2 border-t border-white/10">
+                        {/* Presets */}
+                        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+                          <span className="text-[10px] text-slate-500 uppercase font-mono mr-1">Presets:</span>
+                          {GRADIENT_PRESETS.map((gp) => (
+                            <button
+                              key={gp.name}
+                              type="button"
+                              onClick={() => setConfig((prev) => ({ ...prev, gradientStart: gp.start, gradientEnd: gp.end }))}
+                              className="px-2 py-0.5 rounded text-[10px] bg-white/5 hover:bg-white/10 text-slate-300 shrink-0 border border-white/10"
+                            >
+                              {gp.name}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Angle Slider */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-[11px]">
+                            <span className="text-slate-400">Gradient Angle</span>
+                            <span className="font-mono text-slate-200">{config.gradientAngle}°</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="0"
+                            max="360"
+                            step="15"
+                            value={config.gradientAngle}
+                            onChange={(e) => setConfig((prev) => ({ ...prev, gradientAngle: parseInt(e.target.value, 10) }))}
+                            className="w-full accent-primary h-1.5 bg-black/50 rounded-lg cursor-pointer"
+                          />
+                        </div>
+
+                        {/* Start and End color pickers */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-black/30 border border-white/10 rounded-md p-1.5 flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={config.gradientStart}
+                              onChange={(e) => setConfig((prev) => ({ ...prev, gradientStart: e.target.value }))}
+                              className="w-5 h-5 rounded cursor-pointer bg-transparent shrink-0"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <span className="block text-[9px] text-slate-400 leading-none">Start</span>
+                              <input
+                                type="text"
+                                value={config.gradientStart}
+                                onChange={(e) => setConfig((prev) => ({ ...prev, gradientStart: e.target.value }))}
+                                className="w-full bg-transparent text-[11px] font-mono text-white focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                          <div className="bg-black/30 border border-white/10 rounded-md p-1.5 flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={config.gradientEnd}
+                              onChange={(e) => setConfig((prev) => ({ ...prev, gradientEnd: e.target.value }))}
+                              className="w-5 h-5 rounded cursor-pointer bg-transparent shrink-0"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <span className="block text-[9px] text-slate-400 leading-none">End</span>
+                              <input
+                                type="text"
+                                value={config.gradientEnd}
+                                onChange={(e) => setConfig((prev) => ({ ...prev, gradientEnd: e.target.value }))}
+                                className="w-full bg-transparent text-[11px] font-mono text-white focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Color Pickers & Hex */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Background */}
+                    <div className="bg-black/30 border border-white/10 rounded-md p-1.5 flex items-center gap-2">
+                      <input
+                        type="color"
+                        disabled={config.isTransparentBg}
+                        value={config.isTransparentBg ? "#000000" : config.bgColor}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, bgColor: e.target.value, isTransparentBg: false }))}
+                        className="w-6 h-6 rounded cursor-pointer bg-transparent shrink-0 disabled:opacity-40"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <label className="block text-[9px] text-slate-400 leading-none">Background</label>
+                        <input
+                          type="text"
+                          disabled={config.isTransparentBg}
+                          value={config.isTransparentBg ? "transparent" : config.bgColor}
+                          onChange={(e) => setConfig((prev) => ({ ...prev, bgColor: e.target.value, isTransparentBg: false }))}
+                          className="w-full bg-transparent text-[11px] font-mono text-white focus:outline-none mt-0.5 disabled:text-slate-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Primary */}
+                    <div className="bg-black/30 border border-white/10 rounded-md p-1.5 flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={config.primaryColor}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, primaryColor: e.target.value }))}
+                        className="w-6 h-6 rounded cursor-pointer bg-transparent shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <label className="block text-[9px] text-slate-400 leading-none">Primary</label>
+                        <input
+                          type="text"
+                          value={config.primaryColor}
+                          onChange={(e) => setConfig((prev) => ({ ...prev, primaryColor: e.target.value }))}
+                          className="w-full bg-transparent text-[11px] font-mono text-white focus:outline-none mt-0.5"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Secondary */}
+                    <div className="bg-black/30 border border-white/10 rounded-md p-1.5 flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={config.secondaryColor}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, secondaryColor: e.target.value }))}
+                        className="w-6 h-6 rounded cursor-pointer bg-transparent shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <label className="block text-[9px] text-slate-400 leading-none">Secondary</label>
+                        <input
+                          type="text"
+                          value={config.secondaryColor}
+                          onChange={(e) => setConfig((prev) => ({ ...prev, secondaryColor: e.target.value }))}
+                          className="w-full bg-transparent text-[11px] font-mono text-white focus:outline-none mt-0.5"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Text */}
+                    <div className="bg-black/30 border border-white/10 rounded-md p-1.5 flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={config.textColor}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, textColor: e.target.value }))}
+                        className="w-6 h-6 rounded cursor-pointer bg-transparent shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <label className="block text-[9px] text-slate-400 leading-none">Text</label>
+                        <input
+                          type="text"
+                          value={config.textColor}
+                          onChange={(e) => setConfig((prev) => ({ ...prev, textColor: e.target.value }))}
+                          className="w-full bg-transparent text-[11px] font-mono text-white focus:outline-none mt-0.5"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Border Color & Toggle */}
+                    <div className="bg-black/30 border border-white/10 rounded-md p-1.5 flex items-center gap-2 col-span-2">
+                      <input
+                        type="color"
+                        value={config.borderColor}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, borderColor: e.target.value }))}
+                        className="w-6 h-6 rounded cursor-pointer bg-transparent shrink-0"
+                      />
+                      <div className="min-w-0 flex-1 flex items-center justify-between">
+                        <div>
+                          <label className="block text-[9px] text-slate-400 leading-none">Border</label>
+                          <input
+                            type="text"
+                            value={config.borderColor}
+                            onChange={(e) => setConfig((prev) => ({ ...prev, borderColor: e.target.value }))}
+                            className="w-24 bg-transparent text-[11px] font-mono text-white focus:outline-none mt-0.5"
+                          />
+                        </div>
+                        <label className="flex items-center gap-1.5 text-[11px] text-slate-300 pr-1 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={config.showBorder}
+                            onChange={(e) => setConfig((prev) => ({ ...prev, showBorder: e.target.checked }))}
+                            className="accent-primary w-3.5 h-3.5"
+                          />
+                          Show Border
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              {/* ACCORDION 3: Layout, Spacing & Sizing */}
+              <details className="group border-b border-white/10" open>
+                <summary className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-white/5 select-none text-xs font-semibold uppercase tracking-wider text-slate-300">
+                  <span className="flex items-center gap-2 text-white">
+                    <Sliders className="w-3.5 h-3.5 text-primary" /> Layout & Sizing
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-500 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="px-3.5 pb-4 space-y-4 text-xs">
+                  {/* Border Radius Slider & Chips */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-300 font-medium">Border Radius</span>
+                      <span className="font-mono text-primary font-bold">{config.borderRadius}px</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="32"
+                      value={config.borderRadius}
+                      onChange={(e) => setConfig((prev) => ({ ...prev, borderRadius: parseInt(e.target.value, 10) }))}
+                      className="w-full accent-primary h-1.5 bg-black/50 rounded-lg cursor-pointer"
+                    />
+                    <div className="flex items-center gap-1 pt-0.5">
+                      {[
+                        { label: "Sharp 0px", val: 0 },
+                        { label: "Subtle 8px", val: 8 },
+                        { label: "Smooth 14px", val: 14 },
+                        { label: "Pill 24px", val: 24 },
+                      ].map((r) => (
+                        <button
+                          key={r.val}
+                          type="button"
+                          onClick={() => setConfig((prev) => ({ ...prev, borderRadius: r.val }))}
+                          className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors ${
+                            config.borderRadius === r.val
+                              ? "bg-primary text-white font-semibold"
+                              : "bg-white/5 text-slate-400 hover:text-white"
+                          }`}
+                        >
+                          {r.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Border Thinness / Stroke Width Slider & Chips */}
+                  <div className="space-y-1.5 pt-1 border-t border-white/5">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-300 font-medium">Border Thinness (Stroke)</span>
+                      <span className="font-mono text-primary font-bold">{config.strokeWidth}px</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="6"
+                      step="0.5"
+                      value={config.strokeWidth}
+                      onChange={(e) => setConfig((prev) => ({ ...prev, strokeWidth: parseFloat(e.target.value) }))}
+                      className="w-full accent-primary h-1.5 bg-black/50 rounded-lg cursor-pointer"
+                    />
+                    <div className="flex items-center gap-1 pt-0.5">
+                      {[
+                        { label: "Hairline 0.5px", val: 0.5 },
+                        { label: "Thin 1px", val: 1 },
+                        { label: "Medium 1.5px", val: 1.5 },
+                        { label: "Bold 3px", val: 3 },
+                      ].map((s) => (
+                        <button
+                          key={s.val}
+                          type="button"
+                          onClick={() => setConfig((prev) => ({ ...prev, strokeWidth: s.val }))}
+                          className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors ${
+                            config.strokeWidth === s.val
+                              ? "bg-primary text-white font-semibold"
+                              : "bg-white/5 text-slate-400 hover:text-white"
+                          }`}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Horizontal & Vertical Padding / Edge Spacing */}
+                  <div className="space-y-1.5 pt-1 border-t border-white/5">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-300 font-medium">Horizontal Edge Spacing (Left/Right)</span>
+                      <span className="font-mono text-secondary font-bold">{config.paddingRight}px</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="12"
+                      max="48"
+                      value={config.paddingRight}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value, 10);
+                        setConfig((prev) => ({ ...prev, paddingRight: v, paddingLeft: v }));
+                      }}
+                      className="w-full accent-secondary h-1.5 bg-black/50 rounded-lg cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Dimensions: Width & Height */}
+                  <div className="space-y-2 pt-1 border-t border-white/5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-300 font-medium">Dimensions (px)</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const def = TYPE_CONFIGS[config.type]?.dims || { width: 495, height: 195 };
+                          setConfig((prev) => ({ ...prev, width: def.width, height: def.height }));
+                        }}
+                        className="text-[10px] text-primary hover:underline"
+                      >
+                        Reset ({TYPE_CONFIGS[config.type]?.dims.width} × {TYPE_CONFIGS[config.type]?.dims.height})
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[11px] text-slate-400">
+                          <span>Width</span>
+                          <span className="font-mono text-slate-200">{config.width}px</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="300"
+                          max="800"
+                          step="10"
+                          value={config.width}
+                          onChange={(e) => setConfig((prev) => ({ ...prev, width: parseInt(e.target.value, 10) }))}
+                          className="w-full accent-primary h-1.5 bg-black/50 rounded-lg cursor-pointer"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[11px] text-slate-400">
+                          <span>Height</span>
+                          <span className="font-mono text-slate-200">{config.height}px</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="100"
+                          max="450"
+                          step="5"
+                          value={config.height}
+                          onChange={(e) => setConfig((prev) => ({ ...prev, height: parseInt(e.target.value, 10) }))}
+                          className="w-full accent-primary h-1.5 bg-black/50 rounded-lg cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Animation & Speed */}
+                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/5">
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-slate-400 block font-medium">Animation</label>
+                      <select
+                        value={config.animation}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, animation: e.target.value }))}
+                        className="w-full h-8 rounded-md bg-black/40 border border-white/10 px-2 text-xs text-slate-200 focus:outline-none focus:border-primary/50"
+                      >
+                        <option value="none">None (Static)</option>
+                        <option value="fadeIn">Fade In (Smooth)</option>
+                        <option value="slideUp">Slide Up</option>
+                        <option value="pulse">Subtle Pulse</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-slate-400 block font-medium">Speed</label>
+                      <div className="flex items-center gap-1 h-8">
+                        {(["slow", "normal", "fast"] as const).map((spd) => (
+                          <button
+                            key={spd}
+                            type="button"
+                            onClick={() => setConfig((prev) => ({ ...prev, animationSpeed: spd }))}
+                            className={`flex-1 h-full rounded text-[10px] font-medium uppercase tracking-wider transition-colors ${
+                              config.animationSpeed === spd
+                                ? "bg-primary text-white font-bold"
+                                : "bg-black/40 text-slate-400 hover:text-white border border-white/10"
+                            }`}
+                          >
+                            {spd}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              {/* ACCORDION 4: Engine & Content Options */}
+              <details className="group border-b border-white/10" open>
+                <summary className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-white/5 select-none text-xs font-semibold uppercase tracking-wider text-slate-300">
+                  <span className="flex items-center gap-2 text-white">
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-secondary" /> Engine & Content
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-500 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="px-3.5 pb-4 space-y-3 text-xs">
                   {/* GitHub Username */}
                   <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400">GitHub Username</label>
+                    <label className="text-[10px] text-slate-400 font-medium">GitHub Username</label>
                     <div className="flex items-center bg-black/40 border border-white/10 rounded-md px-2 focus-within:border-primary/50 transition-colors h-8">
                       <AtSign className="w-3.5 h-3.5 text-slate-500 mr-1.5 shrink-0" />
                       <input
@@ -685,7 +1279,7 @@ export default function Generator() {
                   {config.type === "quote" && (
                     <div className="space-y-1.5 pt-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[10px] text-slate-400">Topic</label>
+                        <label className="text-[10px] text-slate-400">Quote Topic</label>
                         <span className="text-[9px] text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">AI Generated</span>
                       </div>
                       <select
@@ -714,8 +1308,8 @@ export default function Generator() {
                   {config.type === "skills" && (
                     <div className="space-y-2.5 pt-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[10px] text-slate-400">Skills Display Style</label>
-                        <span className="text-[9px] text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">De-duplicated</span>
+                        <label className="text-[10px] text-slate-400">Display Layout</label>
+                        <span className="text-[9px] text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">Vector Icons</span>
                       </div>
                       <select
                         value={config.skillsLayout}
@@ -817,230 +1411,28 @@ export default function Generator() {
                     </div>
                   )}
 
-                  {/* Theme Presets Dropdown */}
-                  <div className="pt-2 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[10px] text-slate-400 font-medium">Theme Preset</label>
-                      <button
-                        onClick={handleMagicTheme}
-                        className="text-[10px] text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
-                      >
-                        <Wand2 className="w-3 h-3" /> Random
-                      </button>
-                    </div>
-                    <select
-                      value={config.theme}
-                      onChange={(e) => handleSelectTheme(e.target.value)}
-                      className="w-full h-8 rounded-md bg-black/40 border border-white/10 px-2 text-xs text-slate-200 focus:outline-none focus:border-primary/50 cursor-pointer"
-                    >
-                      {templates.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.name} ({t.category})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </details>
-
-              {/* ACCORDION 2: Colors */}
-              <details className="group border-b border-white/10" open>
-                <summary className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-white/5 select-none text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  <span>Appearance & Colors</span>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-500 transition-transform group-open:rotate-180" />
-                </summary>
-                <div className="px-3.5 pb-4 space-y-3 text-xs">
-                  {/* Gradient Background Toggle */}
-                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-md bg-black/40 border border-white/10">
-                    <div className="flex items-center gap-2">
-                      <Blend className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="text-xs text-slate-300">Gradient Background</span>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={config.gradientEnabled}
-                      onChange={(e) => setConfig((prev) => ({ ...prev, gradientEnabled: e.target.checked }))}
-                      className="accent-primary w-3.5 h-3.5 cursor-pointer"
-                    />
-                  </div>
-
-                  {/* Color Pickers & Hex */}
-                  <div className="grid grid-cols-2 gap-2">
-                    {/* Background */}
-                    <div className="bg-black/30 border border-white/10 rounded-md p-1.5 flex items-center gap-2">
+                  {/* Content Overrides */}
+                  <div className="space-y-2 pt-2 border-t border-white/5">
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Custom Title Override</label>
                       <input
-                        type="color"
-                        value={config.bgColor}
-                        onChange={(e) => setConfig((prev) => ({ ...prev, bgColor: e.target.value }))}
-                        className="w-6 h-6 rounded cursor-pointer bg-transparent shrink-0"
+                        type="text"
+                        value={config.customText}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, customText: e.target.value }))}
+                        placeholder="Default Title..."
+                        className="w-full h-8 rounded bg-black/40 border border-white/10 px-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
                       />
-                      <div className="min-w-0 flex-1">
-                        <label className="block text-[9px] text-slate-400 leading-none">Background</label>
-                        <input
-                          type="text"
-                          value={config.bgColor}
-                          onChange={(e) => setConfig((prev) => ({ ...prev, bgColor: e.target.value }))}
-                          className="w-full bg-transparent text-[11px] font-mono text-white focus:outline-none mt-0.5"
-                        />
-                      </div>
                     </div>
-
-                    {/* Primary */}
-                    <div className="bg-black/30 border border-white/10 rounded-md p-1.5 flex items-center gap-2">
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Custom Subtitle Override</label>
                       <input
-                        type="color"
-                        value={config.primaryColor}
-                        onChange={(e) => setConfig((prev) => ({ ...prev, primaryColor: e.target.value }))}
-                        className="w-6 h-6 rounded cursor-pointer bg-transparent shrink-0"
+                        type="text"
+                        value={config.customDescription}
+                        onChange={(e) => setConfig((prev) => ({ ...prev, customDescription: e.target.value }))}
+                        placeholder="e.g. #developer · architecture"
+                        className="w-full h-8 rounded bg-black/40 border border-white/10 px-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
                       />
-                      <div className="min-w-0 flex-1">
-                        <label className="block text-[9px] text-slate-400 leading-none">Primary</label>
-                        <input
-                          type="text"
-                          value={config.primaryColor}
-                          onChange={(e) => setConfig((prev) => ({ ...prev, primaryColor: e.target.value }))}
-                          className="w-full bg-transparent text-[11px] font-mono text-white focus:outline-none mt-0.5"
-                        />
-                      </div>
                     </div>
-
-                    {/* Secondary */}
-                    <div className="bg-black/30 border border-white/10 rounded-md p-1.5 flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={config.secondaryColor}
-                        onChange={(e) => setConfig((prev) => ({ ...prev, secondaryColor: e.target.value }))}
-                        className="w-6 h-6 rounded cursor-pointer bg-transparent shrink-0"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <label className="block text-[9px] text-slate-400 leading-none">Secondary</label>
-                        <input
-                          type="text"
-                          value={config.secondaryColor}
-                          onChange={(e) => setConfig((prev) => ({ ...prev, secondaryColor: e.target.value }))}
-                          className="w-full bg-transparent text-[11px] font-mono text-white focus:outline-none mt-0.5"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Text */}
-                    <div className="bg-black/30 border border-white/10 rounded-md p-1.5 flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={config.textColor}
-                        onChange={(e) => setConfig((prev) => ({ ...prev, textColor: e.target.value }))}
-                        className="w-6 h-6 rounded cursor-pointer bg-transparent shrink-0"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <label className="block text-[9px] text-slate-400 leading-none">Text</label>
-                        <input
-                          type="text"
-                          value={config.textColor}
-                          onChange={(e) => setConfig((prev) => ({ ...prev, textColor: e.target.value }))}
-                          className="w-full bg-transparent text-[11px] font-mono text-white focus:outline-none mt-0.5"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Border Color & Toggle */}
-                    <div className="bg-black/30 border border-white/10 rounded-md p-1.5 flex items-center gap-2 col-span-2">
-                      <input
-                        type="color"
-                        value={config.borderColor}
-                        onChange={(e) => setConfig((prev) => ({ ...prev, borderColor: e.target.value }))}
-                        className="w-6 h-6 rounded cursor-pointer bg-transparent shrink-0"
-                      />
-                      <div className="min-w-0 flex-1 flex items-center justify-between">
-                        <div>
-                          <label className="block text-[9px] text-slate-400 leading-none">Border</label>
-                          <input
-                            type="text"
-                            value={config.borderColor}
-                            onChange={(e) => setConfig((prev) => ({ ...prev, borderColor: e.target.value }))}
-                            className="w-24 bg-transparent text-[11px] font-mono text-white focus:outline-none mt-0.5"
-                          />
-                        </div>
-                        <label className="flex items-center gap-1.5 text-[11px] text-slate-400 pr-1 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={config.showBorder}
-                            onChange={(e) => setConfig((prev) => ({ ...prev, showBorder: e.target.checked }))}
-                            className="accent-primary w-3.5 h-3.5"
-                          />
-                          Show Border
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </details>
-
-              {/* ACCORDION 3: Layout */}
-              <details className="group border-b border-white/10">
-                <summary className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-white/5 select-none text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  <span>Layout & Sizing</span>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-500 transition-transform group-open:rotate-180" />
-                </summary>
-                <div className="px-3.5 pb-4 space-y-3.5 text-xs">
-                  {/* Border Radius */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">Border Radius</span>
-                      <span className="font-mono text-slate-200">{config.borderRadius}px</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="28"
-                      value={config.borderRadius}
-                      onChange={(e) => setConfig((prev) => ({ ...prev, borderRadius: parseInt(e.target.value, 10) }))}
-                      className="w-full accent-primary h-1.5 bg-black/50 rounded-lg cursor-pointer"
-                    />
-                  </div>
-
-                  {/* Animation */}
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400">Animation</label>
-                    <select
-                      value={config.animation}
-                      onChange={(e) => setConfig((prev) => ({ ...prev, animation: e.target.value }))}
-                      className="w-full h-8 rounded-md bg-black/40 border border-white/10 px-2 text-xs text-slate-200 focus:outline-none focus:border-primary/50"
-                    >
-                      <option value="none">None (Static)</option>
-                      <option value="fadeIn">Fade In (Clean)</option>
-                      <option value="slideUp">Slide Up</option>
-                      <option value="pulse">Subtle Pulse</option>
-                    </select>
-                  </div>
-                </div>
-              </details>
-
-              {/* ACCORDION 4: Content Override */}
-              <details className="group border-b border-white/10">
-                <summary className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-white/5 select-none text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  <span>Content Overrides</span>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-500 transition-transform group-open:rotate-180" />
-                </summary>
-                <div className="px-3.5 pb-4 space-y-2.5 text-xs">
-                  <div>
-                    <label className="block text-[11px] text-slate-400 mb-1">Card Header Title</label>
-                    <input
-                      type="text"
-                      value={config.customText}
-                      onChange={(e) => setConfig((prev) => ({ ...prev, customText: e.target.value }))}
-                      placeholder="Default Title..."
-                      className="w-full h-8 rounded bg-black/40 border border-white/10 px-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] text-slate-400 mb-1">Custom Tag / Subtitle</label>
-                    <input
-                      type="text"
-                      value={config.customDescription}
-                      onChange={(e) => setConfig((prev) => ({ ...prev, customDescription: e.target.value }))}
-                      placeholder="e.g. #developer · architecture"
-                      className="w-full h-8 rounded bg-black/40 border border-white/10 px-2.5 text-xs text-white focus:outline-none focus:border-primary/50"
-                    />
                   </div>
                 </div>
               </details>

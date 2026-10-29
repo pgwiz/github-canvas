@@ -11,6 +11,7 @@ export interface CardParams {
   textColor?: string;
   borderColor?: string;
   borderRadius?: number;
+  strokeWidth?: number;
   showBorder?: boolean;
   paddingTop?: number;
   paddingRight?: number;
@@ -220,7 +221,7 @@ export function generateCardSVG(rawParams: CardParams): string {
   const borderColor = rawParams.borderColor || theme.border;
   const borderRadius = rawParams.borderRadius !== undefined ? rawParams.borderRadius : 12;
   const showBorder = rawParams.showBorder !== false;
-  const animate = rawParams.animate !== false;
+  const animate = rawParams.animate !== false && rawParams.animation !== 'none';
   const animation = rawParams.animation || 'fadeIn';
   const speed = rawParams.speed || 'normal';
   const gradient = rawParams.gradient === true;
@@ -250,11 +251,13 @@ export function generateCardSVG(rawParams: CardParams): string {
   const width = rawParams.width || dims.width;
   const height = rawParams.height || dims.height;
 
-  const borderStyle = showBorder ? `stroke="${borderColor}" stroke-width="1.5"` : '';
+  const strokeWidth = rawParams.strokeWidth !== undefined ? rawParams.strokeWidth : 1.5;
+  const borderStyle = showBorder && strokeWidth > 0 ? `stroke="${borderColor}" stroke-width="${strokeWidth}"` : '';
 
+  const isTransparent = bgColor === 'transparent' || bgColor === 'none';
   let gradientDef = '';
-  let bgFill = bgColor;
-  if (gradient) {
+  let bgFill = isTransparent ? 'none' : bgColor;
+  if (gradient && !isTransparent) {
     if (gradientType === 'radial') {
       gradientDef = `
         <radialGradient id="bgGrad" cx="50%" cy="50%" r="70%">
@@ -281,7 +284,10 @@ export function generateCardSVG(rawParams: CardParams): string {
 
   const animCSS = animate ? `
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .card-anim { animation: fadeIn ${0.45 * m}s ease-out forwards; }
+    @keyframes subtlePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.85; } }
+    .card-anim { 
+      animation: ${animation === 'pulse' ? `subtlePulse ${2 * m}s ease-in-out infinite` : `fadeIn ${0.45 * m}s ease-out both`}; 
+    }
     .d-1 { animation-delay: ${0.05 * m}s; }
     .d-2 { animation-delay: ${0.1 * m}s; }
     .d-3 { animation-delay: ${0.15 * m}s; }

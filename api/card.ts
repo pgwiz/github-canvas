@@ -12,6 +12,7 @@ export interface CardParams {
   textColor?: string;
   borderColor?: string;
   borderRadius?: number;
+  strokeWidth?: number;
   showBorder?: boolean;
   paddingTop?: number;
   paddingRight?: number;
@@ -230,7 +231,7 @@ export function generateCardSVG(rawParams: CardParams): string {
   const borderColor = rawParams.borderColor || theme.border;
   const borderRadius = rawParams.borderRadius !== undefined ? rawParams.borderRadius : 12;
   const showBorder = rawParams.showBorder !== false;
-  const animate = rawParams.animate !== false;
+  const animate = rawParams.animate !== false && rawParams.animation !== 'none';
   const animation = rawParams.animation || 'fadeIn';
   const speed = rawParams.speed || 'normal';
   const gradient = rawParams.gradient === true;
@@ -260,11 +261,13 @@ export function generateCardSVG(rawParams: CardParams): string {
   const width = rawParams.width || dims.width;
   const height = rawParams.height || dims.height;
 
-  const borderStyle = showBorder ? `stroke="${borderColor}" stroke-width="1.5"` : '';
+  const strokeWidth = rawParams.strokeWidth !== undefined ? rawParams.strokeWidth : 1.5;
+  const borderStyle = showBorder && strokeWidth > 0 ? `stroke="${borderColor}" stroke-width="${strokeWidth}"` : '';
 
+  const isTransparent = bgColor === 'transparent' || bgColor === 'none';
   let gradientDef = '';
-  let bgFill = bgColor;
-  if (gradient) {
+  let bgFill = isTransparent ? 'none' : bgColor;
+  if (gradient && !isTransparent) {
     if (gradientType === 'radial') {
       gradientDef = `
         <radialGradient id="bgGrad" cx="50%" cy="50%" r="70%">
@@ -291,7 +294,10 @@ export function generateCardSVG(rawParams: CardParams): string {
 
   const animCSS = animate ? `
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .card-anim { animation: fadeIn ${0.45 * m}s ease-out forwards; }
+    @keyframes subtlePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.85; } }
+    .card-anim { 
+      animation: ${animation === 'pulse' ? `subtlePulse ${2 * m}s ease-in-out infinite` : `fadeIn ${0.45 * m}s ease-out both`}; 
+    }
     .d-1 { animation-delay: ${0.05 * m}s; }
     .d-2 { animation-delay: ${0.1 * m}s; }
     .d-3 { animation-delay: ${0.15 * m}s; }
@@ -1327,6 +1333,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       textColor,
       borderColor,
       borderRadius: q.radius ? parseInt(q.radius as string, 10) : (q.borderRadius ? parseInt(q.borderRadius as string, 10) : 12),
+      strokeWidth: q.strokeWidth ? parseFloat(q.strokeWidth as string) : (q.stroke_width ? parseFloat(q.stroke_width as string) : (q.stroke ? parseFloat(q.stroke as string) : undefined)),
       showBorder: q.showBorder !== 'false' && q.show_border !== 'false',
       showOwner: q.show_owner === 'true' || q.showOwner === 'true',
       width: q.width ? parseInt(q.width as string, 10) : undefined,

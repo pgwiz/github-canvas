@@ -6,7 +6,23 @@
       "destination": "/api/card"
     },
     {
+      "source": "/card/(.*)",
+      "destination": "/api/card"
+    },
+    {
+      "source": "/api/card/(.*)",
+      "destination": "/api/card"
+    },
+    {
       "source": "/pin",
+      "destination": "/api/pin"
+    },
+    {
+      "source": "/pin/(.*)",
+      "destination": "/api/pin"
+    },
+    {
+      "source": "/api/pin/(.*)",
       "destination": "/api/pin"
     },
     {

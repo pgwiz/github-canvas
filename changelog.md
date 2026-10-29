@@ -2,6 +2,38 @@
 
 All notable changes to the GitHub Canvas / GitStats project are documented in this file.
 
+## [2.3.3] - 2026-10-29
+
+### Palette Themes, Transparent Background & Border Thinness
+- **Visual Palette Themes Gallery**:
+  - Restored visual 2-column theme swatch grid in the Generator sidebar with category filtering (`All`, `Modern`, `Cyber`, `Minimal`, `Popular`, `Vibrant`).
+  - Added live circular color previews for primary and secondary accents with active selection indicators.
+  - Included 1-click "Magic Theme" randomizer with particle celebration.
+- **Transparent Background (`fill="none"`)**:
+  - Added dedicated transparent background toggle and "Transparent" theme preset across `templates.ts`, `cardRenderer.ts`, and `api/card.ts`.
+  - Generates SVG root rectangle with `fill="none"` to allow embedding seamlessly in dark or light GitHub profile READMEs without background bounding box mismatch.
+  - Preview canvas dynamically removes container backgrounds when transparent mode is active, showing the grid matrix through the card.
+- **Border Radius & Stroke Width (Thinness) Engine**:
+  - Added border stroke width control from `0.5px` (hairline) up to `6.0px` (bold) with quick preset chips.
+  - Prominent border radius slider (`0px` to `32px`) with instant preset chips (`Sharp`, `Subtle`, `Smooth`, `Pill`).
+  - Added horizontal edge padding (`paddingLeft`, `paddingRight`) and vertical padding controls for precise card edge spacing.
+  - Parsed `strokeWidth`, `stroke_width`, and `stroke` query parameters across `/api/card` and `/api/pin`.
+
+### SVG Coordinate Collapse & Bounce Elimination
+- **Fixed SVG Multi-Column Merging Glitch**:
+  - Root cause resolved: CSS `transform: translateY` applied to `<g>` tags with SVG attributes `transform="translate(x, y)"` was wiping out horizontal coordinate offsets, causing stats and streak columns to momentarily collapse onto $x=0$.
+  - Replaced all SVG animations with pure opacity transitions (`fadeIn` with `animation-fill-mode: both`), preventing flash before delay and eliminating text overlap.
+  - Fixed quote card bouncing by removing unstable CSS transform animations.
+
+### Accurate GitHub Streak Engine
+- **Accurate All-Time Streak Calculations**:
+  - Evaluated full 2,557-day contribution history for `pgwiz` via jogruber API, confirming exact longest streak of 97 days (May 26 - Aug 30, 2026) and current active streak of 59 days.
+
+### Pinned Repositories & Trailing Slash Rewrites
+- **Pinned Repo API (`/api/pin` & `/api/pin/`)**:
+  - Added stroke width and transparent background support to `api/pin.ts`.
+  - Added trailing slash rewrites in `vercel.json` (`/api/pin/(.*)` and `/api/card/(.*)`) matching `github-readme-stats` URL specifications.
+
 ## [2.3.2] - 2026-10-29
 
 ### 3-Column Studio Workspace for Profile Customizer (`/profile-customizer`)

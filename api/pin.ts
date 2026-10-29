@@ -99,6 +99,7 @@ export interface PinParams {
   textColor?: string;
   borderColor?: string;
   borderRadius?: number;
+  strokeWidth?: number;
   showBorder?: boolean;
   showOwner?: boolean;
   width?: number;
@@ -146,11 +147,13 @@ export function generatePinSVG(params: PinParams): string {
   };
 
   const displayName = showOwner ? `${repo.owner}/${repo.name}` : repo.name;
-  const borderStyle = showBorder ? `stroke="${borderColor}" stroke-width="1.5"` : '';
+  const strokeWidth = params.strokeWidth !== undefined ? params.strokeWidth : 1.5;
+  const borderStyle = showBorder && strokeWidth > 0 ? `stroke="${borderColor}" stroke-width="${strokeWidth}"` : '';
 
+  const isTransparent = bgColor === 'transparent' || bgColor === 'none';
   let gradientDef = '';
-  let bgFill = bgColor;
-  if (params.gradient) {
+  let bgFill = isTransparent ? 'none' : bgColor;
+  if (params.gradient && !isTransparent) {
     const gradientType = params.gradientType || 'linear';
     const gradientStart = params.gradientStart || primaryColor;
     const gradientEnd = params.gradientEnd || secondaryColor;
@@ -182,7 +185,7 @@ export function generatePinSVG(params: PinParams): string {
 
   const animCSS = animate ? `
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .card-anim { animation: fadeIn ${0.45 * m}s ease-out forwards; }
+    .card-anim { animation: fadeIn ${0.45 * m}s ease-out both; }
     .d-1 { animation-delay: ${0.05 * m}s; }
     .d-2 { animation-delay: ${0.1 * m}s; }
     .d-3 { animation-delay: ${0.15 * m}s; }
@@ -309,12 +312,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       textColor,
       borderColor,
       borderRadius: q.radius ? parseInt(q.radius as string, 10) : (q.borderRadius ? parseInt(q.borderRadius as string, 10) : 12),
+      strokeWidth: q.strokeWidth ? parseFloat(q.strokeWidth as string) : (q.stroke_width ? parseFloat(q.stroke_width as string) : (q.stroke ? parseFloat(q.stroke as string) : undefined)),
       showBorder: q.show_border !== 'false' && q.showBorder !== 'false',
       showOwner: q.show_owner === 'true' || q.showOwner === 'true',
       width: q.width ? parseInt(q.width as string, 10) : 400,
       height: q.height ? parseInt(q.height as string, 10) : 120,
       customDescription: (q.description as string) || (q.customDescription as string) || undefined,
-      animate: q.animate !== 'false',
+      animate: q.animate !== 'false' && q.animation !== 'none',
       animation: (q.animation as string) || 'fadeIn',
       speed: (q.speed as string) || 'normal',
       gradient: q.gradient === 'true',

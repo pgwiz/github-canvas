@@ -234,4 +234,17 @@ export const templates: TemplateTheme[] = [
       border: "#0CF709",
     },
   },
+  {
+    id: "transparent",
+    name: "Transparent",
+    category: "Minimal",
+    description: "Zero background card with crisp cyan and sapphire accents, blending seamlessly into GitHub profiles.",
+    colors: {
+      bg: "transparent",
+      primary: "#3b82f6",
+      secondary: "#06b6d4",
+      text: "#f1f5f9",
+      border: "#3b82f6",
+    },
+  },
 ];
