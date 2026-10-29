@@ -2,6 +2,24 @@
 
 All notable changes to the GitHub Canvas / GitStats project are documented in this file.
 
+## [2.3.1] - 2026-10-29
+
+### Scrollbar Removal & Minimalist Tech Stack Modal
+- **Global Scrollbar Removal**:
+  - Implemented `scrollbar-width: none !important` and `::-webkit-scrollbar { display: none !important }` in `src/index.css`.
+  - Hidden all distracting scrollbars across the Studio Workspace (canvas stage, icon rail, settings sidebar, and dock) while maintaining smooth mousewheel, touch, and trackpad navigation.
+- **Tech Stack & Language Customization Popup (`src/components/generator/TechStackModal.tsx`)**:
+  - Added dedicated popup window allowing full customization of programming languages, frameworks, and tools.
+  - Search filter indexing 150+ predefined technologies with category tabs (`All`, `Languages`, `Frontend`, `Backend`, `Databases`, `DevOps & Tools`).
+  - Interactive selection chips with 1-click removal, count badge, and "Clear All" action.
+  - Quick Stack Presets: 1-click loading of curated stacks (`FARM`, `PERN`, `LEMP`, `Django`, `Core Languages`).
+  - Custom Language & Tool Input: allows typing any programming language (e.g. Mojo, Zig, Solidity, Fortran, Nim) and immediately adding it to the stack card.
+- **Minimalist Icon Grid Mode (`layout=icons`)**:
+  - Introduced minimalist icon tile grid mode for `type=skills` in `src/lib/cardRenderer.ts` and `api/card.ts`.
+  - Displays crisp vector icons in theme-matching rounded tiles with subtle borders.
+  - Embeds `<title>${skillName}</title>` inside each tile, providing native browser hover tooltips that display the full language/tool name.
+  - Built comprehensive vector icon catalog in `src/lib/techIcons.ts` with SVG paths for top languages and tools.
+
 ## [2.3.0] - 2026-10-29
 
 ### Studio Workspace Overhaul (`src/pages/Generator.tsx`)

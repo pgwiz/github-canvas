@@ -111,23 +111,15 @@
     color: hsl(var(--primary-foreground));
   }
 
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  /* Scrollbars hidden everywhere (scrolling still works: wheel, touch, keys) */
+  html, * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
-
-  ::-webkit-scrollbar-track {
-    background: hsl(var(--background));
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted));
-    border-radius: 4px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--primary));
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 }
 

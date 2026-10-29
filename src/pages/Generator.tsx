@@ -4,10 +4,11 @@ import { Layout } from "@/components/layout/Layout";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { templates } from "@/lib/templates";
 import { generateCardSVG, CardParams, PRESET_STACKS } from "@/lib/cardRenderer";
+import { TechStackModal } from "@/components/generator/TechStackModal";
 import { 
   BarChart3, Code2, Flame, Activity, Quote, Sparkles, Grid3X3, Bookmark, 
   Layers, SlidersHorizontal, RotateCcw, ChevronDown, AtSign, RefreshCw, 
-  Wand2, Blend, Download, Copy, Check, Monitor, Layers3, CheckCircle2 
+  Wand2, Blend, Download, Copy, Check, Monitor, Layers3, CheckCircle2, Sliders 
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGitHubStats, GitHubStats } from "@/hooks/useGitHubStats";
@@ -62,7 +63,7 @@ export interface CardConfig {
   showOwner: boolean;
   skills: string;
   stacks: string[];
-  skillsLayout: "matrix" | "stacks" | "compact";
+  skillsLayout: "matrix" | "stacks" | "compact" | "icons";
 }
 
 const defaultConfig: CardConfig = {
@@ -96,7 +97,7 @@ const defaultConfig: CardConfig = {
   showOwner: false,
   skills: "",
   stacks: ["languages", "farm", "pern", "lemp", "django"],
-  skillsLayout: "matrix",
+  skillsLayout: "icons",
 };
 
 const TYPE_CONFIGS: Record<CardType, { label: string; icon: typeof BarChart3; dims: { width: number; height: number } }> = {
@@ -120,6 +121,7 @@ export default function Generator() {
   const [isCopied, setIsCopied] = useState(false);
   const [githubData, setGithubData] = useState<GitHubStats | null>(null);
   const [currentQuote, setCurrentQuote] = useState<DevQuote | null>(null);
+  const [isStackModalOpen, setIsStackModalOpen] = useState(false);
   const { toast } = useToast();
 
   const { loading: statsLoading, fetchStats } = useGitHubStats();
@@ -699,19 +701,29 @@ export default function Generator() {
 
                   {/* Skills & Stacks Options */}
                   {config.type === "skills" && (
-                    <div className="space-y-2 pt-1">
+                    <div className="space-y-2.5 pt-1">
                       <div className="flex items-center justify-between">
                         <label className="text-[10px] text-slate-400">Skills Display Style</label>
                         <span className="text-[9px] text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">De-duplicated</span>
                       </div>
                       <select
                         value={config.skillsLayout}
-                        onChange={(e) => setConfig((prev) => ({ ...prev, skillsLayout: e.target.value as "matrix" | "stacks" }))}
-                        className="w-full h-8 rounded-md bg-black/40 border border-white/10 px-2 text-xs text-slate-200 focus:outline-none focus:border-primary/50"
+                        onChange={(e) => setConfig((prev) => ({ ...prev, skillsLayout: e.target.value as "matrix" | "stacks" | "icons" }))}
+                        className="w-full h-8 rounded-md bg-black/40 border border-white/10 px-2 text-xs text-slate-200 focus:outline-none focus:border-primary/50 cursor-pointer"
                       >
+                        <option value="icons">Minimalist Icon Grid (Icons only · Name on hover)</option>
                         <option value="matrix">Categorized Matrix (Clean & Deduplicated)</option>
                         <option value="stacks">Stack Clusters (FARM, PERN, LEMP, Django)</option>
                       </select>
+
+                      {/* Customize in Popup Modal Button */}
+                      <button
+                        type="button"
+                        onClick={() => setIsStackModalOpen(true)}
+                        className="w-full h-8 rounded-md bg-primary/15 hover:bg-primary/25 border border-primary/40 text-xs font-semibold text-primary flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95"
+                      >
+                        <Sliders className="w-3.5 h-3.5" /> Customize Stack in Popup Modal
+                      </button>
 
                       <label className="text-[10px] text-slate-400 block pt-1">Included Tech Stacks</label>
                       <div className="grid grid-cols-2 gap-1.5">
@@ -1025,6 +1037,27 @@ export default function Generator() {
             </div>
           </aside>
         </div>
+
+        {/* Tech Stack Customization Popup Window */}
+        <TechStackModal
+          isOpen={isStackModalOpen}
+          onClose={() => setIsStackModalOpen(false)}
+          selectedSkills={
+            config.skills && config.skills.trim().length > 0
+              ? config.skills.split(",").map((s) => s.trim()).filter(Boolean)
+              : config.stacks.flatMap((stk) => PRESET_STACKS[stk]?.skills || [])
+          }
+          onSave={(skills) => {
+            setConfig((prev) => ({
+              ...prev,
+              skills: skills.join(","),
+            }));
+            toast({
+              title: "Tech Stack Updated",
+              description: `${skills.length} technologies saved to your card.`,
+            });
+          }}
+        />
       </PageTransition>
     </Layout>
   );

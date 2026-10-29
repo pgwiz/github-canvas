@@ -1,3 +1,5 @@
+import { getTechIcon } from './techIcons';
+
 export interface CardParams {
   type: string;
   username?: string;
@@ -839,7 +841,89 @@ export function generateCardSVG(rawParams: CardParams): string {
 
       let groups: Array<{ label: string; skills: string[] }> = [];
 
-      if (skillsLayout === 'stacks') {
+      if (skillsLayout === 'icons') {
+        let allSkills: string[] = [];
+        if (rawParams.skills) {
+          const list = typeof rawParams.skills === 'string' ? rawParams.skills.split(',') : rawParams.skills;
+          allSkills = list.map((s) => s.trim()).filter(Boolean);
+        } else {
+          userStacks.forEach((stk) => {
+            if (PRESET_STACKS[stk]) {
+              allSkills.push(...PRESET_STACKS[stk].skills);
+            }
+          });
+        }
+
+        const seen = new Set<string>();
+        const uniqueSkills: string[] = [];
+        allSkills.forEach((s) => {
+          const key = s.toLowerCase();
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueSkills.push(s);
+          }
+        });
+
+        const tileSize = 38;
+        const gap = 10;
+        const startX = 25;
+        let curX = startX;
+        let curY = 68;
+        const maxRowWidth = width - 25;
+
+        let tilesSvg = '';
+        uniqueSkills.forEach((skill, idx) => {
+          if (curX + tileSize > maxRowWidth) {
+            curX = startX;
+            curY += tileSize + gap;
+          }
+
+          const iconDef = getTechIcon(skill);
+          const dotColor = iconDef?.color || LANGUAGE_COLORS[skill] || primaryColor;
+          const animDelay = (idx % 15) * 0.03 * m;
+
+          const innerIcon = iconDef ? `
+            <g transform="translate(8, 8) scale(0.92)">
+              <path d="${iconDef.svgPath}" fill="${dotColor}" />
+            </g>
+          ` : `
+            <text x="19" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="${primaryColor}">${escapeXml(skill.slice(0, 2).toUpperCase())}</text>
+          `;
+
+          tilesSvg += `
+            <g class="${animate ? 'card-anim' : ''}" style="animation-delay: ${animDelay}s" transform="translate(${curX}, ${curY})">
+              <title>${escapeXml(skill)}</title>
+              <rect width="${tileSize}" height="${tileSize}" rx="8" fill="${primaryColor}14" stroke="${primaryColor}35" stroke-width="1" />
+              ${innerIcon}
+            </g>
+          `;
+
+          curX += tileSize + gap;
+        });
+
+        const actualHeight = Math.max(height, curY + tileSize + 20);
+
+        return `<svg width="${width}" height="${actualHeight}" viewBox="0 0 ${width} ${actualHeight}" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>${gradientDef}</defs>
+  ${baseStyles}
+  <rect x="1" y="1" width="${width - 2}" height="${actualHeight - 2}" rx="${borderRadius}" fill="${bgFill}" ${borderStyle} />
+  
+  <g transform="translate(25, 24)">
+    <g class="${animate ? 'card-anim d-1' : ''}">
+      <rect width="22" height="22" rx="5" fill="${primaryColor}" fill-opacity="0.2" />
+      <path d="M11 6L5 9L11 12L17 9L11 6Z" stroke="${primaryColor}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M5 12L11 15L17 12" stroke="${primaryColor}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M5 15L11 18L17 15" stroke="${primaryColor}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      
+      <text x="32" y="15" class="header-title">${escapeXml(title)}</text>
+      <text x="${width - 50}" y="15" text-anchor="end" class="header-sub">${escapeXml(subtitle)}</text>
+      <line x1="0" y1="26" x2="${width - 50}" y2="26" stroke="${textColor}" stroke-opacity="0.1" stroke-width="1" />
+    </g>
+  </g>
+  
+  ${tilesSvg}
+</svg>`;
+      } else if (skillsLayout === 'stacks') {
         groups = userStacks
           .map((stk) => PRESET_STACKS[stk] || { label: stk.toUpperCase(), skills: [stk] })
           .filter(Boolean);
