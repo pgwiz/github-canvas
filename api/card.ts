@@ -1464,9 +1464,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       skills: (q.skills as string) || undefined,
       stacks: (q.stacks as string) || undefined,
       skillsLayout: (q.skillsLayout as CardParams['skillsLayout']) || (q.layout as CardParams['skillsLayout']) || undefined,
-      showLabels: q.showLabels !== undefined ? q.showLabels : (q.labels !== undefined ? q.labels : undefined),
-      style: (q.style as string) || undefined,
-      iconsOnly: q.iconsOnly !== undefined ? q.iconsOnly : undefined,
+      showLabels: (Array.isArray(q.showLabels) ? q.showLabels[0] : q.showLabels) ?? (Array.isArray(q.labels) ? q.labels[0] : q.labels) ?? undefined,
+      style: (Array.isArray(q.style) ? q.style[0] : q.style) || undefined,
+      iconsOnly: (Array.isArray(q.iconsOnly) ? q.iconsOnly[0] : q.iconsOnly) ?? undefined,
     };
 
     // If type is pin or repo, fetch repo info
