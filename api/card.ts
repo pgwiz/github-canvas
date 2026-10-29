@@ -1428,7 +1428,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const textColor = normalizeColor(q.text_color as string || q.text as string || q.textColor as string, THEMES[theme]?.text || '#f1f5f9');
     const borderColor = normalizeColor(q.border_color as string || q.border as string || q.borderColor as string, THEMES[theme]?.border || '#3b82f6');
 
-    const username = (q.username as string) || (q.user as string) || (q.owner as string) || '';
+    const username = (q.username as string) || (q.user as string) || (q.owner as string) || (q.pgwiz !== undefined ? 'pgwiz' : '') || '';
     const repoName = (q.repo as string) || (q.repository as string) || '';
 
     const cardParams: CardParams = {
@@ -1441,8 +1441,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       secondaryColor,
       textColor,
       borderColor,
-      borderRadius: q.radius ? parseInt(q.radius as string, 10) : (q.borderRadius ? parseInt(q.borderRadius as string, 10) : 12),
-      strokeWidth: q.strokeWidth ? parseFloat(q.strokeWidth as string) : (q.stroke_width ? parseFloat(q.stroke_width as string) : (q.stroke ? parseFloat(q.stroke as string) : undefined)),
+      borderRadius: q.radius !== undefined ? parseInt(String(Array.isArray(q.radius) ? q.radius[0] : q.radius), 10) : (q.borderRadius !== undefined ? parseInt(String(Array.isArray(q.borderRadius) ? q.borderRadius[0] : q.borderRadius), 10) : 12),
+      strokeWidth: q.strokeWidth !== undefined ? parseFloat(String(Array.isArray(q.strokeWidth) ? q.strokeWidth[0] : q.strokeWidth)) : (q.stroke_width !== undefined ? parseFloat(String(Array.isArray(q.stroke_width) ? q.stroke_width[0] : q.stroke_width)) : (q.stroke !== undefined ? parseFloat(String(Array.isArray(q.stroke) ? q.stroke[0] : q.stroke)) : undefined)),
       showBorder: q.showBorder !== 'false' && q.show_border !== 'false',
       showOwner: q.show_owner === 'true' || q.showOwner === 'true',
       width: q.width ? parseInt(q.width as string, 10) : undefined,
